@@ -793,3 +793,224 @@ Commit and push now: feat(my-home): add YourNumbersCard with heating-type chip, 
   is intentionally wired as given (not self-hosted) and does not load in headless, so the
   poster frame shows in the screenshots. The footer "Photo: [credit]" placeholder still needs
   the real photo credit filled in.
+
+## Task 5.1 — Convert BERDO 2021 CSV to JSON and add cleaning
+- When: 2026-10-24 13:49 EDT
+- Kiro feature used: Spec (task execution) + CLI script
+- What: Added `scripts/convert-berdo.mjs` (plain Node ESM, no new deps) that reads
+  `data/berdo-2021/data.csv` (2,472 rows), applies the cleaning rules, and writes
+  `data/berdo-2021/buildings.json` (1,249 rows, ~219 KB). Rules: normalize zips
+  (6-digit leading-zero `020118`→`02118`), keep only `/^02\d{3}$/` zips, drop rows
+  with missing/non-numeric Site EUI, `gasShare` null when `per_Gas` blank (never 0),
+  `id` = kept-array index as a string, and keep EUI>300 rows (the "check data" flag
+  is a display concern for the Buildings table). Verified every row matches the
+  `BerdoBuilding` shape. `npx tsc --noEmit` clean; `npx vitest run` green (69/69).
+- Why it mattered: gives the Buildings tab (5.2/5.3) a trustworthy static dataset
+  with known, documented cleaning stats so the ranking and summary strip are reliable.
+
+## 2026-10-24 13:51 EDT — Task 5.2: Build ZipPicker and BuildingsTable
+
+- **Kiro feature:** Spec-driven task execution (`.kiro/specs/heatswitch`) + shadcn/ui components (Badge, Card-style cells, Alert-ready layout).
+- **What:** Added `components/buildings/zip-picker.tsx` (styled native `<select>` listing only the zips present in the data plus an "All of Boston" → null option, sorted ascending) and `components/buildings/buildings-table.tsx`. The table ranks rows via `rankBuildings` from `lib/calc.ts`: default view shows the top 25 citywide by Opportunity_Score with a "Showing top 25 across Boston — pick a zip to filter" note, and a selected zip shows all matching rows (no cap). A data-derived summary strip computes total multifamily / all-electric / ≥50% gas / median site EUI at render time (never hardcoded). Each row shows an address-free identity (type · year · sqft · zip), site EUI with a ">300 check data" Badge, GHG, electric and gas shares (null gas = "unknown", not 0%), a thin emerald percentile bar + numeric percentile + High/Medium/Low Badge, the "likely electric resistance, biggest heat pump win" (computed 75th-pctile EUI threshold) and "convert at boiler replacement" messages, a BERDO source link, and no-match / empty-data states.
+- **Why it mattered:** Keeps all arithmetic in pure `lib/calc.ts` (the table only ranks and formats), and the summary + opportunity thresholds stay correct if the dataset changes because they are derived from the data, not hardcoded. `npx tsc --noEmit` clean; `npx vitest run` green (69 tests).
+
+## Task 5.3 — Wire the Buildings tab into app/page.tsx
+- When: 2026-10-24 13:53 EDT
+- Kiro feature used: Spec (task execution) + shadcn/ui (Alert)
+- What: Replaced the Buildings-tab PlaceholderCard with the real `BuildingsTable`
+  (which renders its own `ZipPicker`). Loaded the cleaned BERDO 2021 dataset
+  client-side via a static JSON import — `import buildingsData from
+  "@/data/berdo-2021/buildings.json"` (`resolveJsonModule` is enabled in
+  tsconfig, so this is SSR-safe, bundled at build time, and needs no fetch or
+  useEffect). Cast to `BerdoBuilding[]` and added a `buildingsLoaded` runtime
+  guard (non-array or empty => render a shadcn `Alert` "Building data is
+  unavailable right now." per Req 8.2). Added `buildingsSelectedZip`
+  state (default `null` = all of Boston) and passed buildings + selectedZip +
+  setter into `BuildingsTable`. The hero navbar "Buildings" link still calls
+  `setActiveTab("buildings")` and lands on this tab; the light header + tabs
+  layout and the My-home hero / #try-it / results are unchanged.
+- Why it mattered: The Buildings tab is now live from the official 1,249-row
+  BERDO dataset with zip filtering and a graceful dataset-load fallback, with
+  no change to the calc engine, demo fixtures, or any test.
+- Verification: `npx tsc --noEmit` clean; `npx vitest run` green (69 tests);
+  `npx next build` compiles (JSON import did not break the build; `/` still
+  prerendered static).
+
+## Task 5.4 — Write unit tests for dataset cleaning
+- When: 2026-10-24 17:56 UTC
+- Kiro feature used: Unit tests (Vitest)
+- What: Added `data/berdo-2021/buildings.cleaning.test.ts` (23 tests). It (A) asserts
+  the committed `buildings.json` satisfies every cleaning rule over all 1,249 rows —
+  every zip matches `/^02\d{3}$/` (Req 8.3), every `siteEUI` is a finite number
+  (Req 8.3), EUI>300 rows are kept not dropped (37 present, Req 8.4), `gasShare` is
+  always `number|null` and never NaN with 214 nulls for the unknown case (Req 8.5),
+  ids are the contiguous "0".."N-1" string sequence, and each row has exactly the
+  BerdoBuilding keys with no address field. It (B) mirrors the script's non-exported
+  `normalizeZip`/`parseNum` rules as local functions and unit-tests zip normalization
+  and the gasShare/EUI classification (blank gas→null, real "0"→0, "0.5"→0.5, blank EUI→drop).
+- Why it mattered: locks the Requirements 8.3–8.5 cleaning invariants to the shipped
+  static dataset so a future converter change can't silently regress the Buildings tab.
+  Writing the mirror also surfaced that the script correctly drops "020118" (slices to
+  "20118"), confirming it never fabricates digits.
+
+## Task 5 — Buildings tab (BERDO 2021): Done (workflow.md closeout)
+- When: 2026-10-24 17:59 UTC
+- Task: Task 5: Buildings tab (BERDO 2021) — closeout of sub-tasks 5.1–5.4
+- Kiro feature used: Spec (design-first workflow) + shadcn/ui + CLI conversion script + unit tests + Playwright MCP
+- What: Ran the workflow.md Done steps for Task 5. (1) `npx vitest run` passed — 92 tests
+  across 9 files, exit 0 (the expected count now that the dataset-cleaning tests from 5.4 are
+  in). `npx tsc --noEmit` clean (exit 0). `npx next build` compiled successfully (Next 16.4.2
+  Turbopack, `/` static plus the `/api/extract` and `/api/explain` dynamic handlers), exit 0.
+  No test or source files were touched in this closeout. (2) UI changed in Task 5 (the Buildings
+  tab now renders the real ranked table), so I reused the already-running dev server on
+  http://localhost:3000, opened the app with the Playwright MCP, clicked the
+  "Buildings (landlords & city)" tab, and captured responsive full-page screenshots:
+  1280px → `docs/kiro/screens/task-5-desktop.png` and 390px → `docs/kiro/screens/task-5-mobile.png`
+  (default no-zip view), plus the preferred zip-filtered view at 1280px →
+  `docs/kiro/screens/task-5-buildings-zip-desktop.png` (zip 02118). Verified on the shots: the
+  light Mist/Emerald layout with NO hero on the Buildings tab (banner + tabs only); the section
+  title "Boston multifamily buildings · Ranked by heat pump opportunity" with the zip picker
+  ("All of Boston"); the computed summary strip reading Multifamily buildings 502 / All-electric 52 /
+  ≥50% gas 333 / Median site EUI 61.1 (multifamily total 502 as expected); the "Showing top 25 across
+  Boston — pick a zip to filter" note; the ranked table (Building / Site EUI / GHG / Electric / Gas /
+  Opportunity) with emerald percentile bars + High/Medium/Low Badges; no-address row identities
+  composed from type · year · area · zip (e.g. "Multifamily Housing · 1975 · 12,000 sqft · 02128",
+  "Other · 1975 · 405,175 sqft · 02215"); amber "check data" flags on `siteEUI > 300` rows; "unknown"
+  gas share where `gasShare` is null (never 0); the "likely electric resistance, biggest heat pump win"
+  and "convert at boiler replacement" opportunity messages; and the "Data: City of Boston BERDO 2021"
+  source line linking the official dataset, with the "Your bill is never stored" footer. The
+  zip-filtered shot confirms the picker filters live (note updates to "73 buildings in 02118") and
+  shows the full percentile spectrum from High (100) through Medium down to Low (1) with shrinking
+  emerald bars. On mobile (390px) the summary strip collapses to a 2×2 grid and the table scrolls
+  horizontally; everything else holds. Closed the browser and removed the transient `.playwright-mcp/`
+  directory; left the pre-existing :3000 dev server running (did not start it). Did not read/print/edit
+  `.env.local`; did not add `.kiro` to `.gitignore`.
+  This closeout summarizes Task 5 across 5.1–5.4: 5.1 added the committed CLI conversion script
+  `scripts/convert-berdo.mjs` that reads `data/berdo-2021/data.csv` and writes the cleaned
+  `data/berdo-2021/buildings.json`, applying the documented cleaning rules — drop rows missing site
+  EUI, keep only 5-digit zips starting with "02", assign `id` as the zero-based row index string, flag
+  `siteEUI > 300` as "check data", and leave `gasShare` null when unknown (never 0); 5.2 built
+  `components/buildings/zip-picker.tsx` and `components/buildings/buildings-table.tsx` — the table
+  defaults to the top-25 citywide, shows the computed summary strip, renders the percentile emerald bar
+  + opportunity Badge and the electric-resistance / boiler-replacement messages, composes each row's
+  identity from type · year · area · zip (no invented addresses), handles the no-match empty row, and
+  prints the BERDO source line; 5.3 wired the Buildings tab into `app/page.tsx`, loading the cleaned
+  dataset client-side, filtering by selected zip, and guarding a dataset-load failure with an Alert;
+  5.4 added the `data/berdo-2021/buildings.cleaning.test.ts` unit tests covering the cleaning rules
+  (drop no-EUI rows, keep only "02" 5-digit zips, flag EUI > 300, keep `gasShare` null when unknown).
+- Screenshots: docs/kiro/screens/task-5-desktop.png (1280px, default view), docs/kiro/screens/task-5-mobile.png (390px, default view), docs/kiro/screens/task-5-buildings-zip-desktop.png (1280px, zip 02118 filtered)
+- Why it mattered: landlords and the city can now rank Boston multifamily buildings by heat pump
+  opportunity straight from the official BERDO 2021 dataset — honestly, with no invented addresses and
+  with uncertain fields flagged ("check data", "unknown" gas share) rather than faked.
+- Caveat for the user: `data/berdo-2021/README.md` notes "Check the source license before publishing a
+  project." The BERDO 2021 data is bundled as a static file for the Hackachusetts demo; confirm the City
+  of Boston dataset's license terms before publishing or distributing the project publicly.
+
+## 2026-10-24 14:14 EDT — Task 9.2: BuildingsTable consistent with reworked ranking
+
+- **Kiro feature:** Spec task execution (spec: `.kiro/specs/heatswitch`, task 9.2).
+- **What it did:** Reworked `components/buildings/buildings-table.tsx` so the Buildings tab mirrors the cohort-only, deduped, fossil-intensity ranking from task 9.1. The table now ranks the full cohort once via `rankBuildings(buildings, null)` and derives everything from it: the summary strip + stats are computed over the VALID cohort (`checkData === false`) only, the zip list is drawn from the ranked cohort (so no zip yields an all-non-cohort empty set), and the citywide view is the top 25 of that ranked cohort. Removed the local `isMultifamily` substring predicate, the `EUI_CHECK_THRESHOLD` constant, and the local percentile math. Per-row `percentile`/`label`/`checkData`/`electricResistanceWin` flags are read straight off each `RankedBuilding`; check-data rows render "—" for the percentile number, a 0-width bar, and "—" for the label (and already sort last). The electric-resistance message now keys off `b.electricResistanceWin` instead of recomputing the 75th-percentile threshold; "convert at boiler replacement" (Req 8.9) is unchanged. The converter `scripts/convert-berdo.mjs` and the `app/page.tsx` loader needed NO change — the cohort filter, dedupe, and check-data handling all live in `rankBuildings` now, and the loader still passes the full cleaned array through.
+- **Why it mattered:** The strip used to read the raw substring-matched, un-deduped, check-data-inclusive count (502). It now reads the honest valid-cohort numbers (431 multifamily, 35 all-electric, 294 ≥50% gas, median site EUI 60.2), keeping the summary and the ranked rows describing exactly the same set.
+- **Verification:** `npx tsc --noEmit` clean; `npx vitest run` green (92 tests). UI changed — Playwright desktop/mobile screenshots are deferred to the task 9.4 Done step (dev server not running in this execution).
+
+## Task 9.3 — finish ranking test rework (Buildings ranking)
+- When: implementation phase (tests only; lib/calc.ts unchanged)
+- Kiro feature used: Property-based test (fast-check) + CLI (vitest/tsc)
+- What: Rewrote lib/calc.ranking.test.ts to replace the task-2 "fuller tests in
+  9.3" placeholders with full coverage of the task-9 cohort-only, deduped, split
+  ranking. Added fast-check/unit invariants (cohort-only output, exact-tuple
+  dedupe with first-kept, check-data rows always sort last, top row EUI <= 300,
+  input not mutated, percentile/label null iff check-data, the all-electric High
+  override and its non-qualifying counter-case, zip filtering, and the
+  opportunityScore / opportunityLabel contracts) AND real-dataset assertions over
+  data/berdo-2021/buildings.json (no non-cohort rows, no duplicate tuples, valid
+  rows precede check-data, top row EUI <= 300, and at least one of each label).
+- Observed real-dataset numbers: 502 cohort rows -> 432 deduped -> 431 valid + 1
+  check-data; label counts High 109 / Medium 151 / Low 171; result[0].siteEUI =
+  84 (an all-electric-win High building, id 830); duplicate-tuple count = 0;
+  non-cohort rows = 0.
+- Result: npx vitest run => 106/106 passing (ranking file 25 tests, up from the
+  placeholder set); npx tsc --noEmit clean.
+- Why it mattered: the ranking rework now has honest, non-weakened guarantees —
+  proving the Buildings tab never shows a non-cohort or duplicate building, never
+  buries a data-quality row above a real one, and spreads the opportunity labels
+  across the real Boston cohort.
+
+## Task 9 — Buildings ranking fix: Done (workflow.md closeout)
+- When: 2026-10-24 18:20 UTC
+- Task: Task 9: Buildings ranking fix (cohort/dedupe/fossil-intensity/check-data) — closeout of sub-tasks 9.1–9.3
+- Kiro feature used: Spec (design-first workflow) + property/unit tests (Vitest + fast-check) + Playwright MCP
+- What: Ran the workflow.md Done steps for Task 9. (1) `npx vitest run` passed — 106 tests
+  across 9 files, exit 0; `npx tsc --noEmit` clean (exit 0); `npx next build` compiled
+  successfully (Next.js 16.4.2, Turbopack, `/` static + `/api/extract` `/api/explain`
+  dynamic). No source/test files were modified in this closeout. (2) UI changed (the Buildings
+  table now shows the deduped valid multifamily cohort with spread-out opportunity labels,
+  check-data "—", and the electric-resistance High override), so captured one record screenshot:
+  reused the existing dev server on :3000 (a dev server I started landed on :3001 since :3000 was
+  already serving HeatSwitch; I shut mine down afterward), switched to the Buildings tab (default
+  view, no zip), and saved `docs/kiro/screens/task-9-buildings-desktop.png` at 1280px. Verified
+  visually and via the a11y snapshot: the summary strip reads Multifamily buildings 431 (not the
+  old 502), All-electric 35, ≥50% gas 294, Median site EUI 60.2; the top row is a valid all-electric
+  row (site EUI 84.0 ≤ 300, 100% electric) with a High badge, an emerald percentile bar, and the
+  "likely electric resistance, biggest heat pump win" override message; gas rows carry the "convert
+  at boiler replacement" message; all visible rows show emerald percentile bars with tabular-nums
+  scores and High labels (the default view is the top-25 slice, so Medium/Low and the check-data
+  "—"/sorted-last rows surface deeper in the dataset and in filtered zip views). Closed the browser,
+  shut down the dev server I started, and removed the transient `.playwright-mcp/` directory. This
+  closeout summarizes 9.1–9.3: 9.1 reworked `rankBuildings` in lib/calc.ts to a fossil-intensity score
+  (siteEUI × fossilFraction, i.e. siteEUI × (1 − electricShare), using gasShare for the fossil fraction
+  when present — not building size), operating on and returning ONLY the multifamily cohort
+  ("Multifamily Housing" plus "CONDO MAIN" if present), with exact-tuple dedupe on
+  (propertyType, yearBuilt, grossFloorAreaSqFt, siteEUI, zip) keeping the first, percentiles computed
+  over the VALID cohort (EUI ≤ 300) with labels High ≥ 75th / Medium 40–75th / Low < 40th, check-data
+  rows (EUI > 300) kept visible but sorted AFTER all valid rows with null percentile/label ("—"), and
+  an all-electric High override (EUI ≥ 75th and ≤ 300 forced to High + the electric-resistance message,
+  grouped with High); 9.2 aligned `scripts/convert-berdo.mjs`/the client loader and
+  `components/buildings/buildings-table.tsx` so the summary strip and percentiles are computed over the
+  valid multifamily cohort only, check-data rows show "—" and sort last, and the electric-resistance
+  message/High override is surfaced; 9.3 reworked `lib/calc.ranking.test.ts` to the new contract (no
+  non-cohort rows in output, no duplicate rows, check-data rows always sort last, top row has EUI ≤ 300,
+  and at least one of each High/Medium/Low label exists in the full real dataset) — 106 tests passing.
+  Did not read/print/edit `.env.local`; did not add `.kiro` to `.gitignore`.
+- Screenshots: docs/kiro/screens/task-9-buildings-desktop.png (1280px)
+- Stale-doc note for the user: `.kiro/specs/heatswitch/design.md` still documents the OLD
+  `opportunityScore` (siteEUI + 0.05·ghgEmissions + electric-resistance bonus + 40·gasShare) and the
+  OLD High ≥ 67 / Medium ≥ 33 / Low banding over the full-list multifamily cohort. That design text is
+  now STALE relative to the shipped fossil-intensity score, valid-cohort 40/75 bands, dedupe, and
+  check-data sorting. A later doc-sync pass should reconcile design.md with the implemented ranking.
+- Why it mattered: the Buildings ranking now honestly surfaces the biggest fossil-heating opportunities
+  (high fossil-fueled energy intensity) instead of just the biggest buildings, so landlords and the city
+  see where a heat pump actually moves the needle.
+
+## Task 4 — assumptions, rebates, renter path, next step, how-we-calculate
+- When: 2026-10-24 18:28 UTC (implementation; code changed)
+- Kiro feature used: Spec task execution (spec-driven implementation) + Playwright MCP for screenshots
+- What: Built the four remaining My-home results cards and wired them into
+  `app/page.tsx`, replacing the task-4 placeholders (and deleting the unused
+  `PlaceholderCard` helper). `components/my-home/assumptions-card.tsx`: shadcn
+  Slider rows for heat pump COP (1.5–4.5), electricity price ($0.10–0.50/kWh),
+  and fuel price in the heating type's native unit, plus the seasonal heat pump
+  rate Switch, with source links to the MA seasonal-rate page.
+  `components/my-home/rebates-card.tsx`: tier badge, rebate amount, net install
+  cost, payback (amber "No payback" when null, never red), the four-item
+  eligibility checklist, the exact "2026 rebates require install by Dec 31,
+  2026." note, and a landlord path (shareable plain-text summary + Mass Save
+  multifamily link) shown only while heat-is-in-rent is on; surfaces the
+  invalid-household and check-income flags. `components/my-home/next-step-row.tsx`:
+  Boston Energy Saver for Boston zips, Mass Save assessment otherwise/unknown,
+  an informational equity-zip Alert (distinct from any dollar figure), and
+  suppression when the zip is invalid. `components/my-home/how-we-calculate.tsx`:
+  an accessible Button-toggled (aria-expanded) collapsible, collapsed by default,
+  showing formulas, the live assumption values, and sources. Every card only
+  DISPLAYS values from the pure engine and emits callbacks; the rent toggle now
+  patches `inputs.heatIncludedInRent` so `verdict.isRenter` + the landlord path
+  follow it live. All numbers use tabular-nums with a grey SourceLink beneath;
+  savings stay emerald-600, extra cost amber-600, never red.
+- Verification: `npx vitest run` → 106 passed (9 files); `npx tsc --noEmit` clean.
+- Screenshots (Oil demo loaded, results visible): desktop
+  `docs/kiro/screens/task-4-desktop.png` (1280px) and mobile
+  `docs/kiro/screens/task-4-mobile.png` (390px).
+- Why it mattered: completes the honest financial picture a household sees —
+  adjustable assumptions, real Mass Save rebate/payback, the renter path, and a
+  location-aware next step — while keeping all arithmetic in the property-tested
+  pure engine, not in the UI or the LLM.

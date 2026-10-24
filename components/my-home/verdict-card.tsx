@@ -3,8 +3,18 @@
 import { cn } from "cn"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import type { Language, Verdict } from "@/lib/schema"
+
+/** Default explanation shown until the real /api/explain route lands (task 7). */
+const DEFAULT_EXPLANATION =
+  "Here's the honest math from your numbers. Adjust the assumptions below to see how it changes."
 
 /**
  * VerdictCard — the results-state hero (rendered full width at the top of the
@@ -20,10 +30,11 @@ import type { Language, Verdict } from "@/lib/schema"
  *   exactly 0 (Req 6.5 / 6.6 / 6.7). Never red.
  * - Show the "Act before Dec 31" badge when `verdict.actBeforeDec31` is true
  *   (Req 6.8).
- * - Show an "Estimate" vs "Based on your bill" status line.
- * - Offer a six-language dropdown that calls `onLanguageChange`.
- * - Render the explanation when present; otherwise show a Skeleton placeholder.
- *   (Real explanation text arrives in task 7.)
+ * - Show a status line: "Demo home" for demo inputs, else "Estimate" (while
+ *   any field is amber) → "Based on your bill".
+ * - Offer a six-language dropdown (shadcn Select) that calls `onLanguageChange`.
+ * - Render the explanation when present; otherwise show the default fallback
+ *   sentence. (The real /api/explain route arrives in task 7.)
  */
 export interface VerdictCardProps {
   verdict: Verdict
@@ -33,6 +44,8 @@ export interface VerdictCardProps {
   explanation: string | null
   language: Language
   isEstimate: boolean
+  /** True when the loaded inputs came from a demo home (label reads "Demo home"). */
+  isDemo: boolean
   onLanguageChange: (lang: Language) => void
 }
 
@@ -61,8 +74,16 @@ export function VerdictCard({
   explanation,
   language,
   isEstimate,
+  isDemo,
   onLanguageChange,
 }: VerdictCardProps) {
+  // Status line: a demo home reads "Demo home"; otherwise it flips from
+  // "Estimate" (while any field is amber) to "Based on your bill".
+  const statusLabel = isDemo
+    ? "Demo home"
+    : isEstimate
+      ? "Estimate"
+      : "Based on your bill"
   // Color the hero figure by the sign of the delta. Savings (delta > 0) read
   // emerald, extra cost (delta < 0) reads amber, and exactly 0 stays neutral.
   // We never use red (Req 6.5 / 6.6 / 6.7).
@@ -92,7 +113,7 @@ export function VerdictCard({
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs text-muted-foreground">
-                {isEstimate ? "Estimate" : "Based on your bill"}
+                {statusLabel}
               </span>
               {verdict.actBeforeDec31 ? (
                 <Badge>Act before Dec 31</Badge>
@@ -103,25 +124,22 @@ export function VerdictCard({
             </h2>
           </div>
 
-          {/* Language dropdown. No shadcn Select is installed, so this is a
-              native <select> styled to match the outline Button look. */}
-          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-            <span className="sr-only">Explanation language</span>
-            <select
-              aria-label="Explanation language"
-              value={language}
-              onChange={(e) => onLanguageChange(e.target.value as Language)}
-              className={cn(
-                "h-8 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground outline-none transition-colors hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              )}
-            >
+          {/* Language dropdown (shadcn Select). */}
+          <Select
+            value={language}
+            onValueChange={(value) => onLanguageChange(value as Language)}
+          >
+            <SelectTrigger aria-label="Explanation language" className="font-medium">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
               {LANGUAGE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
+                <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
-                </option>
+                </SelectItem>
               ))}
-            </select>
-          </label>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
 
@@ -134,19 +152,12 @@ export function VerdictCard({
           <span className="text-sm text-muted-foreground">{caption}</span>
         </div>
 
-        {/* Explanation slot: Skeleton while null, prose once present. */}
+        {/* Explanation slot: the real /api/explain route lands in task 7, so
+            until then show the default fallback sentence when none is passed. */}
         <div className="flex flex-col gap-2">
-          {explanation === null ? (
-            <>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-[92%]" />
-              <Skeleton className="h-4 w-4/5" />
-            </>
-          ) : (
-            <p className="text-sm leading-relaxed text-foreground">
-              {explanation}
-            </p>
-          )}
+          <p className="text-sm leading-relaxed text-foreground">
+            {explanation ?? DEFAULT_EXPLANATION}
+          </p>
         </div>
       </CardContent>
     </Card>

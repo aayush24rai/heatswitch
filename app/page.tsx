@@ -2,9 +2,11 @@
 
 import * as React from "react"
 
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { BuildingsTable } from "@/components/buildings/buildings-table"
 
 import { FadeIn } from "@/components/shared/fade-in"
 import { AnimatedHeading } from "@/components/shared/animated-heading"
@@ -17,6 +19,10 @@ import {
   type EditableField,
   type FieldKey,
 } from "@/components/my-home/your-numbers-card"
+import { AssumptionsCard } from "@/components/my-home/assumptions-card"
+import { RebatesCard } from "@/components/my-home/rebates-card"
+import { NextStepRow } from "@/components/my-home/next-step-row"
+import { HowWeCalculate } from "@/components/my-home/how-we-calculate"
 import {
   buildDemoScenario,
   getDemoExtraction,
@@ -28,43 +34,42 @@ import { computeRebates } from "@/lib/rebates"
 import {
   CONFIDENCE_THRESHOLD,
   type Assumptions,
+  type BerdoBuilding,
   type ExtractionResult,
   type HeatingType,
   type HomeInputs,
   type Language,
 } from "@/lib/schema"
 
+// Cleaned BERDO 2021 dataset, loaded client-side via a static JSON import
+// (Req 8.1). `resolveJsonModule` is enabled in tsconfig.json, so this is
+// SSR-safe and bundled at build time — no runtime fetch or useEffect needed.
+import buildingsData from "@/data/berdo-2021/buildings.json"
+
+/** The imported dataset, treated as BerdoBuilding[] after a runtime shape guard. */
+const BUILDINGS = buildingsData as BerdoBuilding[]
+
 /**
- * HeatSwitch single page (tasks 3.5 + 8 video-hero rework).
+ * HeatSwitch single page.
  *
- * Two tabs — "My home" (default) and "Buildings (landlords & city)".
- *
- * MY HOME is ONE scrollable page, top to bottom:
- *
+ * ONE layout for both tabs:
  *   1. VIDEO HERO (presentation only) — a full-bleed background <video> (with a
  *      poster="/hero.jpg" fallback), a bottom legibility gradient, a glass
  *      navbar, an animated heading, FadeIn-staged subhead/buttons, and a
- *      right-column glass tag. The hero contains NO intake controls: the two
- *      hero buttons and the navbar "Try a demo" only smooth-scroll to #try-it.
- *      Under prefers-reduced-motion the video does not autoplay — the static
- *      poster is shown instead (SSR-safe: static on first render, enhanced to
- *      autoplay on mount when motion is allowed).
- *   2. #try-it — the light Mist section holding the real <UploadCard/> (drop
- *      zone + zip + rent toggle + the three demo buttons). ALL intake lives
- *      here, out of the hero.
- *   3. RESULTS — rendered below #try-it once a demo/bill is loaded (hasData);
- *      loading one smooth-scrolls here (instant under reduced motion).
+ *      right-column glass tag. It always renders at the top of the page,
+ *      regardless of the active tab. Under prefers-reduced-motion the video does
+ *      not autoplay — the static poster is shown instead (SSR-safe).
+ *   2. TABS BAR (id="tabs") — directly below the hero; "My home" / "Buildings".
+ *   3. TAB CONTENT —
+ *        My home: the #try-it intake (UploadCard) then the results below it.
+ *        Buildings: the ranked BERDO table (light layout, no separate header).
  *
- * Because the hero's glass navbar is the header for My home, the plain light
- * header is NOT rendered on My home (avoids two headers). The Tabs control is
- * rendered below the hero; tab switching also routes through the hero navbar's
- * "Buildings" link. The BUILDINGS tab keeps the existing light layout with the
- * normal light header + tabs and no hero.
+ * The hero's glass navbar is the only header; there is no separate light header.
  *
  * All computed numbers come from the pure engine (lib/calc.ts, lib/rebates.ts);
  * the page only holds state and recomputes live on every confirm/edit/heating-
- * type/assumption change (Req 3.10). The verdict label flips from "Estimate" to
- * "Based on your bill" once nothing is amber (Req 3.8 / 3.9).
+ * type/assumption change (Req 3.10). The verdict label reads "Demo home" for
+ * demo inputs, else flips from "Estimate" to "Based on your bill" (Req 3.8/3.9).
  */
 
 /** The background video for the hero (external, intentionally not self-hosted). */
@@ -80,20 +85,6 @@ const FIELD_UNITS: Record<HeatingType, { fuelUse: string; price: string }> = {
   oil: { fuelUse: "gallons", price: "$/gallon" },
   propane: { fuelUse: "gallons", price: "$/gallon" },
   "electric-resistance": { fuelUse: "kWh", price: "$/kWh" },
-}
-
-/** Placeholder card for the task-4 cards that still render in the results layout. */
-function PlaceholderCard({ title, note }: { title: string; note: string }) {
-  return (
-    <Card className="rounded-2xl p-6 shadow-sm">
-      <CardHeader className="p-0">
-        <CardTitle className="text-lg font-medium">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0 text-sm text-muted-foreground">
-        {note}
-      </CardContent>
-    </Card>
-  )
 }
 
 export default function Page() {
@@ -116,11 +107,24 @@ export default function Page() {
     annualFuelUse: true,
     fuelUnitPrice: true,
   })
+  // True when the loaded scenario came from a demo home (vs a real uploaded bill).
+  const [isDemo, setIsDemo] = React.useState(false)
 
   // --- Explanation language (explanation text itself arrives in task 7). ---
   const [language, setLanguage] = React.useState<Language>("en")
 
+  // --- Buildings tab: selected zip (null => all of Boston). ---
+  const [buildingsSelectedZip, setBuildingsSelectedZip] = React.useState<
+    string | null
+  >(null)
+
+  // The dataset genuinely loaded iff the static import yielded a non-empty
+  // array. With the JSON import this is always true; the guard exists so a
+  // malformed/empty dataset shows the Alert (Req 8.2) rather than a blank table.
+  const buildingsLoaded = Array.isArray(BUILDINGS) && BUILDINGS.length > 0
+
   // --- Refs for smooth-scrolling to sections. ---
+  const tabsRef = React.useRef<HTMLDivElement>(null)
   const tryItRef = React.useRef<HTMLElement>(null)
   const resultsRef = React.useRef<HTMLDivElement>(null)
   const howWeCalculateRef = React.useRef<HTMLDivElement>(null)
@@ -129,8 +133,7 @@ export default function Page() {
   const hasData = extraction !== null && inputs !== null && assumptions !== null
 
   // --- Reduced-motion-aware video autoplay (SSR-safe: static on first render,
-  //     enhance to autoplay on mount only when motion is allowed). Mirrors the
-  //     matchMedia pattern used by fade-in.tsx. ---
+  //     enhance to autoplay on mount only when motion is allowed). ---
   const [heroAutoplay, setHeroAutoplay] = React.useState(false)
 
   React.useEffect(() => {
@@ -156,9 +159,29 @@ export default function Page() {
     })
   }
 
-  // When a demo/bill loads (hasData flips true), the results section mounts
-  // below #try-it; smooth-scroll to it (instant under reduced motion). Keyed on
-  // hasData so it fires on the flip.
+  // --- Hero navbar / button handlers. ---
+  // "Buildings": switch to the Buildings tab and scroll to the tabs bar.
+  function goToBuildings() {
+    setActiveTab("buildings")
+    requestAnimationFrame(() => smoothScrollTo(tabsRef.current))
+  }
+  // "Try a demo" / hero buttons: switch to My home and scroll to the intake.
+  function goToTryIt() {
+    setActiveTab("my-home")
+    requestAnimationFrame(() => smoothScrollTo(tryItRef.current))
+  }
+  // "How it works": My home, scroll to the How-we-calculate section.
+  function goToHowItWorks() {
+    setActiveTab("my-home")
+    requestAnimationFrame(() => smoothScrollTo(howWeCalculateRef.current))
+  }
+  // "Sources": My home, scroll to the footer/sources.
+  function goToSources() {
+    setActiveTab("my-home")
+    requestAnimationFrame(() => smoothScrollTo(footerRef.current))
+  }
+
+  // When a demo/bill loads (hasData flips true), smooth-scroll to the results.
   React.useEffect(() => {
     if (hasData) {
       const id = window.requestAnimationFrame(() =>
@@ -184,6 +207,7 @@ export default function Page() {
     setExtraction(validatedExtraction)
     setInputs(demoInputs)
     setAssumptions(demoAssumptions)
+    setIsDemo(true)
     // Keep the intake fields in sync with the loaded demo.
     setZip(demoInputs.zip)
     setHeatIncludedInRent(demoInputs.heatIncludedInRent)
@@ -200,9 +224,11 @@ export default function Page() {
   }
 
   /** Real bill extraction is task 6; for now a dropped/selected file is a no-op
-   *  (no AI call). The demo path is the one that fully works in task 3. */
+   *  (no AI call). The demo path is the one that fully works today. */
   function handleBillSelected(_file: File) {
     // Intentionally left as a no-op until task 6 wires the Extraction_Service.
+    // A real bill is NOT a demo.
+    setIsDemo(false)
   }
 
   // --- Confirmation handlers (recompute happens via derived memo below). ---
@@ -219,6 +245,37 @@ export default function Page() {
 
   function handleHeatingTypeChange(type: HeatingType) {
     setInputs((prev) => (prev ? { ...prev, heatingType: type } : prev))
+  }
+
+  // --- Rent toggle: keep the intake state AND loaded inputs in sync so the
+  //     landlord path + verdict.isRenter follow it live (Req 7.1/7.2/7.3). ---
+  function handleRentToggle(on: boolean) {
+    setHeatIncludedInRent(on)
+    setInputs((prev) => (prev ? { ...prev, heatIncludedInRent: on } : prev))
+  }
+
+  // --- Assumptions handlers (merge so the computed useMemo re-runs; Req 4.11). ---
+  function handleCOPChange(cop: number) {
+    setAssumptions((prev) => (prev ? { ...prev, heatPumpCOP: cop } : prev))
+  }
+
+  function handleElectricityPriceChange(price: number) {
+    setAssumptions((prev) =>
+      prev ? { ...prev, electricityPrice: price } : prev
+    )
+  }
+
+  function handleSeasonalRateToggle(on: boolean) {
+    setAssumptions((prev) =>
+      prev ? { ...prev, seasonalHeatPumpRate: on } : prev
+    )
+  }
+
+  // Fuel price lives on HomeInputs (not Assumptions); confirming it too keeps
+  // the "Your numbers" card consistent with the slider.
+  function handleFuelPriceChange(price: number) {
+    setInputs((prev) => (prev ? { ...prev, fuelUnitPrice: price } : prev))
+    setConfirmed((prev) => ({ ...prev, fuelUnitPrice: true }))
   }
 
   // --- Live recompute: a pure function of inputs + assumptions (Req 3.10). ---
@@ -262,276 +319,233 @@ export default function Page() {
     ]
   }, [extraction, inputs, confirmed])
 
-  // The shared #try-it intake section (same UploadCard on both tabs' flows).
-  const tryItSection = (
-    <section ref={tryItRef} id="try-it" className="mx-auto max-w-5xl px-6 py-16">
-      <h2 className="mb-6 text-lg font-medium">Try it</h2>
-      <UploadCard
-        zip={zip}
-        heatIncludedInRent={heatIncludedInRent}
-        onZipChange={setZip}
-        onRentToggle={setHeatIncludedInRent}
-        onBillSelected={handleBillSelected}
-        onTryDemo={handleTryDemo}
-      />
-    </section>
-  )
-
-  // The results section (rendered below #try-it once a demo/bill is loaded).
-  const resultsSection = hasData ? (
-    <section className="mx-auto max-w-5xl px-6 pb-16">
-      <div ref={resultsRef} className="flex flex-col gap-6">
-        <VerdictCard
-          verdict={computed!.verdict}
-          annualDeltaDollars={computed!.cmp.annualDeltaDollars}
-          explanation={null}
-          language={language}
-          isEstimate={isEstimate}
-          onLanguageChange={setLanguage}
-        />
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-          {/* Left column: cost chart. */}
-          <div className="flex flex-col gap-6 md:col-span-3">
-            <CostChartCard
-              currentAnnualCost={computed!.cmp.currentAnnualCost}
-              heatPumpAnnualCost={computed!.cmp.heatPumpAnnualCost}
-              breakevenCOP={computed!.cmp.breakevenCOP}
-            />
-          </div>
-
-          {/* Right column: your numbers + task-4 placeholders. */}
-          <div className="flex flex-col gap-6 md:col-span-2">
-            <Card className="rounded-2xl p-6 shadow-sm">
-              <YourNumbersCard
-                fields={editableFields}
-                heatingType={inputs!.heatingType}
-                onFieldConfirm={handleFieldConfirm}
-                onFieldEdit={handleFieldEdit}
-                onHeatingTypeChange={handleHeatingTypeChange}
-              />
-            </Card>
-            <PlaceholderCard
-              title="Assumptions"
-              note="Sliders for COP, electricity price, fuel price, and the seasonal heat pump rate switch. (Task 4.1)"
-            />
-            <PlaceholderCard
-              title="Rebates"
-              note="Mass Save rebate, net install cost, payback, requirements, and the renter/landlord path. (Task 4.2)"
-            />
-          </div>
-        </div>
-
-        <PlaceholderCard
-          title="Next step"
-          note="Free Boston Energy Saver consultation (Boston zips) or Mass Save Home Energy Assessment elsewhere. (Task 4.3)"
-        />
-        <div ref={howWeCalculateRef}>
-          <PlaceholderCard
-            title="How we calculate"
-            note="Formulas, assumptions, and sources — collapsed by default. (Task 4.4)"
+  return (
+    <div>
+      {/* ================= VIDEO HERO (always at the top) ================= */}
+      <section className="relative flex min-h-svh w-full flex-col overflow-hidden text-white">
+        {/* Background: autoplay video when motion is allowed, else static poster. */}
+        {heroAutoplay ? (
+          <video
+            key="hero-video"
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster="/hero.jpg"
+            className="absolute inset-0 -z-10 h-full w-full object-cover"
+          >
+            <source src={HERO_VIDEO_SRC} type="video/mp4" />
+          </video>
+        ) : (
+          // Reduced motion (or pre-mount SSR default): static poster image.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/hero.jpg"
+            alt=""
+            className="absolute inset-0 -z-10 h-full w-full object-cover"
           />
-        </div>
-      </div>
-    </section>
-  ) : null
+        )}
 
-  const footer = (
-    <footer
-      ref={footerRef}
-      className="mx-auto mt-10 max-w-5xl border-t px-6 pt-6 pb-10 text-sm text-muted-foreground"
-    >
-      Your bill is never stored · Photo: [credit]
-    </footer>
-  )
+        {/* Bottom-only legibility gradient. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/50 to-transparent" />
 
-  // =========================================================================
-  // MY HOME — video hero (top) → #try-it → results. The hero's glass navbar is
-  // the header; the Tabs control sits below the hero. No plain light header.
-  // =========================================================================
-  if (activeTab === "my-home") {
-    return (
-      <div>
-        {/* VIDEO HERO (presentation only — no intake controls). */}
-        <section className="relative flex min-h-svh w-full flex-col overflow-hidden text-white">
-          {/* Background: autoplay video when motion is allowed, else static poster. */}
-          {heroAutoplay ? (
-            <video
-              key="hero-video"
-              autoPlay
-              loop
-              muted
-              playsInline
-              poster="/hero.jpg"
-              className="absolute inset-0 -z-10 h-full w-full object-cover"
-            >
-              <source src={HERO_VIDEO_SRC} type="video/mp4" />
-            </video>
-          ) : (
-            // Reduced motion (or pre-mount SSR default): static poster image.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src="/hero.jpg"
-              alt=""
-              className="absolute inset-0 -z-10 h-full w-full object-cover"
-            />
-          )}
-
-          {/* Bottom-only legibility gradient. */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/50 to-transparent" />
-
-          {/* Glass navbar. */}
-          <div className="absolute inset-x-0 top-0 z-20 px-6 pt-6 md:px-12 lg:px-16">
-            <nav className="liquid-glass flex items-center justify-between rounded-xl px-4 py-2 text-white">
-              <span className="text-2xl font-semibold tracking-tight">
-                HeatSwitch
-              </span>
-              <div className="hidden gap-8 text-sm md:flex">
-                <button
-                  type="button"
-                  className="transition-colors hover:text-gray-300"
-                  onClick={() => smoothScrollTo(howWeCalculateRef.current)}
-                >
-                  How it works
-                </button>
-                <button
-                  type="button"
-                  className="transition-colors hover:text-gray-300"
-                  onClick={() => setActiveTab("buildings")}
-                >
-                  Buildings
-                </button>
-                <button
-                  type="button"
-                  className="transition-colors hover:text-gray-300"
-                  onClick={() => smoothScrollTo(footerRef.current)}
-                >
-                  Sources
-                </button>
-              </div>
+        {/* Glass navbar. */}
+        <div className="absolute inset-x-0 top-0 z-20 px-6 pt-6 md:px-12 lg:px-16">
+          <nav className="liquid-glass flex items-center justify-between rounded-xl px-4 py-2 text-white">
+            <span className="text-2xl font-semibold tracking-tight">
+              HeatSwitch
+            </span>
+            <div className="hidden gap-8 text-sm md:flex">
               <button
                 type="button"
-                className="rounded-lg bg-white px-6 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-100"
-                onClick={() => smoothScrollTo(tryItRef.current)}
+                className="transition-colors hover:text-gray-300"
+                onClick={goToHowItWorks}
               >
-                Try a demo
+                How it works
               </button>
-            </nav>
-          </div>
-
-          {/* Bottom-pinned hero content. */}
-          <div className="flex flex-1 flex-col justify-end px-6 pb-12 md:px-12 lg:grid lg:grid-cols-2 lg:items-end lg:px-16 lg:pb-16">
-            {/* Left column. */}
-            <div className="max-w-full">
-              <h1
-                className="mb-4 text-4xl font-normal leading-[1.05] md:text-5xl lg:text-6xl xl:text-7xl"
-                style={{ letterSpacing: "-0.04em" }}
+              <button
+                type="button"
+                className="transition-colors hover:text-gray-300"
+                onClick={goToBuildings}
               >
-                <AnimatedHeading
-                  text={"Should your Boston home\nswitch to a heat pump?"}
-                  className="text-white"
-                />
-              </h1>
-
-              <FadeIn delay={800} duration={1000}>
-                <p className="mb-5 text-base text-gray-300 md:text-lg">
-                  Upload a bill. Get an honest answer, with the source under
-                  every number.
-                </p>
-              </FadeIn>
-
-              <FadeIn delay={1200}>
-                <div className="flex flex-wrap gap-4">
-                  <button
-                    type="button"
-                    className="rounded-lg bg-white px-8 py-3 font-medium text-black transition-colors hover:bg-gray-100"
-                    onClick={() => smoothScrollTo(tryItRef.current)}
-                  >
-                    Upload your bill
-                  </button>
-                  <button
-                    type="button"
-                    className="liquid-glass rounded-lg border border-white/20 px-8 py-3 font-medium text-white transition-colors hover:bg-white hover:text-black"
-                    onClick={() => smoothScrollTo(tryItRef.current)}
-                  >
-                    Try a demo home
-                  </button>
-                </div>
-              </FadeIn>
+                Buildings
+              </button>
+              <button
+                type="button"
+                className="transition-colors hover:text-gray-300"
+                onClick={goToSources}
+              >
+                Sources
+              </button>
             </div>
+            <button
+              type="button"
+              className="rounded-lg bg-white px-6 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-100"
+              onClick={goToTryIt}
+            >
+              Try a demo
+            </button>
+          </nav>
+        </div>
 
-            {/* Right column tag. */}
-            <div className="mt-8 flex items-end lg:mt-0 lg:justify-end">
-              <FadeIn delay={1400}>
-                <div className="liquid-glass rounded-xl border border-white/20 px-6 py-3 text-lg font-light text-white md:text-xl lg:text-2xl">
-                  Renters. Homeowners. Buildings.
-                </div>
-              </FadeIn>
-            </div>
+        {/* Bottom-pinned hero content. */}
+        <div className="flex flex-1 flex-col justify-end px-6 pb-12 md:px-12 lg:grid lg:grid-cols-2 lg:items-end lg:px-16 lg:pb-16">
+          {/* Left column. */}
+          <div className="max-w-full">
+            <h1
+              className="mb-4 text-4xl font-normal leading-[1.05] md:text-5xl lg:text-6xl xl:text-7xl"
+              style={{ letterSpacing: "-0.04em" }}
+            >
+              <AnimatedHeading
+                text={"Should your Boston home\nswitch to a heat pump?"}
+                className="text-white"
+              />
+            </h1>
+
+            <FadeIn delay={800} duration={1000}>
+              <p className="mb-5 text-base text-white/85 md:text-lg">
+                Upload a bill. Get an honest answer, with the source under
+                every number.
+              </p>
+            </FadeIn>
+
+            <FadeIn delay={1200}>
+              <div className="flex flex-wrap gap-4">
+                <button
+                  type="button"
+                  className="rounded-lg !bg-white px-8 py-3 font-medium !text-black transition-colors hover:!bg-gray-100"
+                  onClick={goToTryIt}
+                >
+                  Upload your bill
+                </button>
+                <button
+                  type="button"
+                  className="liquid-glass rounded-lg border border-white/20 px-8 py-3 font-medium text-white transition-colors hover:bg-white hover:text-black"
+                  onClick={goToTryIt}
+                >
+                  Try a demo home
+                </button>
+              </div>
+            </FadeIn>
           </div>
-        </section>
 
-        {/* Tabs control below the hero (navigation lives in the glass navbar
-            too; this keeps the Tabs controlled + lets users switch here). */}
-        <div className="mx-auto max-w-5xl px-6 pt-10">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="my-home">My home</TabsTrigger>
-              <TabsTrigger value="buildings">
-                Buildings (landlords &amp; city)
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Right column tag. */}
+          <div className="mt-8 flex items-end lg:mt-0 lg:justify-end">
+            <FadeIn delay={1400}>
+              <div className="liquid-glass rounded-xl border border-white/20 px-6 py-3 text-lg font-light text-white md:text-xl lg:text-2xl">
+                Renters. Homeowners. Buildings.
+              </div>
+            </FadeIn>
+          </div>
         </div>
+      </section>
 
-        {/* #try-it intake, then results below it. */}
-        {tryItSection}
-        {resultsSection}
-        {footer}
+      {/* ================= TABS BAR (directly below the hero) ================= */}
+      <div ref={tabsRef} id="tabs" className="mx-auto max-w-5xl px-6 pt-10">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="my-home">My home</TabsTrigger>
+            <TabsTrigger value="buildings">
+              Buildings (landlords &amp; city)
+            </TabsTrigger>
+          </TabsList>
+
+          {/* TAB 1 — My home: #try-it intake, then results below it. */}
+          <TabsContent value="my-home" className="flex flex-col gap-6">
+            <section ref={tryItRef} id="try-it" className="py-6">
+              <h2 className="mb-6 text-lg font-medium">Try it</h2>
+              <UploadCard
+                zip={zip}
+                heatIncludedInRent={heatIncludedInRent}
+                onZipChange={setZip}
+                onRentToggle={handleRentToggle}
+                onBillSelected={handleBillSelected}
+                onTryDemo={handleTryDemo}
+              />
+            </section>
+
+            {hasData ? (
+              <div ref={resultsRef} className="flex flex-col gap-6 pb-6">
+                <VerdictCard
+                  verdict={computed!.verdict}
+                  annualDeltaDollars={computed!.cmp.annualDeltaDollars}
+                  explanation={null}
+                  language={language}
+                  isEstimate={isEstimate}
+                  isDemo={isDemo}
+                  onLanguageChange={setLanguage}
+                />
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+                  {/* Left column: cost chart. */}
+                  <div className="flex flex-col gap-6 md:col-span-3">
+                    <CostChartCard
+                      currentAnnualCost={computed!.cmp.currentAnnualCost}
+                      heatPumpAnnualCost={computed!.cmp.heatPumpAnnualCost}
+                      breakevenCOP={computed!.cmp.breakevenCOP}
+                    />
+                  </div>
+
+                  {/* Right column: your numbers + task-4 placeholders. */}
+                  <div className="flex flex-col gap-6 md:col-span-2">
+                    <Card className="rounded-2xl p-6 shadow-sm">
+                      <YourNumbersCard
+                        fields={editableFields}
+                        heatingType={inputs!.heatingType}
+                        onFieldConfirm={handleFieldConfirm}
+                        onFieldEdit={handleFieldEdit}
+                        onHeatingTypeChange={handleHeatingTypeChange}
+                      />
+                    </Card>
+                    <AssumptionsCard
+                      assumptions={assumptions!}
+                      fuelUnitPrice={inputs!.fuelUnitPrice}
+                      heatingType={inputs!.heatingType}
+                      onChangeCOP={handleCOPChange}
+                      onChangeElectricityPrice={handleElectricityPriceChange}
+                      onChangeFuelPrice={handleFuelPriceChange}
+                      onToggleSeasonalRate={handleSeasonalRateToggle}
+                    />
+                    <RebatesCard result={computed!.reb} inputs={inputs!} />
+                  </div>
+                </div>
+
+                <NextStepRow zip={inputs!.zip} />
+                <div ref={howWeCalculateRef}>
+                  <HowWeCalculate assumptions={assumptions!} />
+                </div>
+              </div>
+            ) : null}
+          </TabsContent>
+
+          {/* TAB 2 — Buildings (landlords & city). */}
+          <TabsContent value="buildings" className="flex flex-col gap-6 py-6">
+            {buildingsLoaded ? (
+              <BuildingsTable
+                buildings={BUILDINGS}
+                selectedZip={buildingsSelectedZip}
+                onZipChange={setBuildingsSelectedZip}
+              />
+            ) : (
+              // Dataset genuinely failed to load / is empty (Req 8.2).
+              <Alert variant="destructive">
+                <AlertTitle>Building data is unavailable right now.</AlertTitle>
+                <AlertDescription>
+                  We couldn&apos;t load the Boston buildings dataset. Please try
+                  again later.
+                </AlertDescription>
+              </Alert>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-    )
-  }
-
-  // =========================================================================
-  // BUILDINGS — existing light layout, with the normal light header + tabs and
-  // no hero. Unchanged.
-  // =========================================================================
-  return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      {/* Header */}
-      <header className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight">HeatSwitch</h1>
-          <p className="text-sm text-muted-foreground">Know before you switch</p>
-        </div>
-        <Badge variant="secondary" className="ml-auto">
-          Massachusetts
-        </Badge>
-      </header>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="my-home">My home</TabsTrigger>
-          <TabsTrigger value="buildings">
-            Buildings (landlords &amp; city)
-          </TabsTrigger>
-        </TabsList>
-
-        {/* TAB 2 — Buildings (landlords & city) */}
-        <TabsContent value="buildings" className="flex flex-col gap-6">
-          <PlaceholderCard
-            title="Buildings (landlords &amp; city)"
-            note="Zip picker and a ranked table of Boston multifamily buildings by heat pump opportunity, from the City of Boston BERDO 2021 dataset. (Task 5.2)"
-          />
-        </TabsContent>
-      </Tabs>
 
       {/* Footer */}
       <footer
         ref={footerRef}
-        className="mt-10 border-t pt-6 text-sm text-muted-foreground"
+        className="mx-auto mt-10 max-w-5xl border-t px-6 pt-6 pb-10 text-sm text-muted-foreground"
       >
-        Your bill is never stored · Photo: [credit]
+        Your bill is never stored
       </footer>
     </div>
   )

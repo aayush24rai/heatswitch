@@ -381,6 +381,182 @@
         "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
         "timestamp": 1792863982796
       }
+    ],
+    "5.1 Convert the BERDO 2021 CSV to JSON and add cleaning": [
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864041961
+      },
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864185087
+      }
+    ],
+    "5.2 Build `ZipPicker` and `BuildingsTable`": [
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864189325
+      },
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864352949
+      }
+    ],
+    "5.3 Wire the Buildings tab into `app/page.tsx`": [
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864353985
+      },
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864462222
+      }
+    ],
+    "5.4 Write unit tests for dataset cleaning": [
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864461297
+      },
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864610405
+      }
+    ],
+    "5.5 Done (workflow.md)": [
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864613109
+      },
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864794823
+      }
+    ],
+    "5. Build the Buildings tab": [
+      {
+        "executionId": "94edd4a7-a6a0-4186-9742-5c00594a9ff4",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792864794873
+      }
+    ],
+    "9.1 Rework the ranking in `lib/calc.ts`": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792865273866
+      },
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792865551734
+      }
+    ],
+    "9.2 Update the loader/script and BuildingsTable": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792865550863
+      },
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792865707605
+      }
+    ],
+    "9.3 Update and add ranking tests": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792865708554
+      },
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792865939460
+      }
+    ],
+    "9.4 Done (workflow.md)": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792865940978
+      },
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866062544
+      }
+    ],
+    "9. Fix the Buildings ranking (cohort, dedupe, fossil-intensity score, check-data ordering)": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866062601
+      }
+    ],
+    "4.1 Build `AssumptionsCard`": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866166202
+      },
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866549011
+      }
+    ],
+    "4.2 Build `RebatesCard` with the renter/landlord path": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866549982
+      }
+    ],
+    "4.3 Build `NextStepRow` with Boston/equity logic": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866551040
+      }
+    ],
+    "4.4 Build the \"How we calculate\" collapsible and confirm the footer": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866554376
+      }
+    ],
+    "4.5 Wire assumptions, rebates, renter path, and next step into `app/page.tsx`": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866556634
+      }
+    ],
+    "4.6 Done (workflow.md)": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866558826
+      }
+    ],
+    "4. Build assumptions, rebates, renter path, and next step": [
+      {
+        "executionId": "decc65f8-7fb9-4208-8e9a-3c755af6bd24",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866558880
+      }
     ]
   }
 }

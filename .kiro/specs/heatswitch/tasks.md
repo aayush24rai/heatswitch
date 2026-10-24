@@ -110,43 +110,43 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-3-desktop.png` and `docs/kiro/screens/task-3-mobile.png`, and reference them in the log entry
     - Task is not complete until these steps pass
 
-- [ ] 4. Build assumptions, rebates, renter path, and next step
-  - [ ] 4.1 Build `AssumptionsCard`
+- [x] 4. Build assumptions, rebates, renter path, and next step
+  - [x] 4.1 Build `AssumptionsCard`
     - Implement `components/my-home/assumptions-card.tsx` with sliders (heat pump COP, electricity price, fuel price) and the seasonal heat pump rate Switch; changes recompute results live
     - _Requirements: 4.11, 4.12, 4.13_
-  - [ ] 4.2 Build `RebatesCard` with the renter/landlord path
+  - [x] 4.2 Build `RebatesCard` with the renter/landlord path
     - Implement `components/my-home/rebates-card.tsx` showing tier, rebate amount, net install cost, payback, the four-item requirements checklist, the exact note "2026 rebates require install by Dec 31, 2026.", and the landlord path section (shareable summary + Mass Save landlord/multifamily link) shown while the rent toggle is on
     - _Requirements: 5.7, 5.8, 5.10, 5.11, 7.1, 7.4_
-  - [ ] 4.3 Build `NextStepRow` with Boston/equity logic
+  - [x] 4.3 Build `NextStepRow` with Boston/equity logic
     - Implement `components/my-home/next-step-row.tsx` presenting the Boston Energy Saver consultation for Boston zips, Mass Save Home Energy Assessment otherwise (and as default for unrecognized MA zips), an equity-zip informational notice visually distinct from any rebate amount, and suppression of location steps when the zip is invalid
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
-  - [ ] 4.4 Build the "How we calculate" collapsible and confirm the footer
+  - [x] 4.4 Build the "How we calculate" collapsible and confirm the footer
     - Implement `components/my-home/how-we-calculate.tsx` (collapsed by default; expands to formulas, assumption values, and sources) and verify the "Your bill is never stored" footer
     - _Requirements: 11.3, 11.5_
-  - [ ] 4.5 Wire assumptions, rebates, renter path, and next step into `app/page.tsx`
+  - [x] 4.5 Wire assumptions, rebates, renter path, and next step into `app/page.tsx`
     - Connect the new cards to shared state so slider/switch/rent-toggle changes recompute `computeRebates` and `decideVerdict` live; toggle the landlord path and `isRenter` with the rent toggle
     - _Requirements: 7.1, 7.2, 7.3, 4.11_
-  - [ ] 4.6 Done (workflow.md)
+  - [x] 4.6 Done (workflow.md)
     - Run `npx vitest run` and fix any failures before moving on
     - Append a `KIRO_LOG.md` entry (time, task, Kiro feature used, what it did, why it mattered)
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-4-desktop.png` and `docs/kiro/screens/task-4-mobile.png`, and reference them in the log entry
     - Task is not complete until these steps pass
 
-- [ ] 5. Build the Buildings tab
-  - [ ] 5.1 Convert the BERDO 2021 CSV to JSON and add cleaning
+- [x] 5. Build the Buildings tab
+  - [x] 5.1 Convert the BERDO 2021 CSV to JSON and add cleaning
     - Add a small conversion script in `scripts/` (committed to the repo) that reads the source `data/berdo-2021/data.csv` and writes `data/berdo-2021/buildings.json`
     - The script/loader drops rows missing site EUI, keeps only 5-digit zips starting with "02", assigns `id` as the zero-based row index string, flags `siteEUI > 300` as "check data", and leaves `gasShare` null when unknown (never 0)
     - _Requirements: 8.1, 8.3, 8.4, 8.5_
-  - [ ] 5.2 Build `ZipPicker` and `BuildingsTable`
+  - [x] 5.2 Build `ZipPicker` and `BuildingsTable`
     - Implement `components/buildings/zip-picker.tsx` and `components/buildings/buildings-table.tsx` showing type, year built, area, energy use, emissions, electric/gas share, and opportunity label via `rankBuildings`; render the "likely electric resistance, biggest heat pump win" and "convert at boiler replacement" messages; handle the dataset-load error state and the no-match empty-state row
     - _Requirements: 8.2, 8.6, 8.8, 8.9, 8.10, 8.11_
-  - [ ] 5.3 Wire the Buildings tab into `app/page.tsx`
+  - [x] 5.3 Wire the Buildings tab into `app/page.tsx`
     - Mount `BuildingsTable`/`ZipPicker` under the "Buildings (landlords & city)" tab, loading the cleaned dataset client-side and filtering by selected zip
     - _Requirements: 8.1, 8.10, 12.7_
-  - [ ]* 5.4 Write unit tests for dataset cleaning
+  - [x]* 5.4 Write unit tests for dataset cleaning
     - Drop rows without site EUI, keep only "02" 5-digit zips, flag EUI > 300, keep `gasShare` null when unknown
     - _Requirements: 8.3, 8.4, 8.5_
-  - [ ] 5.5 Done (workflow.md)
+  - [x] 5.5 Done (workflow.md)
     - Run `npx vitest run` and fix any failures before moving on
     - Append a `KIRO_LOG.md` entry (time, task, Kiro feature used, what it did, why it mattered)
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-5-desktop.png` and `docs/kiro/screens/task-5-mobile.png`, and reference them in the log entry
@@ -205,6 +205,20 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - Append a KIRO_LOG.md entry (time, task, Kiro feature used, what it did, why it mattered).
     - Task is not complete until these steps pass.
 
+- [x] 9. Fix the Buildings ranking (cohort, dedupe, fossil-intensity score, check-data ordering)
+  - [x] 9.1 Rework the ranking in `lib/calc.ts`
+    - Cohort-only: `rankBuildings` operates on and returns ONLY multifamily rows (propertyType "Multifamily Housing", plus "CONDO MAIN" if present); exclude all other types from the table, summary, and percentiles. Dedupe exact duplicates on (propertyType, yearBuilt, grossFloorAreaSqFt, siteEUI, zip), keeping the first. Change `opportunityScore` to `siteEUI × (1 − electricShare)` (fossil-intensity, using gasShare when present for the fossil fraction; not size). Compute percentile among VALID cohort rows only (EUI ≤ 300), with labels High ≥ 75th, Medium 40–75th, Low < 40th. Check-data rows (EUI > 300) stay visible but sort AFTER all valid rows and get no percentile ("—"/null). All-electric rows with EUI ≥ 75th percentile and ≤ 300 are forced to the High label + the "likely electric resistance, biggest heat pump win" message and sorted with the High group.
+    - _Requirements: 8.6, 8.7, 8.8_
+  - [x] 9.2 Update the loader/script and BuildingsTable
+    - Ensure the converter/loader (`scripts/convert-berdo.mjs` / the client load) and `components/buildings/buildings-table.tsx` reflect the cohort-only, deduped, fossil-intensity ranking: the summary strip and percentiles are computed over the valid multifamily cohort only; check-data rows show "—" for percentile and sort last; the electric-resistance message/High override is surfaced.
+    - _Requirements: 8.2, 8.4, 8.5, 8.6, 8.8_
+  - [x] 9.3 Update and add ranking tests
+    - Update `lib/calc.ranking.test.ts` to the new contract and add: no non-cohort rows in the output; no duplicate rows; check-data rows always sort last; the top row has EUI ≤ 300; at least one of each label (High/Medium/Low) exists in the full dataset.
+    - _Requirements: 8.6, 8.7, 8.8_
+  - [x] 9.4 Done (workflow.md)
+    - Run `npx vitest run` (fix failures), `npx tsc --noEmit` clean, `npx next build` compiles. Append a KIRO_LOG.md entry. No screenshots required unless UI verification is wanted.
+    - Task is not complete until these steps pass.
+
 ## Notes
 
 - All property-based test sub-tasks are required; only 5.4 (dataset cleaning unit tests) is marked optional with `*` and can be skipped for a faster MVP. Optional sub-tasks are still scheduled in the dependency graph.
@@ -234,7 +248,11 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     { "id": 13, "tasks": ["8.1", "8.2"] },
     { "id": 14, "tasks": ["8.3"] },
     { "id": 15, "tasks": ["8.4"] },
-    { "id": 16, "tasks": ["8.5"] }
+    { "id": 16, "tasks": ["8.5"] },
+    { "id": 17, "tasks": ["9.1"] },
+    { "id": 18, "tasks": ["9.2"] },
+    { "id": 19, "tasks": ["9.3"] },
+    { "id": 20, "tasks": ["9.4"] }
   ]
 }
 ```
