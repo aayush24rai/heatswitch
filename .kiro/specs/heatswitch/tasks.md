@@ -43,13 +43,13 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
   - [ ] 2.1 Implement heating-use and energy-content functions in `lib/calc.ts`
     - Implement `annualHeatingUse(history)` (`sum - 12 * min(Jun..Sep)`, rejecting non-12-length or negative histories) and `fuelEnergyContentKWh(type, fuelUse, efficiency)` applying `SYSTEM_EFFICIENCY`
     - _Requirements: 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
-  - [ ]* 2.2 Write property tests for heating-use and energy-content
+  - [ ] 2.2 Write property tests for heating-use and energy-content
     - **Property 9: Zero fuel, zero cost** — **Validates: Requirement 4.7**
     - **Property 10: Annual heating use is bounded** — **Validates: Requirement 4.4**
   - [ ] 2.3 Implement cost, breakeven, and comparison functions in `lib/calc.ts`
     - Implement `currentHeatingCost`, `heatPumpCost` (flat $/kWh seasonal discount floored above 0, rate-aware), `breakevenCOP`, and `computeComparison` (`annualDeltaDollars = current - heatPump`)
     - _Requirements: 4.1, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 4.14_
-  - [ ]* 2.4 Write property tests for cost and breakeven
+  - [ ] 2.4 Write property tests for cost and breakeven
     - **Property 2: Breakeven consistency** — **Validates: Requirement 4.10**
     - **Property 3: Seasonal rate never raises heat pump cost** — **Validates: Requirement 4.12**
     - **Property 4: COP monotonicity** — **Validates: Requirement 4.13**
@@ -57,26 +57,31 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
   - [ ] 2.5 Implement rebate tier and rebate functions in `lib/rebates.ts`
     - Implement `selectRebateTier(householdSize, annualIncome?)` (Standard when income absent or household size invalid; Enhanced/Income Eligible bands from `INCOME_LIMITS`), `computeRebates` (tiered cap, Income Eligible up to full install cost, `netInstallCost >= 0`, payback null when savings <= 0), `isBostonZip`, and `isEquityZip` (informational only; never changes rebate)
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 10.4_
-  - [ ]* 2.6 Write property tests for rebates
+  - [ ] 2.6 Write property tests for rebates
     - **Property 5: Rebate bounds** — **Validates: Requirement 5.6**
     - **Property 6: Payback sign** — **Validates: Requirement 5.8**
   - [ ] 2.7 Implement the verdict function in `lib/calc.ts`
     - Implement `decideVerdict(cmp, reb, inputs, now)` selecting exactly one label ("Not worth it yet" when delta <= 0; "Switch now" when delta > 0 and payback <= 5; else "Switch when your system needs replacing"); set `actBeforeDec31` only when a rebate materially shortens payback and `now <= REBATE_DEADLINE_2026`; derive `isRenter`
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 5.12, 5.13, 7.2, 7.3_
-  - [ ]* 2.8 Write property test and boundary unit tests for the verdict
+  - [ ] 2.8 Write property test and boundary unit tests for the verdict
     - **Property 1: No savings is reported honestly** — **Validates: Requirement 6.2**
     - Add boundary unit tests at/just-above/just-below breakeven and the deadline on/off around Dec 31, 2026
     - _Requirements: 6.1, 6.3, 6.4, 5.12, 5.13_
   - [ ] 2.9 Implement building ranking functions in `lib/calc.ts`
     - Implement `opportunityScore(b)`, `opportunityLabel(percentile)` (High/Medium/Low, monotonic), and `rankBuildings(buildings, zip)` (filter by zip, annotate percentile within the multifamily cohort, sort by score descending, permutation of the matching subset)
     - _Requirements: 8.6, 8.7_
-  - [ ]* 2.10 Write property and unit tests for ranking
+  - [ ] 2.10 Write property and unit tests for ranking
     - **Property 8: Ranking is a sorted permutation** — **Validates: Requirement 8.7**
     - Add unit tests for `opportunityLabel` monotonicity and zip filtering
     - _Requirements: 8.6, 8.7_
-  - [ ]* 2.11 Write table-driven unit tests for calc and rebates
-    - Hand-checked Boston examples (gas, oil, electric-resistance homes); tier selection boundaries; `isEquityZip` never changes the rebate amount
-    - _Requirements: 4.1, 5.2, 5.9, 10.4_
+  - [ ] 2.11 Write persona acceptance-value tests for calc and rebates
+    - Assert, with ±2% tolerance and the shared assumptions (COP 2.5, electricity $0.288/kWh, 3 tons, $18,000 install, standard tier, seasonal rate off unless noted):
+      - Oil persona: 800 gal × $6.15 → current heating cost $4,920; heat pump cost ≈ $3,068
+      - Electric-resistance persona: annual heating 7,600 kWh → current cost ≈ $2,189; heat pump cost ≈ $876
+      - Gas persona: 652 therms × $2.42 → current cost ≈ $1,578; heat pump cost ≈ $1,981; breakeven COP ≈ 3.14
+      - Gas persona with Eversource seasonal rate ON (effective ≈ $0.215/kWh): heat pump cost ≈ $1,481
+    - Also assert tier-selection boundaries and that `isEquityZip` never changes the rebate amount
+    - _Requirements: 4.1, 4.9, 5.2, 5.9, 10.4_
   - [ ] 2.12 Done (workflow.md)
     - Run `npx vitest run` and fix any failures before moving on
     - Append a `KIRO_LOG.md` entry (time, task, Kiro feature used — property-based tests, what it did, why it mattered)
@@ -128,8 +133,9 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - Task is not complete until these steps pass
 
 - [ ] 5. Build the Buildings tab
-  - [ ] 5.1 Add the static BERDO 2021 dataset and cleaning
-    - Add `data/berdo-2021/buildings.json` and a client-side loader/cleaner that drops rows missing site EUI, keeps only 5-digit zips starting with "02", assigns `id` as the zero-based row index string, flags `siteEUI > 300` as "check data", and leaves `gasShare` null when unknown (never 0)
+  - [ ] 5.1 Convert the BERDO 2021 CSV to JSON and add cleaning
+    - Add a small conversion script in `scripts/` (committed to the repo) that reads the source `data/berdo-2021/data.csv` and writes `data/berdo-2021/buildings.json`
+    - The script/loader drops rows missing site EUI, keeps only 5-digit zips starting with "02", assigns `id` as the zero-based row index string, flags `siteEUI > 300` as "check data", and leaves `gasShare` null when unknown (never 0)
     - _Requirements: 8.1, 8.3, 8.4, 8.5_
   - [ ] 5.2 Build `ZipPicker` and `BuildingsTable`
     - Implement `components/buildings/zip-picker.tsx` and `components/buildings/buildings-table.tsx` showing type, year built, area, energy use, emissions, electric/gas share, and opportunity label via `rankBuildings`; render the "likely electric resistance, biggest heat pump win" and "convert at boiler replacement" messages; handle the dataset-load error state and the no-match empty-state row
@@ -148,12 +154,20 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
 
 - [ ] 6. Implement real bill extraction (Anthropic)
   - [ ] 6.1 Implement `app/api/extract/route.ts` with a real Anthropic SDK call
-    - Make a real call with model `claude-sonnet-5-5`, reading `ANTHROPIC_API_KEY` only from `process.env` server-side (never printed or committed); prompt for value + confidence + exact evidence per field, omitting fields without evidence; validate the response against `ExtractionResultSchema` before returning; enforce accepted file types (JPEG/PNG/PDF) and the 10 MB limit; treat >30s as failure; the LLM extracts fields only and computes no number
-    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 1.1, 1.2_
-  - [ ] 6.2 Wire upload → extract → confirmation and manual-form fallback into `app/page.tsx`
-    - On bill upload, POST to `/api/extract`, `safeParse` the result, map to `HomeInputs`, mark fields below `CONFIDENCE_THRESHOLD` amber; on failure, invalid file, timeout, or all-low-confidence, show the manual form pre-filled with known fields and an "extraction unsuccessful" message; support the oil manual inputs and their range validation
-    - _Requirements: 1.3, 1.4, 1.5, 2.7, 2.8, 3.11_
-  - [ ] 6.3 Done (workflow.md)
+    - Make a real call with model `claude-sonnet-5-5`, reading `ANTHROPIC_API_KEY` only from `process.env` server-side (never printed or committed); prompt for value + confidence + exact evidence per field, omitting fields without evidence; validate the response against `ExtractionResultSchema` before returning; the LLM extracts fields only and computes no number
+    - Add `export const maxDuration = 60` to the route; treat >30s as a client-side failure
+    - Accept only JPEG/PNG/PDF; the client resizes images to ≤1600px on the longest edge and re-encodes as JPEG so the uploaded payload is ≤4 MB; reject HEIC with a message to export as JPEG
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 1.1, 1.2, 1.3_
+  - [ ] 6.2 Wire upload → resize → extract → confirmation with manual-form fallback
+    - Implement the client-side image pipeline: resize to ≤1600px longest edge, re-encode as JPEG, enforce the ≤4 MB payload, and reject HEIC with an "export as JPEG" message before POSTing to `/api/extract`
+    - `safeParse` the result, map to `HomeInputs`, mark fields below `CONFIDENCE_THRESHOLD` amber; on failure, invalid file, timeout, or all-low-confidence, show the manual form pre-filled with known fields and an "extraction unsuccessful" message; support the oil manual inputs and their range validation
+    - Add `export const maxDuration = 60` to `app/api/explain/route.ts` as well
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.7, 2.8, 3.11_
+  - [ ] 6.3 Generate three demo bills in `demo-data/`
+    - Create `demo-data/` with three sample bills as HTML files — gas, oil receipt, and electric baseboard — each visibly watermarked "SAMPLE – DEMO DATA"
+    - Use the persona values from task 2.11 (gas 652 therms × $2.42; oil 800 gal × $6.15; electric-resistance 7,600 kWh annual heating) so the cached demo ExtractionResults and these bills agree
+    - _Requirements: 1.7, 1.11_
+  - [ ] 6.4 Done (workflow.md)
     - Run `npx vitest run` and fix any failures before moving on
     - Append a `KIRO_LOG.md` entry (time, task, Kiro feature used — MCP/Anthropic SDK, what it did, why it mattered)
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-6-desktop.png` and `docs/kiro/screens/task-6-mobile.png`, and reference them in the log entry
@@ -174,7 +188,7 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
 
 ## Notes
 
-- Tasks marked with `*` are optional test sub-tasks and can be skipped for a faster MVP; they are still scheduled in the dependency graph.
+- All property-based test sub-tasks are required; only 5.4 (dataset cleaning unit tests) is marked optional with `*` and can be skipped for a faster MVP. Optional sub-tasks are still scheduled in the dependency graph.
 - Each task references specific requirement sub-clauses for traceability, and the calc/rebates tests reference the design's numbered correctness properties.
 - The "Done" sub-step on every top-level task enforces `.kiro/steering/workflow.md`: run `npx vitest run`, append a `KIRO_LOG.md` entry, and capture Playwright screenshots when UI changed.
 - AI is introduced only in tasks 6 and 7; tasks 1–5 keep API routes as no-AI stubs so the app is fully usable with demo homes first.
@@ -196,8 +210,8 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     { "id": 8, "tasks": ["4.1", "4.2", "4.3", "4.4", "5.2", "5.4"] },
     { "id": 9, "tasks": ["4.5", "5.3"] },
     { "id": 10, "tasks": ["6.1"] },
-    { "id": 11, "tasks": ["6.2", "7.1"] },
-    { "id": 12, "tasks": ["7.2"] }
+    { "id": 11, "tasks": ["6.2", "6.3", "7.1"] },
+    { "id": 12, "tasks": ["6.4", "7.2"] }
   ]
 }
 ```

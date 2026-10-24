@@ -39,17 +39,18 @@ These requirements are derived from the finalized design document (`design.md`) 
 
 #### Acceptance Criteria
 
-1. WHEN a user selects or drops a gas or electric bill file of type JPEG, PNG, or PDF that is 10 MB or smaller, THE Intake_UI SHALL hand the file to the Extraction_Service for field extraction.
-2. IF a user selects or drops a file whose type is not JPEG, PNG, or PDF, or whose size exceeds 10 MB, THEN THE Intake_UI SHALL reject the file, retain any previously entered inputs unchanged, and display a message indicating the accepted file types and the 10 MB size limit.
-3. IF the Extraction_Service fails to return an ExtractionResult, or returns a result in which no field has a confidence at or above the Confidence_Threshold, THEN THE Intake_UI SHALL display the manual input form with any successfully extracted field values pre-filled and a message indicating that extraction could not be completed.
-4. WHERE a user has oil heating, THE Intake_UI SHALL accept an annual oil gallons value from 1 to 5000 and an oil unit price value from 0.01 to 99.99 United States dollars per gallon as manual inputs.
-5. IF a user submits an oil gallons value outside 1 to 5000 or an oil unit price value outside 0.01 to 99.99, THEN THE Intake_UI SHALL reject the input, retain the prior valid value, and display a message indicating the accepted range for that field.
-6. WHEN a user clicks a demo button (Oil, Gas, or Baseboard), THE Intake_UI SHALL load that demo's cached ExtractionResult containing a value, confidence, and evidence text for each field without calling the Extraction_Service.
-7. THE Intake_UI SHALL accept a five-digit zip code input matching the pattern `^\d{5}$`.
-8. IF a user submits a zip code value that does not match the pattern `^\d{5}$`, THEN THE Intake_UI SHALL reject the input and display a message indicating that a five-digit zip code is required.
-9. THE Intake_UI SHALL provide a "Heat included in my rent" toggle whose state is stored in HomeInputs as `heatIncludedInRent`.
-10. WHEN the Gas demo is loaded, THE Intake_UI SHALL present exactly one field with confidence below the Confidence_Threshold.
-11. WHEN a demo ExtractionResult is loaded, THE Intake_UI SHALL route it through the same Zod validation and confirmation path used for a real uploaded bill.
+1. WHEN a user selects or drops a gas or electric bill file of type JPEG, PNG, or PDF, THE Intake_UI SHALL resize images to at most 1600px on the longest edge, re-encode as JPEG, require the resulting payload to be at most 4 MB, and hand the file to the Extraction_Service for field extraction.
+2. IF a user selects or drops a HEIC file, THEN THE Intake_UI SHALL reject it and display a message to export the image as JPEG.
+3. IF a user selects or drops a file whose type is not JPEG, PNG, or PDF, or whose resulting payload exceeds 4 MB, THEN THE Intake_UI SHALL reject the file, retain any previously entered inputs unchanged, and display a message indicating the accepted file types and the 4 MB post-resize size limit.
+4. IF the Extraction_Service fails to return an ExtractionResult, or returns a result in which no field has a confidence at or above the Confidence_Threshold, THEN THE Intake_UI SHALL display the manual input form with any successfully extracted field values pre-filled and a message indicating that extraction could not be completed.
+5. WHERE a user has oil heating, THE Intake_UI SHALL accept an annual oil gallons value from 1 to 5000 and an oil unit price value from 0.01 to 99.99 United States dollars per gallon as manual inputs.
+6. IF a user submits an oil gallons value outside 1 to 5000 or an oil unit price value outside 0.01 to 99.99, THEN THE Intake_UI SHALL reject the input, retain the prior valid value, and display a message indicating the accepted range for that field.
+7. WHEN a user clicks a demo button (Oil, Gas, or Baseboard), THE Intake_UI SHALL load that demo's cached ExtractionResult containing a value, confidence, and evidence text for each field without calling the Extraction_Service.
+8. THE Intake_UI SHALL accept a five-digit zip code input matching the pattern `^\d{5}$`.
+9. IF a user submits a zip code value that does not match the pattern `^\d{5}$`, THEN THE Intake_UI SHALL reject the input and display a message indicating that a five-digit zip code is required.
+10. THE Intake_UI SHALL provide a "Heat included in my rent" toggle whose state is stored in HomeInputs as `heatIncludedInRent`.
+11. WHEN the Gas demo is loaded, THE Intake_UI SHALL present exactly one field with confidence below the Confidence_Threshold.
+12. WHEN a demo ExtractionResult is loaded, THE Intake_UI SHALL route it through the same Zod validation and confirmation path used for a real uploaded bill.
 
 ### Requirement 2: Bill field extraction
 
@@ -112,10 +113,10 @@ These requirements are derived from the finalized design document (`design.md`) 
 #### Acceptance Criteria
 
 1. WHEN annual income is absent, THE Calculation_Engine SHALL select the Standard Rebate_Tier.
-2. WHEN annual income is present and at or below the Enhanced threshold for the household size, THE Calculation_Engine SHALL select the Enhanced tier; WHEN annual income is present, above the Enhanced threshold, and at or below the Income Eligible threshold for the household size, THE Calculation_Engine SHALL select the Income Eligible tier; WHEN annual income is present and above the Income Eligible threshold for the household size, THE Calculation_Engine SHALL select the Standard tier.
-3. IF household size is absent or not an integer in the range 1 to 8 inclusive, THEN THE Calculation_Engine SHALL select the Standard tier and SHALL expose a flag indicating the household size was invalid.
-4. WHERE the Rebate_Tier is Standard or Enhanced, THE Calculation_Engine SHALL compute the uncapped rebate as `min(2650 * heatPumpTons, 8500)`, where heatPumpTons is a value in the range 0.5 to 5.0 inclusive.
-5. WHERE the Rebate_Tier is Income Eligible, THE Calculation_Engine SHALL set the rebate to the lesser of the uncapped rebate and installCostGross, allowing the rebate to reach the full gross install cost.
+2. WHEN annual income is present and at or below the Income Eligible maximum for the household size, THE Calculation_Engine SHALL select the Income Eligible tier; WHEN annual income is present, above the Income Eligible maximum, and at or below the Enhanced maximum for the household size, THE Calculation_Engine SHALL select the Enhanced tier; WHEN annual income is present and above the Enhanced maximum for the household size, THE Calculation_Engine SHALL select the Standard tier. The Income Eligible maximums for household sizes 1 through 5 are 51777, 67709, 83641, 99573, and 115504; the Enhanced maximums are 69036, 90279, 111522, 132764, and 154006.
+3. IF household size is absent or is not an integer greater than or equal to 1, THEN THE Calculation_Engine SHALL select the Standard tier and SHALL expose a flag indicating the household size was invalid. WHERE household size is an integer from 6 to 8 inclusive, THE Calculation_Engine SHALL use the household-size-5 income limits and SHALL expose a "check masssave.com/income" flag.
+4. THE Calculation_Engine SHALL compute the uncapped rebate by tier as: Standard = `min(2650 * heatPumpTons, 8500)`; Enhanced = `min(installCostGross, 16000)`; Income Eligible = `installCostGross`. heatPumpTons is a value in the range 0.5 to 5.0 inclusive.
+5. WHERE the Rebate_Tier is Income Eligible, THE Calculation_Engine SHALL set the rebate to the full gross install cost, allowing the rebate to reach installCostGross.
 6. FOR ALL inputs and assumptions, THE Calculation_Engine SHALL satisfy `0 <= rebateAmount <= installCostGross` and `netInstallCost >= 0`.
 7. THE Calculation_Engine SHALL compute net install cost as `installCostGross - rebateAmount`.
 8. IF annual savings are less than or equal to 0, THEN THE Calculation_Engine SHALL set payback years to null; otherwise THE Calculation_Engine SHALL compute payback years as `netInstallCost / annualSavings` and SHALL return a value greater than or equal to 0.
@@ -164,7 +165,7 @@ These requirements are derived from the finalized design document (`design.md`) 
 5. WHERE the source has no gas fraction for a row, THE Buildings_View SHALL set gas share to null rather than 0.
 6. THE Buildings_View SHALL rank buildings by Opportunity_Score descending and SHALL annotate each row with its percentile, in the inclusive range 0 to 100, within the multifamily cohort and the corresponding Opportunity_Label.
 7. FOR ALL building lists and any valid five-digit "02" zip, THE Buildings_View ranking SHALL return exactly the zip-matching subset sorted by Opportunity_Score descending, adding no rows and dropping no matching rows.
-8. WHERE a building has an electric share of 1 and a site EUI greater than 300 kBtu/ft²/year, THE Buildings_View SHALL show the message "likely electric resistance, biggest heat pump win".
+8. WHERE a building has an electric share of 1, a site EUI at or above the 75th percentile of the multifamily cohort, and a site EUI at or below 300 kBtu/ft²/year, THE Buildings_View SHALL show the message "likely electric resistance, biggest heat pump win".
 9. WHERE a building has a gas share greater than or equal to 0.8 and a year built less than or equal to 1980, THE Buildings_View SHALL show the message "convert at boiler replacement".
 10. WHEN a user selects a zip, THE Buildings_View SHALL filter the table to buildings whose zip equals the selected zip.
 11. IF no buildings match the selected zip, THEN THE Buildings_View SHALL display an empty-state row indicating no buildings match and SHALL keep the zip picker usable.
