@@ -1014,3 +1014,92 @@ Commit and push now: feat(my-home): add YourNumbersCard with heating-type chip, 
   adjustable assumptions, real Mass Save rebate/payback, the renter path, and a
   location-aware next step — while keeping all arithmetic in the property-tested
   pure engine, not in the UI or the LLM.
+
+## 2026-10-24 14:38 EDT — Phase A: five small UI/calc fixes
+
+- Task: five targeted fixes across the calc engine and the My-home / Buildings UI
+  (no new feature; small, scoped changes only).
+- Kiro feature used: steering rules (product/tech/design/workflow) kept the
+  changes on-spec; Playwright MCP captured the verification screenshots.
+- What it did:
+  - FIX 1 (verify-only): confirmed `opportunityScore` in `lib/calc.ts` already
+    computes `fossilFraction = clamp(gasShare ?? 1 − electricShare, 0, 1)` and
+    `score = siteEUI × fossilFraction` — no change made.
+  - FIX 2: added pure `sharesInconsistent(b)` to `lib/calc.ts` (true iff
+    `gasShare !== null && electricShare + gasShare > 1.05`; strictly greater),
+    a small amber outline "shares don't add up" Badge on flagged rows in
+    `components/buildings/buildings-table.tsx` (row stays ranked/visible), and
+    four unit tests in `lib/calc.ranking.test.ts` (0.6+0.4 → false; 0.7+0.5 →
+    true; null gasShare → false; exactly 1.05 → false).
+  - FIX 3: in the percentile cell, all-electric High-override rows
+    (`electricResistanceWin`) now render the emerald bar at 100% and read
+    "resistance" instead of a numeric percentile (label Badge kept; check-data
+    rows still "—"/0-width). Flag is read off the RankedBuilding, not recomputed.
+  - FIX 4: `VerdictCard` gained `netInstallCost` + `paybackYears` props and a
+    text-sm line — savings: "You pay $N after rebates · pays back in {Y}" (years
+    ≥ 1yr, else months); no-savings: "Costs more to run, so no payback" in
+    amber-600. `app/page.tsx` passes the two values from `computed.reb`.
+  - FIX 5: the hero "Upload your bill" button is now solid white
+    (`bg-white text-black hover:bg-gray-100`, no `!` overrides), matching the nav
+    "Try a demo" button instead of rendering grey.
+- Verification: `npx vitest run` → 110 passed (9 files, incl. the 4 new shares
+  tests); `npx tsc --noEmit` clean.
+- Screenshots: `docs/kiro/screens/fixes-buildings-desktop.png` (1280px, citywide
+  top-25 shows the single resistance-override row + 7 "shares don't add up"
+  badges), `docs/kiro/screens/fixes-myhome-desktop.png` (1280px, Oil demo —
+  "You pay $2,000 after rebates · pays back in 9 months") and
+  `docs/kiro/screens/fixes-myhome-mobile.png` (390px).
+- Why it mattered: the Buildings table now flags dirty source data honestly and
+  highlights the biggest electric-resistance wins, and the verdict now states
+  the net cost and payback inline — keeping every number from the pure engine.
+
+## 2026-10-24 14:44 EDT — Task 6: real bill extraction (Anthropic)
+
+- Task: 6.1–6.4 — replace the stub extract route with a real Anthropic vision
+  call, wire the client upload → resize → extract → confirm flow with a
+  manual-form fallback, generate three watermarked demo bills, and live-verify.
+- Kiro feature used: Anthropic SDK (`@anthropic-ai/sdk`, model `claude-sonnet-5-5`)
+  for the extraction call + Playwright MCP to render the demo bills to PNG and
+  capture the upload UI; the route's JSON is validated with the Zod
+  `ExtractionResultSchema` before it is trusted.
+- What it did:
+  - 6.1 `app/api/extract/route.ts`: real `messages.create` with
+    `claude-sonnet-5-5`, `ANTHROPIC_API_KEY` read only from `process.env`
+    (never logged/returned). Accepts multipart `file` (JPEG/PNG as an image
+    block, PDF as a document block), rejects HEIC with "Export as JPEG and try
+    again.", caps the payload at 4 MB, and returns a clean 500 when the key is
+    missing. The system prompt forces value + confidence + verbatim evidence
+    per field and OMISSION of unsupported fields — the LLM extracts only and
+    computes no number. The reply JSON is parsed and `safeParse`d against the
+    schema; any failure is a 500 the client treats as "extraction unsuccessful".
+    `export const maxDuration = 60`. A model-not-found/invalid-model error is
+    surfaced as a clear 500 (the model is never swapped).
+  - 6.2 `components/my-home/bill-upload.ts` (resize images to ≤1600px longest
+    edge, re-encode JPEG, reject HEIC, enforce ≤4 MB, 30s AbortController
+    timeout) + `components/my-home/extraction-map.ts` (map a validated result to
+    `HomeInputs`/`Assumptions`, seed the confirmed map so confidence <0.8 starts
+    amber). `app/page.tsx` `handleBillSelected` is now async: on success maps +
+    renders exactly like the demo path; on failure / invalid file / timeout /
+    all-low-confidence it falls back to the pre-filled manual form (amber
+    fields, oil gallons+price reachable via the heating-type chip +
+    ConfirmField's in-range edit) and shows an "Extraction unsuccessful" notice.
+    Added `export const maxDuration = 60` to `app/api/explain/route.ts`.
+  - 6.3 `demo-data/{gas-bill,oil-receipt,electric-bill}.html` — three sample
+    bills, each watermarked "SAMPLE – DEMO DATA", with the task-2.11 persona
+    numbers (gas 652 therms × $2.42; oil 800 gal × $6.15; electric 7,600 kWh).
+- LIVE verification (POST each demo PNG to the running server, response
+  validated against ExtractionResultSchema — all matched the personas):
+  - gas:      heatingType=gas (0.97), annualFuelUse=652 (0.97, "652 therms"),
+              fuelUnitPrice=2.42 (0.95, "$2.42 / therm")
+  - oil:      heatingType=oil (0.98), annualFuelUse=800 (0.70, "800 gal" → amber),
+              fuelUnitPrice=6.15 (0.97, "$6.15")
+  - electric: heatingType=electric-resistance (0.97), annualFuelUse=7600 (0.93,
+              "7,600 kWh"), fuelUnitPrice=0.288 (0.97, "$0.288 / kWh")
+  No model-not-found error; every value carries verbatim bill evidence.
+- Verification: `npx vitest run` → 110 passed (9 files); `npx tsc --noEmit` clean.
+- Screenshots: demo bills rendered to `demo-data/{gas-bill,oil-receipt,electric-bill}.png`;
+  upload/extraction UI at `docs/kiro/screens/task-6-desktop.png` (1280px) and
+  `docs/kiro/screens/task-6-mobile.png` (390px).
+- Why it mattered: this is the first point a real uploaded bill produces an
+  honest, source-cited answer — the model reads the document and the pure engine
+  does every calculation, with a graceful manual fallback when a read is weak.

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sample Oil Delivery Receipt — HeatSwitch demo</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Courier New", monospace;
+        color: #1a1a1a;
+        background: #f3f4f6;
+      }
+      .page {
+        position: relative;
+        width: 620px;
+        margin: 24px auto;
+        background: #fff;
+        border: 1px solid #d1d5db;
+        padding: 40px 48px;
+        overflow: hidden;
+      }
+      .watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-24deg);
+        font-size: 48px;
+        font-weight: 800;
+        letter-spacing: 4px;
+        color: rgba(220, 38, 38, 0.14);
+        white-space: nowrap;
+        pointer-events: none;
+        user-select: none;
+      }
+      .center { text-align: center; }
+      .co { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+      hr { border: none; border-top: 1px dashed #9ca3af; margin: 16px 0; }
+      table { width: 100%; border-collapse: collapse; font-size: 15px; }
+      td { padding: 6px 0; }
+      td.r { text-align: right; }
+      .big { font-size: 18px; font-weight: 700; }
+      .box { background: #fff7ed; border: 1px dashed #d97706; padding: 10px 12px; margin: 12px 0; }
+      footer { margin-top: 24px; font-size: 11px; color: #9ca3af; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="watermark">SAMPLE – DEMO DATA</div>
+      <div class="center">
+        <div class="co">HARBOR FUEL OIL</div>
+        <div>#2 Home Heating Oil Delivery</div>
+        <div>Boston, MA 02118 &nbsp;·&nbsp; (617) 555-0147</div>
+      </div>
+      <hr />
+
+      <table>
+        <tr><td>Ticket #</td><td class="r">OIL-20260112-338</td></tr>
+        <tr><td>Delivery date</td><td class="r">Jan 12, 2026</td></tr>
+        <tr><td>Fuel type</td><td class="r">#2 heating oil</td></tr>
+      </table>
+
+      <div class="box">
+        <table>
+          <tr class="big"><td>Delivered</td><td class="r">800 gal</td></tr>
+          <tr class="big"><td>Price / gal</td><td class="r">$6.15</td></tr>
+        </table>
+      </div>
+
+      <table>
+        <tr><td>Fuel (800 gal × $6.15)</td><td class="r">$4,920.00</td></tr>
+        <tr><td>Delivery fee</td><td class="r">$0.00</td></tr>
+        <tr class="big"><td>Amount due</td><td class="r">$4,920.00</td></tr>
+      </table>
+
+      <hr />
+      <footer>
+        Fictional sample receipt for the HeatSwitch demo. Reflects a full annual
+        heating-oil purchase. Not a real account. SAMPLE – DEMO DATA.
+      </footer>
+    </div>
+  </body>
+</html>

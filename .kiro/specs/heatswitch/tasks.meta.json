@@ -557,6 +557,46 @@
         "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
         "timestamp": 1792866558880
       }
+    ],
+    "6.1 Implement `app/api/extract/route.ts` with a real Anthropic SDK call": [
+      {
+        "executionId": "25928ecc-3143-43ca-831c-dac08638a153",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792866883505
+      },
+      {
+        "executionId": "25928ecc-3143-43ca-831c-dac08638a153",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792867529879
+      }
+    ],
+    "6.2 Wire upload → resize → extract → confirmation with manual-form fallback": [
+      {
+        "executionId": "25928ecc-3143-43ca-831c-dac08638a153",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792867532545
+      }
+    ],
+    "6.3 Generate three demo bills in `demo-data/`": [
+      {
+        "executionId": "25928ecc-3143-43ca-831c-dac08638a153",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792867533345
+      }
+    ],
+    "6.4 Done (workflow.md)": [
+      {
+        "executionId": "25928ecc-3143-43ca-831c-dac08638a153",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792867535683
+      }
+    ],
+    "6. Implement real bill extraction (Anthropic)": [
+      {
+        "executionId": "25928ecc-3143-43ca-831c-dac08638a153",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792867535755
+      }
     ]
   }
 }

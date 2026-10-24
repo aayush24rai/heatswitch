@@ -469,6 +469,25 @@ export function opportunityScore(b: BerdoBuilding): number {
 }
 
 /**
+ * True iff a building's reported electric + gas shares are internally
+ * inconsistent — i.e. they sum to meaningfully more than 100%. A `null`
+ * `gasShare` means the gas fraction is *unknown* (Requirement 8.5), so there is
+ * nothing to check and the result is `false`. The 1.05 ceiling allows for small
+ * rounding slack in the source data; the comparison is STRICTLY greater, so an
+ * exact 1.05 sum is NOT flagged.
+ *
+ * Pure and presentational-only: the Buildings table surfaces a small amber
+ * "shares don't add up" badge for flagged rows, but the row stays ranked and
+ * visible. This changes no score, percentile, or label.
+ */
+export function sharesInconsistent(
+  b: Pick<BerdoBuilding, "electricShare" | "gasShare">,
+): boolean {
+  if (b.gasShare === null) return false;
+  return b.electricShare + b.gasShare > 1.05;
+}
+
+/**
  * Map a building's percentile (inclusive `0..100`, Requirement 8.6) of its
  * opportunity score within the VALID multifamily cohort to a plain-English
  * label. This is a RELATIVE ranking, not an absolute score cutoff (design).

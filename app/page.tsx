@@ -28,6 +28,11 @@ import {
   getDemoExtraction,
   type DemoHome,
 } from "@/components/my-home/demo-homes"
+import { extractFromFile } from "@/components/my-home/bill-upload"
+import {
+  defaultAssumptions,
+  mapExtractionToScenario,
+} from "@/components/my-home/extraction-map"
 
 import { computeComparison, decideVerdict } from "@/lib/calc"
 import { computeRebates } from "@/lib/rebates"
@@ -109,6 +114,14 @@ export default function Page() {
   })
   // True when the loaded scenario came from a demo home (vs a real uploaded bill).
   const [isDemo, setIsDemo] = React.useState(false)
+
+  // --- Upload/extraction status (real bill path, task 6.2). ---
+  const [isExtracting, setIsExtracting] = React.useState(false)
+  // A user-facing message shown above the results when extraction did not fully
+  // succeed and we fell back to the manual (pre-filled, amber) form.
+  const [extractionNotice, setExtractionNotice] = React.useState<string | null>(
+    null
+  )
 
   // --- Explanation language (explanation text itself arrives in task 7). ---
   const [language, setLanguage] = React.useState<Language>("en")
@@ -208,6 +221,7 @@ export default function Page() {
     setInputs(demoInputs)
     setAssumptions(demoAssumptions)
     setIsDemo(true)
+    setExtractionNotice(null)
     // Keep the intake fields in sync with the loaded demo.
     setZip(demoInputs.zip)
     setHeatIncludedInRent(demoInputs.heatIncludedInRent)
@@ -223,12 +237,104 @@ export default function Page() {
     })
   }
 
-  /** Real bill extraction is task 6; for now a dropped/selected file is a no-op
-   *  (no AI call). The demo path is the one that fully works today. */
-  function handleBillSelected(_file: File) {
-    // Intentionally left as a no-op until task 6 wires the Extraction_Service.
-    // A real bill is NOT a demo.
+  /**
+   * Real bill extraction (task 6.2): resize/validate the file on the client,
+   * POST it to `/api/extract`, and map the validated result to inputs + the
+   * confirmed map. On any failure (bad/HEIC/oversized file, >30s timeout, server
+   * error, or an all-low-confidence result) fall back to the MANUAL form:
+   * pre-fill whatever we know (heating type + any extracted numbers, else safe
+   * defaults), mark the numeric fields amber, and show an "extraction
+   * unsuccessful" notice. A real bill is never a demo.
+   */
+  async function handleBillSelected(file: File) {
     setIsDemo(false)
+    setExtractionNotice(null)
+    setIsExtracting(true)
+
+    const utility = "eversource" as const
+    const householdSize = 1
+    const intake = { zip, utility, heatIncludedInRent, householdSize }
+
+    try {
+      const outcome = await extractFromFile(file)
+
+      if (outcome.ok) {
+        const mapped = mapExtractionToScenario(outcome.result, intake)
+        setExtraction(outcome.result)
+        setInputs(mapped.inputs)
+        setAssumptions(mapped.assumptions)
+        setConfirmed(mapped.confirmed)
+        // Even on a valid parse, an all-low-confidence read is treated as a
+        // soft failure: keep the pre-filled fields but prompt a manual check.
+        setExtractionNotice(
+          mapped.allLowConfidence
+            ? "We couldn't read your bill confidently. Check the numbers below."
+            : null
+        )
+        return
+      }
+
+      // Hard failure → manual form, pre-filled with safe defaults, all amber.
+      const messageByReason: Record<typeof outcome.reason, string> = {
+        heic: "That looks like a HEIC photo. Export as JPEG and try again — or enter your numbers below.",
+        unsupported:
+          "That file type isn't supported. Upload a JPEG, PNG, or PDF — or enter your numbers below.",
+        "too-large":
+          "That file is too large (keep it under 4 MB). Enter your numbers below.",
+        timeout:
+          "Reading your bill took too long. Enter your numbers below.",
+        failed:
+          "We couldn't read your bill. Enter your numbers below.",
+      }
+      seedManualForm(intake)
+      setExtractionNotice(messageByReason[outcome.reason])
+    } finally {
+      setIsExtracting(false)
+    }
+  }
+
+  /**
+   * Seed the manual (pre-filled) form used as the extraction fallback. Defaults
+   * to gas heat with plausible placeholder numbers, both marked amber so the
+   * user confirms/edits them in place (the oil manual inputs — gallons + price —
+   * are reachable via the heating-type chip "Change" + ConfirmField's in-range
+   * edit validation). Known intake fields (zip, rent flag) are carried over.
+   */
+  function seedManualForm(intake: {
+    zip: string
+    utility: "eversource" | "national-grid" | "unitil"
+    heatIncludedInRent: boolean
+    householdSize: number
+  }) {
+    const manualExtraction: ExtractionResult = {
+      heatingType: {
+        value: "gas",
+        confidence: 1,
+        evidence: "Entered manually",
+      },
+      annualFuelUse: {
+        value: 650,
+        confidence: 0, // amber — needs a manual check
+        evidence: "Enter your annual heating use",
+      },
+      fuelUnitPrice: {
+        value: 2.4,
+        confidence: 0, // amber — needs a manual check
+        evidence: "Enter your fuel price",
+      },
+    }
+    setExtraction(manualExtraction)
+    setInputs({
+      heatingType: "gas",
+      annualFuelUse: 650,
+      fuelUnitPrice: 2.4,
+      zip: intake.zip,
+      utility: intake.utility,
+      heatIncludedInRent: intake.heatIncludedInRent,
+      householdSize: intake.householdSize,
+    })
+    setAssumptions(defaultAssumptions(intake.utility))
+    setConfirmed({ annualFuelUse: false, fuelUnitPrice: false })
   }
 
   // --- Confirmation handlers (recompute happens via derived memo below). ---
@@ -413,7 +519,7 @@ export default function Page() {
               <div className="flex flex-wrap gap-4">
                 <button
                   type="button"
-                  className="rounded-lg !bg-white px-8 py-3 font-medium !text-black transition-colors hover:!bg-gray-100"
+                  className="rounded-lg bg-white px-8 py-3 font-medium text-black transition-colors hover:bg-gray-100"
                   onClick={goToTryIt}
                 >
                   Upload your bill
@@ -462,6 +568,26 @@ export default function Page() {
                 onBillSelected={handleBillSelected}
                 onTryDemo={handleTryDemo}
               />
+
+              {/* Extraction status: a brief loading note, then (on a soft/hard
+                  failure) the "extraction unsuccessful" notice above results. */}
+              {isExtracting ? (
+                <p
+                  role="status"
+                  className="mt-4 text-sm text-muted-foreground"
+                >
+                  Reading your bill…
+                </p>
+              ) : extractionNotice ? (
+                <Alert className="mt-4 border-amber-500 bg-amber-50/60 text-amber-900">
+                  <AlertTitle className="text-amber-900">
+                    Extraction unsuccessful
+                  </AlertTitle>
+                  <AlertDescription className="text-amber-900">
+                    {extractionNotice}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
             </section>
 
             {hasData ? (
@@ -473,6 +599,8 @@ export default function Page() {
                   language={language}
                   isEstimate={isEstimate}
                   isDemo={isDemo}
+                  netInstallCost={computed!.reb.netInstallCost}
+                  paybackYears={computed!.reb.paybackYears}
                   onLanguageChange={setLanguage}
                 />
 

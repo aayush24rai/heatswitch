@@ -46,6 +46,10 @@ export interface VerdictCardProps {
   isEstimate: boolean
   /** True when the loaded inputs came from a demo home (label reads "Demo home"). */
   isDemo: boolean
+  /** Net install cost after rebates ($), from computeRebates. */
+  netInstallCost: number
+  /** Years to pay back the net install from savings; null when it never does. */
+  paybackYears: number | null
   onLanguageChange: (lang: Language) => void
 }
 
@@ -75,6 +79,8 @@ export function VerdictCard({
   language,
   isEstimate,
   isDemo,
+  netInstallCost,
+  paybackYears,
   onLanguageChange,
 }: VerdictCardProps) {
   // Status line: a demo home reads "Demo home"; otherwise it flips from
@@ -105,6 +111,17 @@ export function VerdictCard({
     : isExtraCost
       ? "more per year"
       : "no change per year"
+
+  // Payback line beneath the figure. When the home saves money AND the net
+  // install pays back, show the net cost after rebates and the payback period
+  // (years once >= 1 year, otherwise months). When it costs more to run there
+  // is no payback — say so in amber (never red).
+  const paybackPeriod =
+    paybackYears === null
+      ? null
+      : paybackYears >= 1
+        ? `${paybackYears.toFixed(1)} years`
+        : `${Math.round(paybackYears * 12)} months`
 
   return (
     <Card className="w-full">
@@ -150,6 +167,18 @@ export function VerdictCard({
             {figureText}
           </span>
           <span className="text-sm text-muted-foreground">{caption}</span>
+
+          {/* Payback line. */}
+          {isSavings && paybackPeriod !== null ? (
+            <span className="text-sm tabular-nums text-muted-foreground">
+              You pay {formatDollars(netInstallCost)} after rebates · pays back
+              in {paybackPeriod}
+            </span>
+          ) : !isSavings ? (
+            <span className="text-sm tabular-nums text-amber-600">
+              Costs more to run, so no payback
+            </span>
+          ) : null}
         </div>
 
         {/* Explanation slot: the real /api/explain route lands in task 7, so

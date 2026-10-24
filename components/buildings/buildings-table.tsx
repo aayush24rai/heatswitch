@@ -3,7 +3,11 @@
 import * as React from "react"
 import { cn } from "cn"
 import type { BerdoBuilding } from "@/lib/schema"
-import { rankBuildings, type RankedBuilding } from "@/lib/calc"
+import {
+  rankBuildings,
+  sharesInconsistent,
+  type RankedBuilding,
+} from "@/lib/calc"
 import { Badge } from "@/components/ui/badge"
 import { SourceLink } from "@/components/shared/source-link"
 import { ZipPicker } from "@/components/buildings/zip-picker"
@@ -270,31 +274,49 @@ export function BuildingsTable({
                       {formatShare(b.electricShare)}
                     </td>
 
-                    {/* Gas share: null shows "unknown", not 0% (Req 8.5). */}
+                    {/* Gas share: null shows "unknown", not 0% (Req 8.5). When
+                        electric + gas overshoot 100%, surface an amber "shares
+                        don't add up" badge; the row stays ranked and visible. */}
                     <td className="px-4 py-3 text-right tabular-nums">
-                      {b.gasShare === null ? (
-                        <span className="text-muted-foreground">unknown</span>
-                      ) : (
-                        formatShare(b.gasShare)
-                      )}
+                      <div className="flex items-center justify-end gap-1.5">
+                        {b.gasShare === null ? (
+                          <span className="text-muted-foreground">unknown</span>
+                        ) : (
+                          <span>{formatShare(b.gasShare)}</span>
+                        )}
+                        {sharesInconsistent(b) ? (
+                          <Badge variant="outline" className="h-5 text-amber-700">
+                            shares don&apos;t add up
+                          </Badge>
+                        ) : null}
+                      </div>
                     </td>
 
                     {/* Percentile emerald bar + numeric percentile + label Badge,
                         read straight from the ranking. Check-data rows carry a
                         null percentile/label and render a 0-width bar and "—"
-                        (they already sort last from rankBuildings). */}
+                        (they already sort last from rankBuildings). An
+                        all-electric High override (electricResistanceWin) fills
+                        the bar to 100% and reads "resistance" instead of the
+                        numeric percentile — read off the ranking, not recomputed. */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                           <div
                             className="h-full rounded-full bg-emerald-600"
                             style={{
-                              width: `${b.percentile === null ? 0 : Math.round(b.percentile)}%`,
+                              width: b.electricResistanceWin
+                                ? "100%"
+                                : `${b.percentile === null ? 0 : Math.round(b.percentile)}%`,
                             }}
                           />
                         </div>
-                        <span className="w-8 text-right text-xs tabular-nums text-muted-foreground">
-                          {b.percentile === null ? "—" : Math.round(b.percentile)}
+                        <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">
+                          {b.electricResistanceWin
+                            ? "resistance"
+                            : b.percentile === null
+                              ? "—"
+                              : Math.round(b.percentile)}
                         </span>
                         <Badge variant={labelBadgeVariant(b.label)}>
                           {b.label ?? "—"}

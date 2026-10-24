@@ -28,7 +28,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { opportunityLabel, opportunityScore, rankBuildings } from "@/lib/calc";
+import {
+  opportunityLabel,
+  opportunityScore,
+  rankBuildings,
+  sharesInconsistent,
+} from "@/lib/calc";
 import type { BerdoBuilding, OpportunityLabel } from "@/lib/schema";
 
 // ---------------------------------------------------------------------------
@@ -452,6 +457,37 @@ describe("opportunityScore", () => {
       gasShare: null,
     };
     expect(opportunityScore(b)).toBeCloseTo(75, 10);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sharesInconsistent — amber "shares don't add up" flag.
+//   Validates: Requirement 8.5.
+// ---------------------------------------------------------------------------
+
+describe("sharesInconsistent", () => {
+  it("is false for a consistent split (0.6 + 0.4)", () => {
+    expect(sharesInconsistent({ electricShare: 0.6, gasShare: 0.4 })).toBe(
+      false,
+    );
+  });
+
+  it("is true when shares overshoot the 1.05 ceiling (0.7 + 0.5)", () => {
+    expect(sharesInconsistent({ electricShare: 0.7, gasShare: 0.5 })).toBe(
+      true,
+    );
+  });
+
+  it("is false when gasShare is null (unknown, nothing to check)", () => {
+    expect(sharesInconsistent({ electricShare: 0.9, gasShare: null })).toBe(
+      false,
+    );
+  });
+
+  it("is false at exactly 1.05 (strictly greater only)", () => {
+    expect(sharesInconsistent({ electricShare: 0.55, gasShare: 0.5 })).toBe(
+      false,
+    );
   });
 });
 

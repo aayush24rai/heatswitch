@@ -1,0 +1,35 @@
+- generic [ref=f1e2]:
+  - generic: SAMPLE – DEMO DATA
+  - banner [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - text: GreenLeaf Gas Co.
+      - generic [ref=f1e5]: Residential natural gas service
+    - generic [ref=f1e6]: "Account: 4471-0082-11 Service address: 14 Maple St, Boston, MA 02118 Billing period: Annual summary (Jan–Dec) Statement date: Jan 03, 2026"
+  - heading "Service" [level=2] [ref=f1e7]
+  - table [ref=f1e8]:
+    - rowgroup [ref=f1e9]:
+      - row [ref=f1e10]:
+        - cell "Service type" [ref=f1e11]
+        - cell "Residential Gas" [ref=f1e12]
+      - row [ref=f1e13]:
+        - cell "Meter" [ref=f1e14]
+        - cell "Natural gas (therms)" [ref=f1e15]
+  - heading "Annual usage & charges" [level=2] [ref=f1e16]
+  - table [ref=f1e17]:
+    - rowgroup [ref=f1e18]:
+      - row [ref=f1e19]:
+        - cell "Total therms used (12-month)" [ref=f1e20]
+        - cell "652 therms" [ref=f1e21]
+      - row [ref=f1e22]:
+        - cell "Average price per therm" [ref=f1e23]
+        - cell "$2.42 / therm" [ref=f1e24]
+      - row [ref=f1e25]:
+        - cell "Supply + delivery (652 × $2.42)" [ref=f1e26]
+        - cell "$1,577.84" [ref=f1e27]
+      - row [ref=f1e28]:
+        - cell "Customer charge (12 mo)" [ref=f1e29]
+        - cell "$120.00" [ref=f1e30]
+      - row [ref=f1e31]:
+        - cell "Total gas charges for the year" [ref=f1e32]
+        - cell "$1,697.84" [ref=f1e33]
+  - contentinfo [ref=f1e34]: This is a fictional sample bill generated for the HeatSwitch demo. Not a real account. SAMPLE – DEMO DATA.

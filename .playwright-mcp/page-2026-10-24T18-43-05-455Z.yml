@@ -1,0 +1,35 @@
+- generic [ref=f3e2]:
+  - generic: SAMPLE – DEMO DATA
+  - banner [ref=f3e3]:
+    - generic [ref=f3e4]:
+      - text: BayState Electric
+      - generic [ref=f3e5]: Residential electric service
+    - generic [ref=f3e6]: "Account: 7781-5540-02 Service address: 9 Harbor Ave Apt 3, Boston, MA 02118 Billing period: Annual summary (Jan–Dec) Statement date: Jan 05, 2026"
+  - heading "Service" [level=2] [ref=f3e7]
+  - table [ref=f3e8]:
+    - rowgroup [ref=f3e9]:
+      - row [ref=f3e10]:
+        - cell "Service type" [ref=f3e11]
+        - cell "Residential Electric" [ref=f3e12]
+      - row [ref=f3e13]:
+        - cell "Heating" [ref=f3e14]
+        - cell "Electric baseboard heat" [ref=f3e15]
+  - heading "Annual heating usage & charges" [level=2] [ref=f3e16]
+  - table [ref=f3e17]:
+    - rowgroup [ref=f3e18]:
+      - row [ref=f3e19]:
+        - cell "Winter heating usage (kWh)" [ref=f3e20]
+        - cell "7,600 kWh" [ref=f3e21]
+      - row [ref=f3e22]:
+        - cell "Price per kWh" [ref=f3e23]
+        - cell "$0.288 / kWh" [ref=f3e24]
+      - row [ref=f3e25]:
+        - cell "Heating energy (7,600 × $0.288)" [ref=f3e26]
+        - cell "$2,188.80" [ref=f3e27]
+      - row [ref=f3e28]:
+        - cell "Customer charge (12 mo)" [ref=f3e29]
+        - cell "$84.00" [ref=f3e30]
+      - row [ref=f3e31]:
+        - cell "Total heating-related charges" [ref=f3e32]
+        - cell "$2,272.80" [ref=f3e33]
+  - contentinfo [ref=f3e34]: Fictional sample bill generated for the HeatSwitch demo. The 7,600 kWh figure is the annual electric-resistance heating portion only. Not a real account. SAMPLE – DEMO DATA.

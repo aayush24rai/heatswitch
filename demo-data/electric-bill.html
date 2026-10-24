@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sample Electric Bill — HeatSwitch demo</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        color: #1a1a1a;
+        background: #f3f4f6;
+      }
+      .page {
+        position: relative;
+        width: 760px;
+        margin: 24px auto;
+        background: #fff;
+        border: 1px solid #d1d5db;
+        padding: 40px 48px;
+        overflow: hidden;
+      }
+      .watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-28deg);
+        font-size: 56px;
+        font-weight: 800;
+        letter-spacing: 4px;
+        color: rgba(220, 38, 38, 0.14);
+        white-space: nowrap;
+        pointer-events: none;
+        user-select: none;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 3px solid #1d4ed8;
+        padding-bottom: 16px;
+      }
+      .util { font-size: 24px; font-weight: 700; color: #1d4ed8; }
+      .util small { display: block; font-size: 12px; color: #6b7280; font-weight: 400; }
+      .meta { text-align: right; font-size: 12px; color: #4b5563; line-height: 1.6; }
+      h2 { font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: #6b7280; margin: 28px 0 8px; }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      td { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+      td.r { text-align: right; font-variant-numeric: tabular-nums; }
+      .total td { font-weight: 700; font-size: 16px; border-bottom: none; padding-top: 14px; }
+      .highlight { background: #eff6ff; }
+      footer { margin-top: 28px; font-size: 11px; color: #9ca3af; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="watermark">SAMPLE – DEMO DATA</div>
+      <header>
+        <div class="util">BayState Electric<small>Residential electric service</small></div>
+        <div class="meta">
+          Account: 7781-5540-02<br />
+          Service address: 9 Harbor Ave Apt 3, Boston, MA 02118<br />
+          Billing period: Annual summary (Jan–Dec)<br />
+          Statement date: Jan 05, 2026
+        </div>
+      </header>
+
+      <h2>Service</h2>
+      <table>
+        <tr><td>Service type</td><td class="r">Residential Electric</td></tr>
+        <tr><td>Heating</td><td class="r">Electric baseboard heat</td></tr>
+      </table>
+
+      <h2>Annual heating usage &amp; charges</h2>
+      <table>
+        <tr class="highlight"><td>Winter heating usage (kWh)</td><td class="r">7,600 kWh</td></tr>
+        <tr class="highlight"><td>Price per kWh</td><td class="r">$0.288 / kWh</td></tr>
+        <tr><td>Heating energy (7,600 × $0.288)</td><td class="r">$2,188.80</td></tr>
+        <tr><td>Customer charge (12 mo)</td><td class="r">$84.00</td></tr>
+        <tr class="total"><td>Total heating-related charges</td><td class="r">$2,272.80</td></tr>
+      </table>
+
+      <footer>
+        Fictional sample bill generated for the HeatSwitch demo. The 7,600 kWh
+        figure is the annual electric-resistance heating portion only. Not a real
+        account. SAMPLE – DEMO DATA.
+      </footer>
+    </div>
+  </body>
+</html>

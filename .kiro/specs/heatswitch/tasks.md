@@ -152,22 +152,22 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-5-desktop.png` and `docs/kiro/screens/task-5-mobile.png`, and reference them in the log entry
     - Task is not complete until these steps pass
 
-- [ ] 6. Implement real bill extraction (Anthropic)
-  - [ ] 6.1 Implement `app/api/extract/route.ts` with a real Anthropic SDK call
+- [x] 6. Implement real bill extraction (Anthropic)
+  - [x] 6.1 Implement `app/api/extract/route.ts` with a real Anthropic SDK call
     - Make a real call with model `claude-sonnet-5-5`, reading `ANTHROPIC_API_KEY` only from `process.env` server-side (never printed or committed); prompt for value + confidence + exact evidence per field, omitting fields without evidence; validate the response against `ExtractionResultSchema` before returning; the LLM extracts fields only and computes no number
     - Add `export const maxDuration = 60` to the route; treat >30s as a client-side failure
     - Accept only JPEG/PNG/PDF; the client resizes images to ≤1600px on the longest edge and re-encodes as JPEG so the uploaded payload is ≤4 MB; reject HEIC with a message to export as JPEG
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 1.1, 1.2, 1.3_
-  - [ ] 6.2 Wire upload → resize → extract → confirmation with manual-form fallback
+  - [x] 6.2 Wire upload → resize → extract → confirmation with manual-form fallback
     - Implement the client-side image pipeline: resize to ≤1600px longest edge, re-encode as JPEG, enforce the ≤4 MB payload, and reject HEIC with an "export as JPEG" message before POSTing to `/api/extract`
     - `safeParse` the result, map to `HomeInputs`, mark fields below `CONFIDENCE_THRESHOLD` amber; on failure, invalid file, timeout, or all-low-confidence, show the manual form pre-filled with known fields and an "extraction unsuccessful" message; support the oil manual inputs and their range validation
     - Add `export const maxDuration = 60` to `app/api/explain/route.ts` as well
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.7, 2.8, 3.11_
-  - [ ] 6.3 Generate three demo bills in `demo-data/`
+  - [x] 6.3 Generate three demo bills in `demo-data/`
     - Create `demo-data/` with three sample bills as HTML files — gas, oil receipt, and electric baseboard — each visibly watermarked "SAMPLE – DEMO DATA"
     - Use the persona values from task 2.11 (gas 652 therms × $2.42; oil 800 gal × $6.15; electric-resistance 7,600 kWh annual heating) so the cached demo ExtractionResults and these bills agree
     - _Requirements: 1.7, 1.11_
-  - [ ] 6.4 Done (workflow.md)
+  - [x] 6.4 Done (workflow.md)
     - Run `npx vitest run` and fix any failures before moving on
     - Append a `KIRO_LOG.md` entry (time, task, Kiro feature used — MCP/Anthropic SDK, what it did, why it mattered)
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-6-desktop.png` and `docs/kiro/screens/task-6-mobile.png`, and reference them in the log entry
