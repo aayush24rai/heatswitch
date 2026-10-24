@@ -56,3 +56,47 @@ describe("fieldRange", () => {
     });
   });
 });
+
+import { resetInputsForHeatingType } from "@/lib/field-ranges";
+
+describe("resetInputsForHeatingType", () => {
+  const base = {
+    heatingType: "gas" as const,
+    annualFuelUse: 652,
+    fuelUnitPrice: 2.42,
+    zip: "02118",
+    utility: "eversource" as const,
+    heatIncludedInRent: false,
+    householdSize: 3,
+  };
+
+  it("switches the heating type and CLEARS usage and price to 0", () => {
+    const out = resetInputsForHeatingType(base, "oil");
+    expect(out.heatingType).toBe("oil");
+    expect(out.annualFuelUse).toBe(0);
+    expect(out.fuelUnitPrice).toBe(0);
+  });
+
+  it("never reinterprets the old numbers in the new unit (both become 0)", () => {
+    const out = resetInputsForHeatingType(base, "electric-resistance");
+    // 652 therms must NOT survive as 652 kWh, etc.
+    expect(out.annualFuelUse).not.toBe(652);
+    expect(out.fuelUnitPrice).not.toBe(2.42);
+    expect(out.annualFuelUse).toBe(0);
+    expect(out.fuelUnitPrice).toBe(0);
+  });
+
+  it("retains the other inputs (zip, utility, rent, household) unchanged", () => {
+    const out = resetInputsForHeatingType(base, "propane");
+    expect(out.zip).toBe("02118");
+    expect(out.utility).toBe("eversource");
+    expect(out.heatIncludedInRent).toBe(false);
+    expect(out.householdSize).toBe(3);
+  });
+
+  it("does not mutate the input object", () => {
+    const snapshot = { ...base };
+    resetInputsForHeatingType(base, "oil");
+    expect(base).toEqual(snapshot);
+  });
+});

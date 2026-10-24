@@ -50,7 +50,7 @@ import {
   type HomeInputs,
   type Language,
 } from "@/lib/schema"
-import { fieldRange } from "@/lib/field-ranges"
+import { fieldRange, resetInputsForHeatingType } from "@/lib/field-ranges"
 
 // Cleaned BERDO 2021 dataset, loaded client-side via a static JSON import
 // (Req 8.1). `resolveJsonModule` is enabled in tsconfig.json, so this is
@@ -334,6 +334,71 @@ export default function Page() {
     setConfirmed({ annualFuelUse: false, fuelUnitPrice: false })
   }
 
+  /**
+   * Manual entry (item 5): the user typed a heating type + yearly use + price.
+   * Seed a confirmed scenario that feeds the SAME results flow as a bill. Not a
+   * demo; both numbers are user-provided and confirmed.
+   */
+  function handleManualSubmit(
+    heatingType: HeatingType,
+    annualFuelUse: number,
+    fuelUnitPrice: number
+  ) {
+    setIsDemo(false)
+    setExtractionNotice(null)
+    const utility = "eversource" as const
+    setExtraction({
+      heatingType: { value: heatingType, confidence: 1, evidence: "Entered manually" },
+      annualFuelUse: { value: annualFuelUse, confidence: 1, evidence: "Entered manually" },
+      fuelUnitPrice: { value: fuelUnitPrice, confidence: 1, evidence: "Entered manually" },
+    })
+    setInputs({
+      heatingType,
+      annualFuelUse,
+      fuelUnitPrice,
+      zip,
+      utility,
+      heatIncludedInRent,
+      householdSize: 1,
+    })
+    setAssumptions(defaultAssumptions(utility))
+    setConfirmed({ annualFuelUse: true, fuelUnitPrice: true })
+  }
+
+  /**
+   * Guesser result (item 4): the three-question helper resolved a heating type
+   * (null when a mini-split is likely). Set the type (clearing usage/price so
+   * old numbers are never reinterpreted), and turn on the rent toggle when the
+   * user said heat is included. When null (mini-split) we leave the type alone
+   * and just honor the rent answer — the helper's message already explains it.
+   */
+  function handleGuessResolved(
+    heatingType: HeatingType | null,
+    rentIncluded: boolean
+  ) {
+    if (rentIncluded) handleRentToggle(true)
+    if (heatingType === null) return
+    setIsDemo(false)
+    setExtractionNotice(null)
+    const utility = "eversource" as const
+    setExtraction({
+      heatingType: { value: heatingType, confidence: 1, evidence: "From your answers" },
+      annualFuelUse: { value: 0, confidence: 0, evidence: "Enter your yearly use" },
+      fuelUnitPrice: { value: 0, confidence: 0, evidence: "Enter your price" },
+    })
+    setInputs({
+      heatingType,
+      annualFuelUse: 0,
+      fuelUnitPrice: 0,
+      zip,
+      utility,
+      heatIncludedInRent: rentIncluded || heatIncludedInRent,
+      householdSize: 1,
+    })
+    setAssumptions(defaultAssumptions(utility))
+    setConfirmed({ annualFuelUse: false, fuelUnitPrice: false })
+  }
+
   // --- Confirmation handlers (recompute happens via derived memo below). ---
 
   function handleFieldConfirm(key: FieldKey) {
@@ -346,8 +411,14 @@ export default function Page() {
     setConfirmed((prev) => ({ ...prev, [key]: true }))
   }
 
+  // Changing heating type CLEARS the old usage/price — they were in the old
+  // fuel's units, so reinterpreting them in the new unit would be wrong
+  // (item 6). resetInputsForHeatingType zeroes both; the computed memo skips
+  // recompute while either is <= 0, and both fields are marked unconfirmed so
+  // the empty inputs show for re-entry in the new fuel's units.
   function handleHeatingTypeChange(type: HeatingType) {
-    setInputs((prev) => (prev ? { ...prev, heatingType: type } : prev))
+    setInputs((prev) => (prev ? resetInputsForHeatingType(prev, type) : prev))
+    setConfirmed({ annualFuelUse: false, fuelUnitPrice: false })
   }
 
   // --- Rent toggle: keep the intake state AND loaded inputs in sync so the
@@ -659,6 +730,8 @@ export default function Page() {
                 onRentToggle={handleRentToggle}
                 onBillSelected={handleBillSelected}
                 onTryDemo={handleTryDemo}
+                onManualSubmit={handleManualSubmit}
+                onGuessResolved={handleGuessResolved}
               />
 
               {/* Extraction status: a brief loading note, then (on a soft/hard
@@ -682,14 +755,11 @@ export default function Page() {
               ) : null}
             </section>
 
-            {/* Always-visible "How it works" — three short steps, present even
-                before any demo/bill is loaded (so the navbar link always has a
-                target). Distinct from the results-only "How we calculate". */}
-            <section
-              ref={howItWorksRef}
-              id="how-it-works"
-              className="scroll-mt-6"
-            >
+            {/* "How it works" — shown only in the empty state; once results are
+                showing it is hidden and the navbar link scrolls to the
+                always-present footer copy instead. */}
+            {!hasData ? (
+            <section className="scroll-mt-6">
               <Card className="rounded-2xl p-6 shadow-sm">
                 <h2 className="mb-4 text-lg font-medium">How it works</h2>
                 <ol className="flex flex-col gap-3 text-sm text-foreground">
@@ -725,8 +795,29 @@ export default function Page() {
                 </ol>
               </Card>
             </section>
+            ) : null}
 
-            {hasData ? (
+            {hasData && !computed ? (
+              /* Mid re-entry (e.g. a heating-type change cleared usage/price):
+                 show ONLY Step 2 so the user re-enters the new numbers. No
+                 verdict/chart until both are entered (item 6). */
+              <div ref={resultsRef} className="flex flex-col gap-6 pb-6">
+                <Card className="rounded-2xl p-6 shadow-sm">
+                  <YourNumbersCard
+                    fields={editableFields}
+                    heatingType={inputs!.heatingType}
+                    onFieldConfirm={handleFieldConfirm}
+                    onFieldEdit={handleFieldEdit}
+                    onHeatingTypeChange={handleHeatingTypeChange}
+                  />
+                </Card>
+                <p className="text-sm text-muted-foreground">
+                  Enter your yearly use and price above to see your answer.
+                </p>
+              </div>
+            ) : null}
+
+            {hasData && computed ? (
               <div ref={resultsRef} className="flex flex-col gap-6 pb-6">
                 <VerdictCard
                   verdict={computed!.verdict}
@@ -839,6 +930,18 @@ export default function Page() {
         ref={footerRef}
         className="mx-auto mt-10 max-w-5xl scroll-mt-6 border-t px-6 pt-6 pb-10 text-sm text-muted-foreground"
       >
+        <section
+          ref={howItWorksRef}
+          id="how-it-works"
+          className="mb-6 flex scroll-mt-6 flex-col gap-2"
+        >
+          <span className="text-sm font-medium text-foreground">How it works</span>
+          <ol className="flex flex-col gap-1">
+            <li>1. Upload a bill or try a demo home.</li>
+            <li>2. We read it and you confirm the numbers.</li>
+            <li>3. Get an honest verdict, with the source under every number.</li>
+          </ol>
+        </section>
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium text-foreground">Sources</span>
           <div className="flex flex-col gap-1">
@@ -861,6 +964,30 @@ export default function Page() {
             />
           </div>
         </div>
+        <p className="mt-4">
+
+          A first-pass estimate, not financial advice. A free Mass Save home energy
+
+          assessment gives you exact numbers.
+
+        </p>
+
+        <a
+
+          href="https://github.com/aayush24rai/heatswitch"
+
+          target="_blank"
+
+          rel="noreferrer noopener"
+
+          className="mt-2 inline-block underline-offset-4 hover:text-foreground hover:underline"
+
+        >
+
+          View source on GitHub
+
+        </a>
+
         <p className="mt-4">Your bill is never stored</p>
       </footer>
     </div>

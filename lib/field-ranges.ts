@@ -52,3 +52,19 @@ export function fieldRange(
 ): FieldRange {
   return RANGES[heatingType][key];
 }
+
+/**
+ * When the user switches heating type via the "Change" picker, the previously
+ * entered usage and price are in the OLD fuel's units (therms, gallons, kWh),
+ * so they are meaningless for the new fuel. This helper clears both to 0 — the
+ * sentinel the page treats as "not entered yet" (`computeComparison` is skipped
+ * while either is <= 0) — so the app never reinterprets old numbers in the new
+ * unit. Only `heatingType` carries over the change; everything else is retained.
+ *
+ * Pure: returns a new object, mutates nothing.
+ */
+export function resetInputsForHeatingType<
+  T extends { heatingType: HeatingType; annualFuelUse: number; fuelUnitPrice: number }
+>(inputs: T, nextType: HeatingType): T {
+  return { ...inputs, heatingType: nextType, annualFuelUse: 0, fuelUnitPrice: 0 };
+}
