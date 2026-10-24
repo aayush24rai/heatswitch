@@ -95,10 +95,12 @@ export function RebatesCard({
 
   // Household size is an integer 1–8; empty income maps to undefined (Standard).
   function handleHouseholdSizeInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const digits = e.target.value.replace(/\D/g, "")
-    if (digits === "") return
-    const n = Math.min(8, Math.max(1, parseInt(digits, 10)))
-    onHouseholdSizeChange(n)
+    // Single-digit field: the newest digit typed replaces the old one, so
+    // typing "4" over "3" gives 4 (not "34" clamped to 8). 1–8 only.
+    const last = e.target.value.replace(/\D/g, "").slice(-1)
+    if (last === "") return
+    const n = parseInt(last, 10)
+    if (n >= 1 && n <= 8) onHouseholdSizeChange(n)
   }
 
   function handleIncomeInput(e: React.ChangeEvent<HTMLInputElement>) {
@@ -139,6 +141,7 @@ export function RebatesCard({
               placeholder="1–8"
               value={inputs.householdSize ?? ""}
               onChange={handleHouseholdSizeInput}
+              onFocus={(e) => e.currentTarget.select()}
               className="h-8 rounded-md border bg-background px-2 text-sm tabular-nums"
             />
           </div>
