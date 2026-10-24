@@ -3,7 +3,7 @@
 **Find out if a heat pump actually saves you money in Boston.**
 
 **Live app:** https://heatswitch-five.vercel.app
-**Demo video:** [VIDEO LINK]
+**Demo video:** https://youtu.be/c6uy_ZNdKJ0
 **Built for:** Hackachusetts 2026 · Climatech & Clean Energy · Challenge C2 (cleaner, more affordable buildings)
 
 ![HeatSwitch](docs/kiro/screens/hero-desktop.png)
