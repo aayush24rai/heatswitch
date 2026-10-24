@@ -10,30 +10,30 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
 
 ## Tasks
 
-- [ ] 1. Scaffold the app, constants, schema, and stub routes
+- [x] 1. Scaffold the app, constants, schema, and stub routes
   - [x] 1.1 Scaffold the Next.js App Router + TypeScript + Tailwind + shadcn/ui project
     - Run `npx shadcn@latest init --preset b2BWx6KYq --template next` (base Mist, theme Emerald, chart Emerald) into the current folder using npm (never pnpm); keep existing `README.md`, `.git`, `.kiro`, and `docs`
     - If the CLI requires an empty folder or prompts for a project name, scaffold into a temp folder and move the generated files into the workspace root, preserving the kept files
     - Enable TypeScript strict mode; configure Inter via `next/font`; enforce light mode only (no dark-mode class or theme toggle)
     - Create the directory structure: `lib/`, `app/api/extract/`, `app/api/explain/`, `components/my-home/`, `components/buildings/`, `components/shared/`, `data/berdo-2021/`
     - _Requirements: 12.1, 12.2, 12.3, 12.4_
-  - [ ] 1.2 Install shadcn/ui components and set up the test toolchain
+  - [x] 1.2 Install shadcn/ui components and set up the test toolchain
     - Install only these shadcn/ui components via the shadcn MCP: Card, Button, Slider, Switch, Tabs, Badge, Alert, Tooltip, Skeleton
     - Add Recharts, Zod, and the Anthropic SDK (`@anthropic-ai/sdk`) as dependencies with pinned versions
     - Set up Vitest and fast-check with a test script; confirm `npx vitest run` executes with zero tests passing
     - _Requirements: 12.1, 12.2_
-  - [ ] 1.3 Implement `lib/constants.ts` with all source-cited constants
+  - [x] 1.3 Implement `lib/constants.ts` with all source-cited constants
     - Add every constant from the design with an adjacent resolvable source-URL comment: `THERM_KWH`, `OIL_GALLON_KWH`, `PROPANE_GALLON_KWH`, `SYSTEM_EFFICIENCY`, `SEASONAL_HEAT_PUMP_RATE_DISCOUNT`, `MASS_SAVE_PER_TON`, `MASS_SAVE_TOTAL_CAP`, `INCOME_LIMITS`, `REBATE_REQUIREMENTS`, `REBATE_DEADLINE_2026`, `REBATE_DEADLINE_NOTE`, `SUMMER_MONTH_INDEXES`
     - _Requirements: 4.5, 4.11, 5.4, 5.10, 5.11, 11.6_
-  - [ ] 1.4 Implement `lib/schema.ts` with the Zod schemas and shared types
+  - [x] 1.4 Implement `lib/schema.ts` with the Zod schemas and shared types
     - Define `ExtractedFieldSchema`, `HeatingTypeSchema`, `ExtractionResultSchema` (with `annualFuelUse`/`fuelUnitPrice` partial), `CONFIDENCE_THRESHOLD = 0.8`, and the `HomeInputs`/`Assumptions`/`Language`/`Utility`/`RebateTier`/`VerdictLabel` TypeScript types
     - _Requirements: 2.1, 2.6, 2.8, 1.7_
-  - [ ] 1.5 Create `app/page.tsx` two-tab shell and stub API routes
+  - [x] 1.5 Create `app/page.tsx` two-tab shell and stub API routes
     - Build the single page with a shadcn `Tabs` defaulting to "My home" and hiding "Buildings (landlords & city)" until selected; apply the `max-w-5xl mx-auto px-6 py-10` container, header with "HeatSwitch" + tagline + "Massachusetts" badge, and footer with "Your bill is never stored"
     - Lay out empty card placeholders per the wireframe (upload, verdict, cost chart, your numbers, assumptions, rebates, next step, how-we-calculate) with `rounded-2xl border shadow-sm p-6` and `gap-6`; stack to a single column below 768px
     - Create `app/api/extract/route.ts` and `app/api/explain/route.ts` as stubs that return static placeholder JSON with NO AI calls
     - _Requirements: 12.5, 12.7, 12.8, 12.9, 11.5_
-  - [ ] 1.6 Done (workflow.md)
+  - [x] 1.6 Done (workflow.md)
     - Run `npx vitest run` and fix any failures before moving on
     - Append a `KIRO_LOG.md` entry (time, task, Kiro feature used, what it did, why it mattered)
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-1-desktop.png` and `docs/kiro/screens/task-1-mobile.png`, and reference them in the log entry

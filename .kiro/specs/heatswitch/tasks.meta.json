@@ -12,6 +12,73 @@
         "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
         "timestamp": 1792859040184
       }
+    ],
+    "1.2 Install shadcn/ui components and set up the test toolchain": [
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859146930
+      },
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859420453
+      }
+    ],
+    "1.3 Implement `lib/constants.ts` with all source-cited constants": [
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859148232
+      },
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859421398
+      }
+    ],
+    "1.4 Implement `lib/schema.ts` with the Zod schemas and shared types": [
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859149062
+      },
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859422518
+      }
+    ],
+    "1.5 Create `app/page.tsx` two-tab shell and stub API routes": [
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859425267
+      },
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859570723
+      }
+    ],
+    "1.6 Done (workflow.md)": [
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859573848
+      },
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859748008
+      }
+    ],
+    "1. Scaffold the app, constants, schema, and stub routes": [
+      {
+        "executionId": "d777118e-02b1-4ac9-9ad8-994453f005b5",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859748093
+      }
     ]
   }
 }
