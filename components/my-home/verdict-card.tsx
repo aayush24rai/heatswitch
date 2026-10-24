@@ -122,7 +122,7 @@ export function VerdictCard({
       <CardHeader>
         <div className="flex flex-col gap-2">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
-            Step 3 · Your answer
+            Step 2 · Your answer
           </span>
           {/* 1. Small status label (+ Act-before-Dec-31 badge). */}
           <div className="flex flex-wrap items-center gap-2">

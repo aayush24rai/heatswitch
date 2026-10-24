@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card } from "@/components/ui/card"
@@ -153,6 +152,19 @@ export default function Page() {
   const footerRef = React.useRef<HTMLElement>(null)
 
   const hasData = extraction !== null && inputs !== null && assumptions !== null
+
+  // --- Reduced-motion-aware video autoplay. SSR renders the static poster
+  //     (heroAutoplay=false); on mount we enable autoplay only when motion is
+  //     allowed, and react to changes in the media query. ---
+  const [heroAutoplay, setHeroAutoplay] = React.useState(false)
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
+    setHeroAutoplay(!mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setHeroAutoplay(!e.matches)
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
 
   // Small reduced-motion check reused by the smooth-scroll + nav handlers.
   function prefersReducedMotion(): boolean {
@@ -580,6 +592,12 @@ export default function Page() {
         confirmed: confirmed.annualFuelUse,
         min: fieldRange(inputs.heatingType, "annualFuelUse").min,
         max: fieldRange(inputs.heatingType, "annualFuelUse").max,
+        // Therms tip specifically for gas; the general "annual heating use" tip
+        // otherwise (it names gallons/kWh too).
+        infoTerm:
+          inputs.heatingType === "gas"
+            ? ("therms" as const)
+            : ("annualHeatingUse" as const),
       },
       {
         key: "fuelUnitPrice" as FieldKey,
@@ -596,21 +614,34 @@ export default function Page() {
 
   return (
     <div>
-      {/* ================= PHOTO HERO (always at the top) ================= */}
+      {/* ================= VIDEO HERO (always at the top) ================= */}
       <section className="relative flex min-h-svh w-full flex-col overflow-hidden text-white">
-        {/* Background photo: next/image fill, slowly ken-burns-scaled via the
-            sanctioned `.hero-kenburns` utility (disabled under reduced motion in
-            CSS, so no client branching). The wrapper owns the scale + origin. */}
-        <div className="hero-kenburns absolute inset-0 -z-10">
-          <Image
+        {/* Background: a full-screen autoplaying, looping, muted video
+            (/hero.mp4) with /hero.jpg as the poster. Under prefers-reduced-motion
+            the video does not autoplay — the static poster shows instead
+            (heroAutoplay is false until the mount effect confirms motion is
+            allowed, so SSR renders the poster). */}
+        {heroAutoplay ? (
+          <video
+            key="hero-video"
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster="/hero.jpg"
+            className="absolute inset-0 -z-10 h-full w-full object-cover"
+          >
+            <source src="/hero.mp4" type="video/mp4" />
+          </video>
+        ) : (
+          // Reduced motion (or pre-mount SSR default): static poster image.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src="/hero.jpg"
             alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-bottom"
+            className="absolute inset-0 -z-10 h-full w-full object-cover"
           />
-        </div>
+        )}
 
         {/* Bottom-only legibility gradient. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/50 to-transparent" />
@@ -853,6 +884,7 @@ export default function Page() {
                     currentAnnualCost={computed!.cmp.currentAnnualCost}
                     heatPumpAnnualCost={computed!.cmp.heatPumpAnnualCost}
                     breakevenCOP={computed!.cmp.breakevenCOP}
+                    typicalCOP={assumptions!.heatPumpCOP}
                   />
                   <Card className="rounded-2xl p-6 shadow-sm">
                     <YourNumbersCard

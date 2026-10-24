@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cn } from "cn"
+import { zipLabel } from "@/lib/neighborhoods"
 
 /**
  * ZipPicker — the zip selector for the Buildings tab (Buildings_View).
@@ -59,7 +60,7 @@ export function ZipPicker({
         <option value={ALL_ZIPS_VALUE}>All of Boston</option>
         {sortedZips.map((zip) => (
           <option key={zip} value={zip}>
-            {zip}
+            {zipLabel(zip)}
           </option>
         ))}
       </select>

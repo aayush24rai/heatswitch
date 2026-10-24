@@ -7,9 +7,11 @@ import { ConfirmField } from "@/components/shared/confirm-field"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { InfoTip } from "@/components/shared/info-tip"
+import type { GlossaryKey } from "@/lib/glossary"
 
 /**
- * YourNumbersCard — the editable "Step 2 · Check the numbers we read" card.
+ * YourNumbersCard — the editable "Step 3 · Check the numbers we read" card.
  *
  *  - One `ConfirmField` per editable extracted number (Req 3.2, 3.3, 11.2).
  *  - The heating-type chip "Looks like {…} heat." with [Yes] / [Change]
@@ -31,6 +33,8 @@ export interface EditableField {
   confirmed: boolean
   min?: number
   max?: number
+  /** Optional glossary term for a tooltip next to this field's label. */
+  infoTerm?: GlossaryKey
 }
 
 export interface YourNumbersCardProps {
@@ -92,7 +96,7 @@ export function YourNumbersCard({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-medium">Step 2 · Check the numbers we read</h2>
+      <h2 className="text-lg font-medium">Step 3 · Check the numbers we read</h2>
 
       {unconfirmedCount >= 1 ? (
         <Alert
@@ -111,6 +115,7 @@ export function YourNumbersCard({
             {`Estimate: ${unconfirmedCount} ${
               unconfirmedCount === 1 ? "value needs" : "values need"
             } a quick check`}
+            <InfoTip term="estimate" label="Estimate" className="ml-1" />
           </AlertTitle>
         </Alert>
       ) : null}
@@ -121,6 +126,7 @@ export function YourNumbersCard({
           <Badge variant="outline" className="h-6">
             Looks like {HEATING_TYPE_PHRASE[heatingType]}.
           </Badge>
+          <InfoTip term="heatPump" label="Heat pump" />
           {heatingTypeAcknowledged ? (
             <span className="text-xs text-muted-foreground">Confirmed</span>
           ) : (
@@ -177,6 +183,14 @@ export function YourNumbersCard({
             ref={i === firstAmberIndex ? firstAmberRef : undefined}
             className={cn("scroll-mt-4")}
           >
+            {field.infoTerm ? (
+              <div className="mb-1 flex items-center gap-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {field.label}
+                </span>
+                <InfoTip term={field.infoTerm} label={field.label} />
+              </div>
+            ) : null}
             <ConfirmField
               label={field.label}
               value={field.value}

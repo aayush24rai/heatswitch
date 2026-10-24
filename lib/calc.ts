@@ -813,3 +813,44 @@ export function decideVerdict(
 
   return { label, actBeforeDec31, isRenter };
 }
+
+// ---------------------------------------------------------------------------
+// Buildings-view presentation helpers (plain-English labels; NOT ranking)
+// ---------------------------------------------------------------------------
+
+/**
+ * Plain-English "what to do" guidance for a ranked building, derived ENTIRELY
+ * from the ranking flags (no new ranking math). Presentation only.
+ *
+ *  - all-electric High override    → "Biggest win: likely electric heat"
+ *  - mostly gas (gasShare >= 0.8)  → "Plan a heat pump at the next boiler replacement"
+ *  - otherwise High / Medium       → "Good candidate"
+ *  - Low (or null label)           → "Lower priority"
+ */
+export function buildingAdvice(b: RankedBuilding): string {
+  if (b.electricResistanceWin) return "Biggest win: likely electric heat";
+  if (b.gasShare !== null && b.gasShare >= 0.8) {
+    return "Plan a heat pump at the next boiler replacement";
+  }
+  if (b.label === "High" || b.label === "Medium") return "Good candidate";
+  return "Lower priority";
+}
+
+/**
+ * Plain-English heating-fuel summary for a building, from its shares:
+ *  - electricShare === 1          → "All-electric"
+ *  - gasShare >= 0.8              → "Mostly gas (NN%)"
+ *  - gasShare === null (unknown)  → "Unknown"
+ *  - otherwise                    → "Mixed"
+ */
+export function heatingFuelLabel(b: {
+  electricShare: number;
+  gasShare: number | null;
+}): string {
+  if (b.electricShare === 1) return "All-electric";
+  if (b.gasShare !== null && b.gasShare >= 0.8) {
+    return `Mostly gas (${Math.round(b.gasShare * 100)}%)`;
+  }
+  if (b.gasShare === null) return "Unknown";
+  return "Mixed";
+}

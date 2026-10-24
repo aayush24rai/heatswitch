@@ -15,7 +15,7 @@ export const GLOSSARY = {
     "A device that heats (and cools) your home by moving heat instead of burning fuel. It runs on electricity and is very efficient.",
   cop: "How much heat a heat pump gives you for the electricity it uses. A COP of 3 means 3 units of heat per 1 unit of electricity — higher is better.",
   breakEvenEfficiency:
-    "The heat pump efficiency (COP) at which running a heat pump costs the same as your current heating. Above it you save; below it you pay more.",
+    "How efficient a heat pump would need to be to cost the same as your heating now. Most heat pumps in Boston average about 2.5. Above the break-even you save; below it you pay more.",
   seasonalHeatPumpRate:
     "A cheaper Massachusetts electricity rate for homes with heat pumps during heating months, which lowers the cost of running one.",
   therms:
@@ -64,6 +64,20 @@ export const GLOSSARY = {
     "This all-electric building probably uses old electric baseboard heat, which is expensive — switching to a heat pump is the biggest win.",
   convertAtBoiler:
     "This older, mostly-gas building is a good candidate to switch to a heat pump when its gas boiler is due for replacement.",
+  annualHeatingUse:
+    "How much fuel or electricity you use for heating in a year — in therms (gas), gallons (oil/propane), or kWh (electricity).",
+  estimate:
+    "A first-pass number based on what we read. Confirm or fix the amber fields to turn the estimate into an answer based on your bill.",
+  energyUse:
+    "How much energy this building uses for its size, compared with a typical Boston apartment building. Higher means more room to cut waste.",
+  typical:
+    "The middle (median) value across the apartment buildings shown. Half use more, half use less — a fair yardstick to compare against.",
+  heatingFuel:
+    "What this building mostly burns or uses for heat: natural gas, oil, or electricity. Gas and oil are the ones a heat pump replaces.",
+  priority:
+    "How strong a heat-pump opportunity this building is — High, Medium, or Low — based on its energy use and how much fossil fuel it burns.",
+  kbtuPerSqFt:
+    "A unit for building energy use: thousands of BTUs of energy per square foot per year. Lower is more efficient.",
 } as const
 
 /** A valid glossary key — the keys of {@link GLOSSARY}. */

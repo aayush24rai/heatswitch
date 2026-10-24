@@ -20,26 +20,20 @@ import { InfoTip } from "@/components/shared/info-tip"
 
 /**
  * CostChartCard — a two-bar comparison of current heating cost vs heat pump
- * cost, with a breakeven COP readout (Requirements 6.x cost presentation).
- *
- * Recharts renders in the browser, so this is a client component. Colors stay
- * neutral/emerald (the theme chart tokens); red is never used.
+ * cost, with a break-even efficiency readout alongside the typical heat-pump
+ * efficiency (the current COP assumption). Display only; never red.
  */
 export interface CostChartCardProps {
-  /** $/yr with the current heating system. */
   currentAnnualCost: number
-  /** $/yr with a heat pump (rate-aware). */
   heatPumpAnnualCost: number
   /** COP at which the heat pump cost equals the current heating cost. */
   breakevenCOP: number
+  /** The current COP assumption — shown as the "typical heat pump" reference. */
+  typicalCOP: number
 }
 
-/** Current heating uses a neutral muted token. The heat pump bar is colored by
- *  the comparison: emerald (the chart token) when it saves money, amber when it
- *  costs MORE to run than the current system. Never red. */
 const CURRENT_COLOR = "var(--muted-foreground)"
 const HEAT_PUMP_SAVINGS_COLOR = "var(--chart-2)"
-/** amber-600 — matches the "extra cost" color used across the results UI. */
 const HEAT_PUMP_COSTS_MORE_COLOR = "#d97706"
 
 function formatDollars(value: number): string {
@@ -54,9 +48,8 @@ export function CostChartCard({
   currentAnnualCost,
   heatPumpAnnualCost,
   breakevenCOP,
+  typicalCOP,
 }: CostChartCardProps) {
-  // Amber when the heat pump costs more to run than the current system,
-  // emerald otherwise (never red).
   const heatPumpColor =
     heatPumpAnnualCost > currentAnnualCost
       ? HEAT_PUMP_COSTS_MORE_COLOR
@@ -72,7 +65,7 @@ export function CostChartCard({
       <CardHeader>
         <CardTitle>Annual heating cost</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-3">
         <div className="h-56 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -85,10 +78,7 @@ export function CostChartCard({
                 axisLine={false}
                 tick={{ fontSize: 12 }}
               />
-              <YAxis
-                hide
-                domain={[0, (max: number) => Math.ceil(max * 1.15)]}
-              />
+              <YAxis hide domain={[0, (max: number) => Math.ceil(max * 1.15)]} />
               <Bar dataKey="cost" radius={[8, 8, 0, 0]} maxBarSize={96}>
                 {data.map((entry) => (
                   <Cell key={entry.name} fill={entry.fill} />
@@ -105,7 +95,8 @@ export function CostChartCard({
           </ResponsiveContainer>
         </div>
 
-        <div className="flex flex-col gap-1">
+        {/* Break-even efficiency + the typical heat-pump efficiency reference. */}
+        <div className="flex flex-col gap-0.5">
           <span className="text-sm text-foreground">
             Break-even efficiency:
             <InfoTip
@@ -115,6 +106,12 @@ export function CostChartCard({
             />
             <span className="font-medium tabular-nums">
               {breakevenCOP.toFixed(2)}
+            </span>
+            <span className="text-muted-foreground">
+              {" · typical heat pump: "}
+              <span className="font-medium tabular-nums text-foreground">
+                {typicalCOP.toFixed(1)}
+              </span>
             </span>
           </span>
           <SourceLink label="How break-even efficiency is calculated" />
