@@ -135,6 +135,9 @@ export function VerdictCard({
     <Card className="w-full">
       <CardHeader>
         <div className="flex flex-col gap-2">
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Step 3 · Your answer
+          </span>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">
               {statusLabel}
@@ -168,6 +171,26 @@ export function VerdictCard({
               Costs more to run, so no payback
             </span>
           ) : null}
+
+          {/* Plain-words one-line meaning, computed HERE from the passed
+              annualDeltaDollars — never from the explanation service (Req 9.9).
+              Savings reads emerald, extra cost reads amber (never red). */}
+          <span
+            className={cn(
+              "text-sm",
+              isSavings
+                ? "text-emerald-600"
+                : isExtraCost
+                  ? "text-amber-600"
+                  : "text-foreground"
+            )}
+          >
+            {isSavings
+              ? `A heat pump would save you about ${amount} a year.`
+              : isExtraCost
+                ? `A heat pump would cost you about ${amount} more per year than your heating now.`
+                : "A heat pump would cost about the same to run as your heating now."}
+          </span>
         </div>
 
         {/* Explanation slot. While a request is in flight show a Skeleton and

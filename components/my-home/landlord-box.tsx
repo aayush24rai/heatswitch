@@ -83,7 +83,9 @@ export function LandlordBox({
   const paybackLine =
     paybackYears === null
       ? "- Payback: a heat pump costs more than the current system at these numbers"
-      : `- Simple payback: about ${paybackYears.toFixed(1)} years`
+      : paybackYears >= 1
+        ? `- Simple payback: about ${paybackYears.toFixed(1)} years`
+        : `- Simple payback: about ${Math.round(paybackYears * 12)} months`
 
   const summary = [
     "Heat pump opportunity for this unit:",

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card } from "@/components/ui/card"
@@ -49,6 +50,7 @@ import {
   type HomeInputs,
   type Language,
 } from "@/lib/schema"
+import { fieldRange } from "@/lib/field-ranges"
 
 // Cleaned BERDO 2021 dataset, loaded client-side via a static JSON import
 // (Req 8.1). `resolveJsonModule` is enabled in tsconfig.json, so this is
@@ -62,12 +64,14 @@ const BUILDINGS = buildingsData as BerdoBuilding[]
  * HeatSwitch single page.
  *
  * ONE layout for both tabs:
- *   1. VIDEO HERO (presentation only) — a full-bleed background <video> (with a
- *      poster="/hero.jpg" fallback), a bottom legibility gradient, a glass
- *      navbar, an animated heading, FadeIn-staged subhead/buttons, and a
- *      right-column glass tag. It always renders at the top of the page,
- *      regardless of the active tab. Under prefers-reduced-motion the video does
- *      not autoplay — the static poster is shown instead (SSR-safe).
+ *   1. PHOTO HERO (presentation only) — a full-bleed next/image background
+ *      (/hero.jpg) with a slow 20s ken-burns scale (the sanctioned
+ *      `.hero-kenburns` utility; design.md line 22), a bottom legibility
+ *      gradient, a glass navbar, an animated heading, FadeIn-staged
+ *      subhead/buttons, and a right-column glass tag. It always renders at the
+ *      top of the page, regardless of the active tab. Under
+ *      prefers-reduced-motion the scale animation does not run (static image,
+ *      handled in CSS — SSR-safe, no client branching).
  *   2. TABS BAR (id="tabs") — directly below the hero; "My home" / "Buildings".
  *   3. TAB CONTENT —
  *        My home: the #try-it intake (UploadCard) then the results below it.
@@ -80,10 +84,6 @@ const BUILDINGS = buildingsData as BerdoBuilding[]
  * type/assumption change (Req 3.10). The verdict label reads "Demo home" for
  * demo inputs, else flips from "Estimate" to "Based on your bill" (Req 3.8/3.9).
  */
-
-/** The background video for the hero (external, intentionally not self-hosted). */
-const HERO_VIDEO_SRC =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4"
 
 /** The two editable extracted numbers tracked for confirmation. */
 const EDITABLE_FIELD_KEYS: FieldKey[] = ["annualFuelUse", "fuelUnitPrice"]
@@ -153,19 +153,6 @@ export default function Page() {
   const footerRef = React.useRef<HTMLElement>(null)
 
   const hasData = extraction !== null && inputs !== null && assumptions !== null
-
-  // --- Reduced-motion-aware video autoplay (SSR-safe: static on first render,
-  //     enhance to autoplay on mount only when motion is allowed). ---
-  const [heroAutoplay, setHeroAutoplay] = React.useState(false)
-
-  React.useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    setHeroAutoplay(!mq.matches)
-    const onChange = (e: MediaQueryListEvent) => setHeroAutoplay(!e.matches)
-    mq.addEventListener("change", onChange)
-    return () => mq.removeEventListener("change", onChange)
-  }, [])
 
   // Small reduced-motion check reused by the smooth-scroll + nav handlers.
   function prefersReducedMotion(): boolean {
@@ -520,6 +507,8 @@ export default function Page() {
         unit: units.fuelUse,
         evidence: extraction.annualFuelUse?.evidence,
         confirmed: confirmed.annualFuelUse,
+        min: fieldRange(inputs.heatingType, "annualFuelUse").min,
+        max: fieldRange(inputs.heatingType, "annualFuelUse").max,
       },
       {
         key: "fuelUnitPrice" as FieldKey,
@@ -528,36 +517,29 @@ export default function Page() {
         unit: units.price,
         evidence: extraction.fuelUnitPrice?.evidence,
         confirmed: confirmed.fuelUnitPrice,
+        min: fieldRange(inputs.heatingType, "fuelUnitPrice").min,
+        max: fieldRange(inputs.heatingType, "fuelUnitPrice").max,
       },
     ]
   }, [extraction, inputs, confirmed])
 
   return (
     <div>
-      {/* ================= VIDEO HERO (always at the top) ================= */}
+      {/* ================= PHOTO HERO (always at the top) ================= */}
       <section className="relative flex min-h-svh w-full flex-col overflow-hidden text-white">
-        {/* Background: autoplay video when motion is allowed, else static poster. */}
-        {heroAutoplay ? (
-          <video
-            key="hero-video"
-            autoPlay
-            loop
-            muted
-            playsInline
-            poster="/hero.jpg"
-            className="absolute inset-0 -z-10 h-full w-full object-cover"
-          >
-            <source src={HERO_VIDEO_SRC} type="video/mp4" />
-          </video>
-        ) : (
-          // Reduced motion (or pre-mount SSR default): static poster image.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+        {/* Background photo: next/image fill, slowly ken-burns-scaled via the
+            sanctioned `.hero-kenburns` utility (disabled under reduced motion in
+            CSS, so no client branching). The wrapper owns the scale + origin. */}
+        <div className="hero-kenburns absolute inset-0 -z-10">
+          <Image
             src="/hero.jpg"
             alt=""
-            className="absolute inset-0 -z-10 h-full w-full object-cover"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-bottom"
           />
-        )}
+        </div>
 
         {/* Bottom-only legibility gradient. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/50 to-transparent" />
@@ -667,7 +649,9 @@ export default function Page() {
           {/* TAB 1 — My home: #try-it intake, then results below it. */}
           <TabsContent value="my-home" className="flex flex-col gap-6">
             <section ref={tryItRef} id="try-it" className="py-6">
-              <h2 className="mb-6 text-lg font-medium">Try it</h2>
+              <h2 className="mb-6 text-lg font-medium">
+                Step 1 · Tell us about your home
+              </h2>
               <UploadCard
                 zip={zip}
                 heatIncludedInRent={heatIncludedInRent}
@@ -788,6 +772,17 @@ export default function Page() {
                       onHeatingTypeChange={handleHeatingTypeChange}
                     />
                   </Card>
+                </div>
+
+                {/* Optional tweaks heading — Row 2 is a fine-tune step. */}
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-lg font-medium">
+                    Want to fine-tune? (optional)
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Adjust the assumptions and rebate details to match your
+                    situation. The verdict updates live.
+                  </p>
                 </div>
 
                 {/* Row 2: assumptions | rebates. */}

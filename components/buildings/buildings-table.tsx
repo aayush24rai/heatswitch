@@ -10,6 +10,7 @@ import {
 } from "@/lib/calc"
 import { Badge } from "@/components/ui/badge"
 import { SourceLink } from "@/components/shared/source-link"
+import { InfoTip } from "@/components/shared/info-tip"
 import { ZipPicker } from "@/components/buildings/zip-picker"
 
 /**
@@ -248,11 +249,46 @@ export function BuildingsTable({
           <thead>
             <tr className="border-b bg-muted/40 text-left text-xs font-medium text-muted-foreground">
               <th className="px-4 py-3">Building</th>
-              <th className="px-4 py-3 text-right">Site EUI</th>
-              <th className="px-4 py-3 text-right">GHG (t CO₂e)</th>
-              <th className="px-4 py-3 text-right">Electric</th>
-              <th className="px-4 py-3 text-right">Gas</th>
-              <th className="px-4 py-3">Opportunity</th>
+              <th className="px-4 py-3 text-right">
+                Energy use per sq ft
+                <InfoTip
+                  term="siteEui"
+                  label="Energy use per sq ft"
+                  className="ml-1"
+                />
+              </th>
+              <th className="px-4 py-3 text-right">
+                Yearly emissions (tons CO₂)
+                <InfoTip
+                  term="ghgEmissions"
+                  label="Yearly emissions"
+                  className="ml-1"
+                />
+              </th>
+              <th className="px-4 py-3 text-right">
+                Electric
+                <InfoTip
+                  term="electricShare"
+                  label="Electric share"
+                  className="ml-1"
+                />
+              </th>
+              <th className="px-4 py-3 text-right">
+                Gas
+                <InfoTip
+                  term="gasShare"
+                  label="Gas share"
+                  className="ml-1"
+                />
+              </th>
+              <th className="px-4 py-3">
+                Opportunity
+                <InfoTip
+                  term="opportunityScore"
+                  label="Opportunity"
+                  className="ml-1"
+                />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -277,13 +313,25 @@ export function BuildingsTable({
             ) : (
               rows.map((b) => {
                 const message = opportunityMessage(b)
+                // Pick the glossary term for the opportunity message so each
+                // message carries the right plain-English tip inline.
+                const messageTerm = b.electricResistanceWin
+                  ? ("likelyElectricResistance" as const)
+                  : ("convertAtBoiler" as const)
                 return (
                   <tr key={b.id} className="border-b last:border-b-0 align-top">
                     {/* Row identity (no address) + property type/year/area/zip. */}
                     <td className="px-4 py-3">
                       <div className="font-medium tabular-nums">{rowIdentity(b)}</div>
                       {message ? (
-                        <div className="mt-1 text-xs text-emerald-700">{message}</div>
+                        <div className="mt-1 text-xs text-emerald-700">
+                          {message}
+                          <InfoTip
+                            term={messageTerm}
+                            label={message}
+                            className="ml-1"
+                          />
+                        </div>
                       ) : null}
                     </td>
 
@@ -295,9 +343,12 @@ export function BuildingsTable({
                           {eui1Fmt.format(b.siteEUI)}
                         </span>
                         {b.checkData ? (
-                          <Badge variant="outline" className="h-5 text-amber-700">
-                            check data
-                          </Badge>
+                          <span className="inline-flex items-center gap-1">
+                            <Badge variant="outline" className="h-5 text-amber-700">
+                              check data
+                            </Badge>
+                            <InfoTip term="checkData" label="Check data" />
+                          </span>
                         ) : null}
                       </div>
                     </td>
@@ -321,9 +372,15 @@ export function BuildingsTable({
                           <span>{formatShare(b.gasShare)}</span>
                         )}
                         {sharesInconsistent(b) ? (
-                          <Badge variant="outline" className="h-5 text-amber-700">
-                            shares don&apos;t add up
-                          </Badge>
+                          <span className="inline-flex items-center gap-1">
+                            <Badge variant="outline" className="h-5 text-amber-700">
+                              shares don&apos;t add up
+                            </Badge>
+                            <InfoTip
+                              term="sharesDontAddUp"
+                              label="Shares don't add up"
+                            />
+                          </span>
                         ) : null}
                       </div>
                     </td>
@@ -374,6 +431,7 @@ export function BuildingsTable({
       <p className="text-xs text-muted-foreground">
         Data:{" "}
         <SourceLink label="City of Boston BERDO 2021" href={BERDO_SOURCE_URL} />
+        <InfoTip term="berdo" label="BERDO 2021" className="ml-1" />
       </p>
     </div>
   )

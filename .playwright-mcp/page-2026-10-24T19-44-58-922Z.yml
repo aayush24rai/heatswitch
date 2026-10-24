@@ -1,0 +1,300 @@
+- generic [ref=f5e1]:
+  - generic [ref=f5e2]:
+    - generic [ref=f5e3]:
+      - navigation [ref=f5e6]:
+        - generic [ref=f5e7]: HeatSwitch
+        - generic [ref=f5e8]:
+          - button "How it works" [ref=f5e9]
+          - button "Buildings" [ref=f5e10]
+          - button "Sources" [ref=f5e11]
+        - button "Try a demo" [ref=f5e12]
+      - generic [ref=f5e13]:
+        - generic [ref=f5e14]:
+          - heading [level=1] [ref=f5e15]:
+            - generic [ref=f5e16]:
+              - generic [ref=f5e17]:
+                - generic [aria-hidden] [ref=f5e18]: S
+                - generic [aria-hidden] [ref=f5e19]: h
+                - generic [aria-hidden] [ref=f5e20]: o
+                - generic [aria-hidden] [ref=f5e21]: u
+                - generic [aria-hidden] [ref=f5e22]: l
+                - generic [aria-hidden] [ref=f5e23]: d
+              - generic [ref=f5e24]:
+                - generic [aria-hidden] [ref=f5e25]: "y"
+                - generic [aria-hidden] [ref=f5e26]: o
+                - generic [aria-hidden] [ref=f5e27]: u
+                - generic [aria-hidden] [ref=f5e28]: r
+              - generic [ref=f5e29]:
+                - generic [aria-hidden] [ref=f5e30]: B
+                - generic [aria-hidden] [ref=f5e31]: o
+                - generic [aria-hidden] [ref=f5e32]: s
+                - generic [aria-hidden] [ref=f5e33]: t
+                - generic [aria-hidden] [ref=f5e34]: o
+                - generic [aria-hidden] [ref=f5e35]: "n"
+              - generic [ref=f5e36]:
+                - generic [aria-hidden] [ref=f5e37]: h
+                - generic [aria-hidden] [ref=f5e38]: o
+                - generic [aria-hidden] [ref=f5e39]: m
+                - generic [aria-hidden] [ref=f5e40]: e
+              - generic [ref=f5e41]:
+                - generic [aria-hidden] [ref=f5e42]: s
+                - generic [aria-hidden] [ref=f5e43]: w
+                - generic [aria-hidden] [ref=f5e44]: i
+                - generic [aria-hidden] [ref=f5e45]: t
+                - generic [aria-hidden] [ref=f5e46]: c
+                - generic [aria-hidden] [ref=f5e47]: h
+              - generic [ref=f5e48]:
+                - generic [aria-hidden] [ref=f5e49]: t
+                - generic [aria-hidden] [ref=f5e50]: o
+              - generic [aria-hidden] [ref=f5e52]: a
+              - generic [ref=f5e53]:
+                - generic [aria-hidden] [ref=f5e54]: h
+                - generic [aria-hidden] [ref=f5e55]: e
+                - generic [aria-hidden] [ref=f5e56]: a
+                - generic [aria-hidden] [ref=f5e57]: t
+              - generic [ref=f5e58]:
+                - generic [aria-hidden] [ref=f5e59]: p
+                - generic [aria-hidden] [ref=f5e60]: u
+                - generic [aria-hidden] [ref=f5e61]: m
+                - generic [aria-hidden] [ref=f5e62]: p
+                - generic [aria-hidden] [ref=f5e63]: "?"
+          - paragraph [ref=f5e65]: Upload a bill. Get an honest answer, with the source under every number.
+          - generic [ref=f5e67]:
+            - button "Upload your bill" [ref=f5e68]
+            - button "Try a demo home" [ref=f5e69]
+        - generic [ref=f5e70]: Renters. Homeowners. Buildings.
+    - generic [ref=f5e74]:
+      - tablist [ref=f5e75]:
+        - tab "My home" [selected] [ref=f5e76]
+        - tab "Buildings (landlords & city)" [ref=f5e77]
+      - tabpanel "My home" [ref=f5e78]:
+        - generic [ref=f5e79]:
+          - heading "Step 1 · Tell us about your home" [level=2] [ref=f5e80]
+          - generic [ref=f5e81]:
+            - generic [ref=f5e82]:
+              - generic [ref=f5e83]: Start with your bill
+              - generic [ref=f5e84]: Upload a gas or electric bill, or try a demo home. Your bill is never stored.
+            - generic [ref=f5e85]:
+              - button "Upload a bill photo or PDF" [ref=f5e86] [cursor=pointer]:
+                - generic [ref=f5e87]: Drop your bill here, or click to browse
+                - generic [ref=f5e88]: JPEG, PNG, or PDF
+              - generic [ref=f5e89]:
+                - generic [ref=f5e90]:
+                  - generic [ref=f5e91]: Zip code
+                  - textbox "Zip code" [ref=f5e92]:
+                    - /placeholder: "02118"
+                    - text: "02118"
+                - generic [ref=f5e93]:
+                  - switch "Heat included in my rent" [ref=f5e94]
+                  - checkbox [aria-hidden] [ref=f5e95]
+                  - generic [ref=f5e96]: Heat included in my rent
+              - generic [ref=f5e97]:
+                - generic [ref=f5e98]: Or try a demo home
+                - generic [ref=f5e99]:
+                  - button "Oil home" [ref=f5e100]
+                  - button "Gas home" [active] [ref=f5e102]
+                  - button "Baseboard apartment" [ref=f5e104]
+        - generic [ref=f5e107]:
+          - heading "How it works" [level=2] [ref=f5e108]
+          - list [ref=f5e109]:
+            - listitem [ref=f5e110]:
+              - generic [aria-hidden] [ref=f5e111]: "1"
+              - generic [ref=f5e112]: Upload a bill or try a demo home.
+            - listitem [ref=f5e113]:
+              - generic [aria-hidden] [ref=f5e114]: "2"
+              - generic [ref=f5e115]: We read it and you confirm the numbers.
+            - listitem [ref=f5e116]:
+              - generic [aria-hidden] [ref=f5e117]: "3"
+              - generic [ref=f5e118]: Get an honest verdict, with the source under every number.
+        - generic [ref=f5e139]:
+          - generic [ref=f5e140]:
+            - generic [ref=f5e142]:
+              - generic [ref=f5e143]: Step 3 · Your answer
+              - generic [ref=f5e144]: Demo home
+              - heading "Not worth it yet" [level=2] [ref=f5e146]
+            - generic [ref=f5e147]:
+              - generic [ref=f5e148]:
+                - generic [ref=f5e149]: +$403
+                - generic [ref=f5e150]: more per year
+                - generic [ref=f5e151]: Costs more to run, so no payback
+                - generic [ref=f5e152]: A heat pump would cost you about $403 more per year than your heating now.
+              - generic [ref=f5e153]:
+                - generic [ref=f5e154]:
+                  - generic [ref=f5e155]: "Explain in:"
+                  - combobox "Explanation language" [ref=f5e156]:
+                    - generic [ref=f5e157]: English
+                    - img [aria-hidden]: ▼
+                  - textbox [aria-hidden] [ref=f5e158]: en
+                - paragraph [ref=f5e159]: The heat pump would cost more to run, about $1,981 a year versus your current $1,578, which is $403 more, so even with the $7,950 rebate and a $10,050 net install cost there is no payback (costs more to run). It would only start saving money if it reached a efficiency (COP) of 3.14, so for now it's not worth it yet.
+          - generic [ref=f5e160]:
+            - generic [ref=f5e161]:
+              - generic [ref=f5e162]: Annual heating cost
+              - generic [ref=f5e164]:
+                - application [ref=f5e168]:
+                  - generic [ref=f5e179]:
+                    - generic [ref=f5e180]:
+                      - generic [ref=f5e181]: Current heating
+                      - generic [ref=f5e183]: Heat pump
+                    - generic [ref=f5e185]:
+                      - generic [ref=f5e186]: $1,578
+                      - generic [ref=f5e187]: $1,981
+                - generic [ref=f5e188]:
+                  - generic [ref=f5e189]:
+                    - text: "Break-even efficiency:"
+                    - button "Break-even efficiency — what's this?" [ref=f5e190]: "?"
+                    - text: "3.14"
+                  - button "How break-even efficiency is calculated" [ref=f5e191]
+            - generic [ref=f5e193]:
+              - heading "Step 2 · Check the numbers we read" [level=2] [ref=f5e194]
+              - 'button "Estimate: 1 value needs a quick check" [ref=f5e195] [cursor=pointer]'
+              - generic [ref=f5e197]:
+                - generic [ref=f5e198]: Looks like gas heat.
+                - button "Yes" [ref=f5e199]
+                - button "Change" [ref=f5e200]
+              - generic [ref=f5e201]:
+                - generic [ref=f5e203]:
+                  - generic [ref=f5e204]: Annual heating use
+                  - generic [ref=f5e205]:
+                    - generic [ref=f5e206]: "652"
+                    - generic [ref=f5e207]: therms
+                  - generic [ref=f5e208]: “Total therms used (12-month) 652 therms”
+                  - generic [ref=f5e209]:
+                    - button "Looks right" [ref=f5e210]
+                    - button "Edit" [ref=f5e211]
+                - generic [ref=f5e213]:
+                  - generic [ref=f5e214]: Fuel price
+                  - generic [ref=f5e215]:
+                    - generic [ref=f5e216]: "2.42"
+                    - generic [ref=f5e217]: $/therm
+                  - generic [ref=f5e218]: “Average price per therm $2.42 / therm”
+          - generic [ref=f5e219]:
+            - heading "Want to fine-tune? (optional)" [level=2] [ref=f5e220]
+            - paragraph [ref=f5e221]: Adjust the assumptions and rebate details to match your situation. The verdict updates live.
+          - generic [ref=f5e222]:
+            - generic [ref=f5e223]:
+              - generic [ref=f5e224]: Assumptions
+              - generic [ref=f5e226]:
+                - generic [ref=f5e227]:
+                  - generic [ref=f5e228]:
+                    - generic [ref=f5e229]:
+                      - text: Heat pump efficiency (COP)
+                      - button "COP — what's this?" [ref=f5e230]: "?"
+                    - generic [ref=f5e231]: "2.5"
+                  - group "Heat pump coefficient of performance" [ref=f5e232]:
+                    - slider [ref=f5e237]: "2.5"
+                  - link "NEEP — cold-climate heat pump list" [ref=f5e239] [cursor=pointer]:
+                    - /url: https://ashp.neep.org/
+                - generic [ref=f5e240]:
+                  - generic [ref=f5e241]:
+                    - generic [ref=f5e242]:
+                      - text: Electricity price
+                      - button "$/kWh — what's this?" [ref=f5e243]: "?"
+                    - generic [ref=f5e244]: $0.288/kWh
+                  - group "Electricity price in dollars per kWh" [ref=f5e245]:
+                    - slider [ref=f5e250]: "0.288"
+                  - link "EIA — Massachusetts residential average price" [ref=f5e252] [cursor=pointer]:
+                    - /url: https://www.eia.gov/electricity/monthly/epm_table_grapher.php
+                - generic [ref=f5e253]:
+                  - generic [ref=f5e254]:
+                    - generic [ref=f5e255]: Fuel price
+                    - generic [ref=f5e256]: $2.42 $/therm
+                  - group "Fuel price in $/therm" [ref=f5e257]:
+                    - slider [ref=f5e262]: "2.42"
+                - generic [ref=f5e263]:
+                  - generic [ref=f5e264]:
+                    - generic [ref=f5e265]:
+                      - text: Seasonal heat pump rate
+                      - button "Seasonal heat pump rate — what's this?" [ref=f5e266]: "?"
+                    - switch "Massachusetts seasonal heat pump electric rate" [ref=f5e267]
+                    - checkbox [aria-hidden] [ref=f5e268]
+                  - paragraph [ref=f5e269]: "Off: the seasonal discount is not applied"
+                  - link "MA residential seasonal heat pump rates" [ref=f5e270] [cursor=pointer]:
+                    - /url: https://www.mass.gov/info-details/residential-electric-seasonal-heat-pump-rates
+            - generic [ref=f5e271]:
+              - generic [ref=f5e273]:
+                - generic [ref=f5e274]:
+                  - text: Rebates
+                  - button "Mass Save — what's this?" [ref=f5e275]: "?"
+                - generic [ref=f5e276]:
+                  - generic [ref=f5e277]: Standard tier
+                  - button "Rebate tier — what's this?" [ref=f5e278]: "?"
+              - generic [ref=f5e279]:
+                - generic [ref=f5e280]:
+                  - generic [ref=f5e281]:
+                    - generic [ref=f5e282]: Household size
+                    - textbox "Household size" [ref=f5e283]:
+                      - /placeholder: 1–8
+                      - text: "3"
+                  - generic [ref=f5e284]:
+                    - generic [ref=f5e285]: Annual household income
+                    - textbox "Annual household income" [ref=f5e286]:
+                      - /placeholder: $ (optional)
+                - generic [ref=f5e287]:
+                  - generic [ref=f5e288]:
+                    - generic [ref=f5e289]: Rebate amount
+                    - generic [ref=f5e290]: $7,950
+                  - generic [ref=f5e291]:
+                    - generic [ref=f5e292]:
+                      - text: Net install cost
+                      - button "Net install cost — what's this?" [ref=f5e293]: "?"
+                    - generic [ref=f5e294]: $10,050
+                - generic [ref=f5e295]:
+                  - generic [ref=f5e296]:
+                    - text: Payback
+                    - button "Payback — what's this?" [ref=f5e297]: "?"
+                  - generic [ref=f5e298]: No payback (heat pump costs more)
+                - generic [ref=f5e299]:
+                  - generic [ref=f5e300]: Eligibility requirements
+                  - list [ref=f5e301]:
+                    - listitem [ref=f5e302]:
+                      - generic [aria-hidden] [ref=f5e303]: ✓
+                      - generic [ref=f5e304]:
+                        - text: Mass Save home energy assessment completed
+                        - button "Mass Save home energy assessment completed — what's this?" [ref=f5e305]: "?"
+                    - listitem [ref=f5e306]:
+                      - generic [aria-hidden] [ref=f5e307]: ✓
+                      - generic [ref=f5e308]:
+                        - text: Weatherization completed (or scheduled)
+                        - button "Weatherization completed (or scheduled) — what's this?" [ref=f5e309]: "?"
+                    - listitem [ref=f5e310]:
+                      - generic [aria-hidden] [ref=f5e311]: ✓
+                      - generic [ref=f5e312]:
+                        - text: Installed by a Mass Save network installer
+                        - button "Installed by a Mass Save network installer — what's this?" [ref=f5e313]: "?"
+                    - listitem [ref=f5e314]:
+                      - generic [aria-hidden] [ref=f5e315]: ✓
+                      - generic [ref=f5e316]:
+                        - text: Equipment uses R-32 or R-454B refrigerant
+                        - button "Equipment uses R-32 or R-454B refrigerant — what's this?" [ref=f5e317]: "?"
+                - paragraph [ref=f5e318]: 2026 rebates require install by Dec 31, 2026.
+                - link "Mass Save rebates" [ref=f5e319] [cursor=pointer]:
+                  - /url: https://www.masssave.com/
+          - generic [ref=f5e320]:
+            - generic [ref=f5e321]: Next step
+            - generic [ref=f5e324]:
+              - generic [ref=f5e325]:
+                - text: Your zip is served by Boston Energy Saver.
+                - button "Boston Energy Saver — what's this?" [ref=f5e326]: "?"
+              - link "Free Boston Energy Saver consultation" [ref=f5e327] [cursor=pointer]:
+                - /url: https://www.boston.gov/departments/environment
+          - generic [ref=f5e331]:
+            - generic [ref=f5e332]: How we calculate
+            - button "Show details" [ref=f5e333]
+    - contentinfo [ref=f5e119]:
+      - generic [ref=f5e120]:
+        - generic [ref=f5e121]: Sources
+        - generic [ref=f5e122]:
+          - link "U.S. EIA" [ref=f5e123] [cursor=pointer]:
+            - /url: https://www.eia.gov/energyexplained/units-and-calculators/
+          - link "U.S. DOE" [ref=f5e124] [cursor=pointer]:
+            - /url: https://www.energy.gov/energysaver/furnaces-and-boilers
+          - link "Mass.gov" [ref=f5e125] [cursor=pointer]:
+            - /url: https://www.mass.gov/info-details/residential-electric-seasonal-heat-pump-rates
+          - link "Mass Save" [ref=f5e126] [cursor=pointer]:
+            - /url: https://www.masssave.com/
+          - link "Analyze Boston (BERDO 2021)" [ref=f5e127] [cursor=pointer]:
+            - /url: https://data.boston.gov/dataset/building-energy-reporting-and-disclosure-ordinance
+      - paragraph [ref=f5e128]: Your bill is never stored
+  - button "Open Next.js Dev Tools" [ref=f5e134] [cursor=pointer]
+  - alert [ref=f5e138]
+  - generic [aria-hidden] [ref=f5e334]: Current heating

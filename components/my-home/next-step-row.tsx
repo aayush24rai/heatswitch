@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { buttonVariants } from "@/components/ui/button"
+import { InfoTip } from "@/components/shared/info-tip"
 import { isBostonZip, isEquityZip } from "@/lib/rebates"
 
 /**
@@ -100,6 +101,11 @@ export function NextStepRow({ zip, onZipChange }: NextStepRowProps) {
           <div className="flex flex-col gap-2">
             <span className="text-sm text-foreground">
               Your zip is served by Boston Energy Saver.
+              <InfoTip
+                term="bostonEnergySaver"
+                label="Boston Energy Saver"
+                className="ml-1"
+              />
             </span>
             <a
               href={BOSTON_ENERGY_SAVER_URL}
@@ -134,7 +140,14 @@ export function NextStepRow({ zip, onZipChange }: NextStepRowProps) {
             distinct from any dollar figure, that does not imply a changed rebate. */}
         {equity ? (
           <Alert>
-            <AlertTitle>Enhanced incentives may be available</AlertTitle>
+            <AlertTitle>
+              Enhanced incentives may be available
+              <InfoTip
+                term="equityZip"
+                label="Equity zip"
+                className="ml-1"
+              />
+            </AlertTitle>
             <AlertDescription>
               Your neighborhood is an equity-focus area, so extra Mass Save
               outreach and support may apply. This is informational only and

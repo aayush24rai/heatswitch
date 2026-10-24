@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { SourceLink } from "@/components/shared/source-link"
+import { InfoTip } from "@/components/shared/info-tip"
 
 /**
  * CostChartCard — a two-bar comparison of current heating cost vs heat pump
@@ -106,12 +107,17 @@ export function CostChartCard({
 
         <div className="flex flex-col gap-1">
           <span className="text-sm text-foreground">
-            Breakeven COP:{" "}
+            Break-even efficiency:
+            <InfoTip
+              term="breakEvenEfficiency"
+              label="Break-even efficiency"
+              className="mx-1"
+            />
             <span className="font-medium tabular-nums">
               {breakevenCOP.toFixed(2)}
             </span>
           </span>
-          <SourceLink label="How breakeven COP is calculated" />
+          <SourceLink label="How break-even efficiency is calculated" />
         </div>
       </CardContent>
     </Card>

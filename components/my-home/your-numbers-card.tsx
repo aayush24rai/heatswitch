@@ -41,6 +41,8 @@ export interface EditableField {
   unit: string
   evidence?: string
   confirmed: boolean
+  min?: number
+  max?: number
 }
 
 export interface YourNumbersCardProps {
@@ -106,7 +108,9 @@ export function YourNumbersCard({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-medium">Your numbers</h2>
+      <h2 className="text-lg font-medium">
+        Step 2 · Check the numbers we read
+      </h2>
 
       {/* Banner: "Estimate: N values need a quick check" — only while N >= 1. */}
       {unconfirmedCount >= 1 ? (
@@ -173,7 +177,8 @@ export function YourNumbersCard({
               unit={field.unit}
               evidence={field.evidence}
               confirmed={field.confirmed}
-              min={0}
+              min={field.min}
+              max={field.max}
               onConfirm={() => onFieldConfirm(field.key)}
               onEdit={(value) => onFieldEdit(field.key, value)}
             />

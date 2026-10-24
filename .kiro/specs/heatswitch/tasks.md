@@ -94,7 +94,7 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - _Requirements: 11.1, 11.2, 3.1, 3.2, 3.3, 3.11_
   - [x] 3.2 Build `UploadCard` with the three Try demo buttons and cached ExtractionResults
     - Implement `components/my-home/upload-card.tsx` with drop zone, zip field, "Heat included in my rent" toggle, and Oil/Gas/Baseboard demo buttons; add cached `ExtractionResult` fixtures (value + confidence + evidence per field) routed through `ExtractionResultSchema`; the Gas demo carries exactly one field below `CONFIDENCE_THRESHOLD`
-    - _Requirements: 1.6, 1.7, 1.8, 1.9, 1.10, 1.11_
+    - _Requirements: 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12_
   - [x] 3.3 Build `VerdictCard` and `CostChartCard`
     - Implement `components/my-home/verdict-card.tsx` (verdict label `text-4xl font-semibold`, big annual number in emerald for savings / amber for extra cost / neutral at zero, never red; "Act before Dec 31" badge; "Estimate" vs "Based on your bill" label; explanation Skeleton placeholder) and `components/my-home/cost-chart-card.tsx` (Recharts two-bar current-vs-heat-pump + breakeven COP readout)
     - _Requirements: 6.1, 6.5, 6.6, 6.7, 6.8, 12.6_
@@ -162,7 +162,7 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - Implement the client-side image pipeline: resize to ≤1600px longest edge, re-encode as JPEG, enforce the ≤4 MB payload, and reject HEIC with an "export as JPEG" message before POSTing to `/api/extract`
     - `safeParse` the result, map to `HomeInputs`, mark fields below `CONFIDENCE_THRESHOLD` amber; on failure, invalid file, timeout, or all-low-confidence, show the manual form pre-filled with known fields and an "extraction unsuccessful" message; support the oil manual inputs and their range validation
     - Add `export const maxDuration = 60` to `app/api/explain/route.ts` as well
-    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.7, 2.8, 3.11_
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.7, 2.8, 3.11, 11.4_
   - [x] 6.3 Generate three demo bills in `demo-data/`
     - Create `demo-data/` with three sample bills as HTML files — gas, oil receipt, and electric baseboard — each visibly watermarked "SAMPLE – DEMO DATA"
     - Use the persona values from task 2.11 (gas 652 therms × $2.42; oil 800 gal × $6.15; electric-resistance 7,600 kWh annual heating) so the cached demo ExtractionResults and these bills agree

@@ -12,7 +12,21 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { SourceLink } from "@/components/shared/source-link"
+import { InfoTip } from "@/components/shared/info-tip"
 import { REBATE_DEADLINE_NOTE } from "@/lib/constants"
+
+/**
+ * Glossary terms for the four eligibility requirement items, in the same order
+ * as REBATE_REQUIREMENTS (lib/constants.ts): assessment, weatherization,
+ * network installer, refrigerant. Matched by index so each item gets the right
+ * plain-English tooltip without re-parsing its text.
+ */
+const REQUIREMENT_TERMS = [
+  "homeEnergyAssessment",
+  "weatherization",
+  "networkInstaller",
+  "refrigerant",
+] as const
 
 /**
  * RebatesCard — the Mass Save rebate, net cost, payback, requirements, deadline
@@ -58,7 +72,7 @@ function DollarStat({
   label,
   value,
 }: {
-  label: string
+  label: React.ReactNode
   value: number
 }) {
   return (
@@ -96,8 +110,14 @@ export function RebatesCard({
     <Card className="rounded-2xl p-6 shadow-sm">
       <CardHeader className="p-0">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-lg font-medium">Rebates</CardTitle>
-          <Badge variant="outline">{TIER_LABEL[result.tier]} tier</Badge>
+          <CardTitle className="text-lg font-medium">
+            Rebates
+            <InfoTip term="massSave" label="Mass Save" className="ml-1" />
+          </CardTitle>
+          <span className="inline-flex items-center gap-1">
+            <Badge variant="outline">{TIER_LABEL[result.tier]} tier</Badge>
+            <InfoTip term="rebateTier" label="Rebate tier" />
+          </span>
         </div>
       </CardHeader>
 
@@ -144,12 +164,27 @@ export function RebatesCard({
         {/* Dollar figures. */}
         <div className="grid grid-cols-2 gap-4">
           <DollarStat label="Rebate amount" value={result.rebateAmount} />
-          <DollarStat label="Net install cost" value={result.netInstallCost} />
+          <DollarStat
+            label={
+              <>
+                Net install cost
+                <InfoTip
+                  term="netInstallCost"
+                  label="Net install cost"
+                  className="ml-1"
+                />
+              </>
+            }
+            value={result.netInstallCost}
+          />
         </div>
 
         {/* Payback — amber (never red) when the heat pump costs more (Req 5.8). */}
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs text-muted-foreground">Payback</span>
+          <span className="text-xs text-muted-foreground">
+            Payback
+            <InfoTip term="payback" label="Payback" className="ml-1" />
+          </span>
           <span
             className={cn(
               "text-xl font-semibold tabular-nums",
@@ -184,7 +219,7 @@ export function RebatesCard({
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">Eligibility requirements</span>
           <ul className="flex flex-col gap-1.5">
-            {result.requirements.map((req) => (
+            {result.requirements.map((req, i) => (
               <li
                 key={req}
                 className="flex items-start gap-2 text-sm text-foreground"
@@ -195,7 +230,16 @@ export function RebatesCard({
                 >
                   ✓
                 </span>
-                <span>{req}</span>
+                <span>
+                  {req}
+                  {REQUIREMENT_TERMS[i] ? (
+                    <InfoTip
+                      term={REQUIREMENT_TERMS[i]}
+                      label={req}
+                      className="ml-1"
+                    />
+                  ) : null}
+                </span>
               </li>
             ))}
           </ul>

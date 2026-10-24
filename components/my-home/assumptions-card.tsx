@@ -12,6 +12,7 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { SourceLink } from "@/components/shared/source-link"
+import { InfoTip } from "@/components/shared/info-tip"
 
 /**
  * AssumptionsCard — the user-adjustable knobs on the My home tab (Requirements
@@ -71,7 +72,7 @@ function SliderRow({
   onChange,
   source,
 }: {
-  label: string
+  label: React.ReactNode
   valueText: string
   value: number
   min: number
@@ -119,7 +120,12 @@ export function AssumptionsCard({
       <CardContent className="flex flex-col gap-6 p-0 pt-4">
         {/* Heat pump COP (Req 4.13). */}
         <SliderRow
-          label="Heat pump COP"
+          label={
+            <>
+              Heat pump efficiency (COP)
+              <InfoTip term="cop" label="COP" className="ml-1" />
+            </>
+          }
           valueText={assumptions.heatPumpCOP.toFixed(1)}
           value={assumptions.heatPumpCOP}
           min={1.5}
@@ -137,7 +143,12 @@ export function AssumptionsCard({
 
         {/* Electricity price $/kWh. */}
         <SliderRow
-          label="Electricity price"
+          label={
+            <>
+              Electricity price
+              <InfoTip term="kwh" label="$/kWh" className="ml-1" />
+            </>
+          }
           valueText={`$${assumptions.electricityPrice.toFixed(3)}/kWh`}
           value={assumptions.electricityPrice}
           min={0.1}
@@ -172,6 +183,11 @@ export function AssumptionsCard({
           <div className="flex items-center justify-between">
             <span className="text-sm text-foreground">
               Seasonal heat pump rate
+              <InfoTip
+                term="seasonalHeatPumpRate"
+                label="Seasonal heat pump rate"
+                className="ml-1"
+              />
             </span>
             <Switch
               aria-label="Massachusetts seasonal heat pump electric rate"

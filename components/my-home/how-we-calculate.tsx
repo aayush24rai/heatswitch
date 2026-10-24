@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { SourceLink } from "@/components/shared/source-link"
+import { InfoTip } from "@/components/shared/info-tip"
 
 /**
  * HowWeCalculate — a transparency section, collapsed by default, that expands to
@@ -33,7 +34,7 @@ function SourceRow({
   sourceLabel,
   href,
 }: {
-  label: string
+  label: React.ReactNode
   value: string
   sourceLabel: string
   href: string
@@ -91,8 +92,8 @@ export function HowWeCalculate({ assumptions }: HowWeCalculateProps) {
                 efficiency
               </li>
               <li>
-                Breakeven COP = the COP at which heat pump cost equals current
-                cost
+                Break-even efficiency = the COP at which heat pump cost equals
+                current cost
               </li>
               <li>
                 Net install cost = gross install cost − Mass Save rebate
@@ -134,7 +135,12 @@ export function HowWeCalculate({ assumptions }: HowWeCalculateProps) {
               href="https://www.mass.gov/info-details/residential-electric-seasonal-heat-pump-rates"
             />
             <SourceRow
-              label="Heat pump capacity"
+              label={
+                <>
+                  Heat pump capacity
+                  <InfoTip term="tons" label="Tons" className="ml-1" />
+                </>
+              }
               value={`${assumptions.heatPumpTons} tons`}
               sourceLabel="Mass Save rebates"
               href="https://www.masssave.com/"
