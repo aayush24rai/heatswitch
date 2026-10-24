@@ -173,14 +173,14 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-6-desktop.png` and `docs/kiro/screens/task-6-mobile.png`, and reference them in the log entry
     - Task is not complete until these steps pass
 
-- [ ] 7. Implement real explanation and language support (Anthropic)
-  - [ ] 7.1 Implement `app/api/explain/route.ts` with a real Anthropic SDK call
+- [x] 7. Implement real explanation and language support (Anthropic)
+  - [x] 7.1 Implement `app/api/explain/route.ts` with a real Anthropic SDK call
     - Make a real call with model `claude-sonnet-5-5`, reading `ANTHROPIC_API_KEY` only from `process.env` server-side; accept `{verdict, numbers, language}` with only pre-computed numbers (no raw bill content) and return prose only in the requested language; the LLM computes no number; treat >30s or errors as failure
     - _Requirements: 9.1, 9.2, 9.3, 9.7, 9.8_
-  - [ ] 7.2 Wire the language dropdown and explanation rendering into `VerdictCard`/`app/page.tsx`
+  - [x] 7.2 Wire the language dropdown and explanation rendering into `VerdictCard`/`app/page.tsx`
     - Add the six-language dropdown (English, Spanish, Cape Verdean Creole, Chinese, Haitian Creole, Vietnamese); on language change request a new explanation while keeping computed numbers visible; show a Skeleton while loading; on timeout/error keep numbers on screen and show a default English sentence (<=200 chars); never display numbers produced by the Explanation_Service
     - _Requirements: 9.4, 9.5, 9.6, 9.7, 9.8, 9.9_
-  - [ ] 7.3 Done (workflow.md)
+  - [x] 7.3 Done (workflow.md)
     - Run `npx vitest run` and fix any failures before moving on
     - Append a `KIRO_LOG.md` entry (time, task, Kiro feature used — MCP/Anthropic SDK, what it did, why it mattered)
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-7-desktop.png` and `docs/kiro/screens/task-7-mobile.png`, and reference them in the log entry

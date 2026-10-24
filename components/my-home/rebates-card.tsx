@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { cn } from "cn"
 import type { HomeInputs, RebateTier } from "@/lib/schema"
 import type { RebateResult } from "@/lib/rebates"
@@ -29,6 +30,10 @@ import { REBATE_DEADLINE_NOTE } from "@/lib/constants"
 export interface RebatesCardProps {
   result: RebateResult
   inputs: HomeInputs
+  /** Patch inputs.householdSize (integer 1–8) live so the tier re-selects. */
+  onHouseholdSizeChange: (size: number) => void
+  /** Patch inputs.annualIncome live (undefined when blank) so the tier re-selects. */
+  onIncomeChange: (income: number | undefined) => void
 }
 
 /** Mass Save multifamily / landlord next-step page (Req 7.1). */
@@ -52,7 +57,8 @@ function formatDollars(value: number): string {
   }).format(Math.round(value))
 }
 
-/** A dollar stat with its label above and a masssave.com source beneath. */
+/** A dollar stat with its label above. The single Mass Save source link now
+ *  lives once at the bottom of the card (not under every number). */
 function DollarStat({
   label,
   value,
@@ -66,13 +72,30 @@ function DollarStat({
       <span className="text-xl font-semibold tabular-nums">
         {formatDollars(value)}
       </span>
-      <SourceLink label="Mass Save rebates" href={MASS_SAVE_URL} />
     </div>
   )
 }
 
-export function RebatesCard({ result, inputs }: RebatesCardProps) {
+export function RebatesCard({
+  result,
+  inputs,
+  onHouseholdSizeChange,
+  onIncomeChange,
+}: RebatesCardProps) {
   const noPayback = result.paybackYears === null
+
+  // Household size is an integer 1–8; empty income maps to undefined (Standard).
+  function handleHouseholdSizeInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, "")
+    if (digits === "") return
+    const n = Math.min(8, Math.max(1, parseInt(digits, 10)))
+    onHouseholdSizeChange(n)
+  }
+
+  function handleIncomeInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, "")
+    onIncomeChange(digits === "" ? undefined : parseInt(digits, 10))
+  }
 
   // A shareable, plain-text summary the renter can send their landlord (Req 7.1).
   const landlordSummary = [
@@ -97,6 +120,45 @@ export function RebatesCard({ result, inputs }: RebatesCardProps) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-5 p-0 pt-4">
+        {/* Household size + income feed selectRebateTier live. These inputs are
+            display-only intake; all dollar math stays in computeRebates. */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="rebate-household-size"
+              className="text-xs text-muted-foreground"
+            >
+              Household size
+            </label>
+            <input
+              id="rebate-household-size"
+              type="text"
+              inputMode="numeric"
+              placeholder="1–8"
+              value={inputs.householdSize ?? ""}
+              onChange={handleHouseholdSizeInput}
+              className="h-8 rounded-md border bg-background px-2 text-sm tabular-nums"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="rebate-income"
+              className="text-xs text-muted-foreground"
+            >
+              Annual household income
+            </label>
+            <input
+              id="rebate-income"
+              type="text"
+              inputMode="numeric"
+              placeholder="$ (optional)"
+              value={inputs.annualIncome ?? ""}
+              onChange={handleIncomeInput}
+              className="h-8 rounded-md border bg-background px-2 text-sm tabular-nums"
+            />
+          </div>
+        </div>
+
         {/* Dollar figures. */}
         <div className="grid grid-cols-2 gap-4">
           <DollarStat label="Rebate amount" value={result.rebateAmount} />
@@ -116,7 +178,6 @@ export function RebatesCard({ result, inputs }: RebatesCardProps) {
               ? "No payback (heat pump costs more)"
               : `${result.paybackYears!.toFixed(1)} years`}
           </span>
-          <SourceLink label="Mass Save rebates" href={MASS_SAVE_URL} />
         </div>
 
         {/* Tier-selection notes (surfaced only when present; never affect math). */}
@@ -189,6 +250,9 @@ export function RebatesCard({ result, inputs }: RebatesCardProps) {
             </AlertDescription>
           </Alert>
         ) : null}
+
+        {/* Single source link for the whole card (Req 11.1 / FIX 6). */}
+        <SourceLink label="Mass Save rebates" href={MASS_SAVE_URL} />
       </CardContent>
     </Card>
   )

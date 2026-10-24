@@ -33,10 +33,13 @@ export interface CostChartCardProps {
   breakevenCOP: number
 }
 
-/** Current heating uses a neutral muted token; heat pump uses the emerald
- *  chart token — both read as "informational", never alarming (no red). */
+/** Current heating uses a neutral muted token. The heat pump bar is colored by
+ *  the comparison: emerald (the chart token) when it saves money, amber when it
+ *  costs MORE to run than the current system. Never red. */
 const CURRENT_COLOR = "var(--muted-foreground)"
-const HEAT_PUMP_COLOR = "var(--chart-2)"
+const HEAT_PUMP_SAVINGS_COLOR = "var(--chart-2)"
+/** amber-600 — matches the "extra cost" color used across the results UI. */
+const HEAT_PUMP_COSTS_MORE_COLOR = "#d97706"
 
 function formatDollars(value: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -51,9 +54,16 @@ export function CostChartCard({
   heatPumpAnnualCost,
   breakevenCOP,
 }: CostChartCardProps) {
+  // Amber when the heat pump costs more to run than the current system,
+  // emerald otherwise (never red).
+  const heatPumpColor =
+    heatPumpAnnualCost > currentAnnualCost
+      ? HEAT_PUMP_COSTS_MORE_COLOR
+      : HEAT_PUMP_SAVINGS_COLOR
+
   const data = [
     { name: "Current heating", cost: Math.round(currentAnnualCost), fill: CURRENT_COLOR },
-    { name: "Heat pump", cost: Math.round(heatPumpAnnualCost), fill: HEAT_PUMP_COLOR },
+    { name: "Heat pump", cost: Math.round(heatPumpAnnualCost), fill: heatPumpColor },
   ]
 
   return (

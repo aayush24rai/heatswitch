@@ -29,6 +29,8 @@ import {
   type DemoHome,
 } from "@/components/my-home/demo-homes"
 import { extractFromFile } from "@/components/my-home/bill-upload"
+import { requestExplanation } from "@/components/my-home/explain-request"
+import { DEFAULT_EXPLANATION } from "@/components/my-home/verdict-card"
 import {
   defaultAssumptions,
   mapExtractionToScenario,
@@ -123,8 +125,12 @@ export default function Page() {
     null
   )
 
-  // --- Explanation language (explanation text itself arrives in task 7). ---
+  // --- Explanation language + the fetched prose / loading flag (task 7.2). ---
   const [language, setLanguage] = React.useState<Language>("en")
+  // The explanation prose for the CURRENT language, or null while loading /
+  // before the first request. Numbers on screen NEVER come from here (Req 9.9).
+  const [explanation, setExplanation] = React.useState<string | null>(null)
+  const [explanationLoading, setExplanationLoading] = React.useState(false)
 
   // --- Buildings tab: selected zip (null => all of Boston). ---
   const [buildingsSelectedZip, setBuildingsSelectedZip] = React.useState<
@@ -360,6 +366,16 @@ export default function Page() {
     setInputs((prev) => (prev ? { ...prev, heatIncludedInRent: on } : prev))
   }
 
+  // --- Zip: keep the intake state AND any loaded inputs in sync so NextStepRow
+  //     (Boston / equity notice) re-renders live while results are shown. The
+  //     equity notice only appears for the nine equity zips (demos use 02118,
+  //     which is Boston but NOT equity), so editing the zip to e.g. 02125
+  //     surfaces it immediately. ---
+  function handleZipChange(nextZip: string) {
+    setZip(nextZip)
+    setInputs((prev) => (prev ? { ...prev, zip: nextZip } : prev))
+  }
+
   // --- Assumptions handlers (merge so the computed useMemo re-runs; Req 4.11). ---
   function handleCOPChange(cop: number) {
     setAssumptions((prev) => (prev ? { ...prev, heatPumpCOP: cop } : prev))
@@ -384,6 +400,27 @@ export default function Page() {
     setConfirmed((prev) => ({ ...prev, fuelUnitPrice: true }))
   }
 
+  // --- Rebate intake: household size + income feed selectRebateTier live. ---
+  // Household size stays an integer 1–8; blank income deletes the key so the
+  // tier falls back to Standard (annualIncome: undefined), never 0.
+  function handleHouseholdSizeChange(size: number) {
+    const n = Math.min(8, Math.max(1, Math.round(size)))
+    setInputs((prev) => (prev ? { ...prev, householdSize: n } : prev))
+  }
+
+  function handleIncomeChange(income: number | undefined) {
+    setInputs((prev) => {
+      if (!prev) return prev
+      if (income === undefined) {
+        // Delete the key rather than set 0, so the tier is Standard.
+        const { annualIncome: _omit, ...rest } = prev
+        void _omit
+        return rest
+      }
+      return { ...prev, annualIncome: income }
+    })
+  }
+
   // --- Live recompute: a pure function of inputs + assumptions (Req 3.10). ---
   const computed = React.useMemo(() => {
     if (!inputs || !assumptions) return null
@@ -400,6 +437,55 @@ export default function Page() {
 
   // N amber fields still needing a quick check. isEstimate while N >= 1.
   const isEstimate = EDITABLE_FIELD_KEYS.some((k) => !confirmed[k])
+
+  // --- Explanation request (task 7.2, Req 9.1/9.4/9.5/9.6/9.7/9.8/9.9). ---
+  // When results exist, request an explanation in the current language from
+  // /api/explain, sending ONLY the computed numbers (no raw bill content). On a
+  // language change the effect re-runs: it shows a Skeleton while loading and
+  // keeps the numbers visible throughout. A per-request AbortController + a
+  // language guard discard any stale response whose language no longer matches
+  // the selected one. On timeout/error it falls back to the default English
+  // sentence (<=200 chars). The numbers rendered always come from the engine.
+  React.useEffect(() => {
+    if (!computed) {
+      setExplanation(null)
+      setExplanationLoading(false)
+      return
+    }
+
+    const controller = new AbortController()
+    let cancelled = false
+    setExplanationLoading(true)
+    setExplanation(null)
+
+    const payload = {
+      verdict: computed.verdict,
+      numbers: {
+        annualDeltaDollars: computed.cmp.annualDeltaDollars,
+        currentAnnualCost: computed.cmp.currentAnnualCost,
+        heatPumpAnnualCost: computed.cmp.heatPumpAnnualCost,
+        breakevenCOP: computed.cmp.breakevenCOP,
+        rebateAmount: computed.reb.rebateAmount,
+        netInstallCost: computed.reb.netInstallCost,
+        paybackYears: computed.reb.paybackYears,
+      },
+      language,
+    }
+    const requestedLanguage = language
+
+    requestExplanation(payload, controller.signal).then((outcome) => {
+      // Ignore a stale response: the effect was cleaned up, or the selected
+      // language changed since this request went out.
+      if (cancelled || requestedLanguage !== language) return
+      setExplanation(outcome.ok ? outcome.explanation : DEFAULT_EXPLANATION)
+      setExplanationLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [computed, language])
 
   // Build the EditableField[] for YourNumbersCard from the extraction + inputs.
   const editableFields: EditableField[] = React.useMemo(() => {
@@ -563,7 +649,7 @@ export default function Page() {
               <UploadCard
                 zip={zip}
                 heatIncludedInRent={heatIncludedInRent}
-                onZipChange={setZip}
+                onZipChange={handleZipChange}
                 onRentToggle={handleRentToggle}
                 onBillSelected={handleBillSelected}
                 onTryDemo={handleTryDemo}
@@ -595,7 +681,8 @@ export default function Page() {
                 <VerdictCard
                   verdict={computed!.verdict}
                   annualDeltaDollars={computed!.cmp.annualDeltaDollars}
-                  explanation={null}
+                  explanation={explanation}
+                  explanationLoading={explanationLoading}
                   language={language}
                   isEstimate={isEstimate}
                   isDemo={isDemo}
@@ -605,16 +692,26 @@ export default function Page() {
                 />
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-                  {/* Left column: cost chart. */}
+                  {/* Left column: cost chart + assumptions (balances the two
+                      columns — Req FIX 5). */}
                   <div className="flex flex-col gap-6 md:col-span-3">
                     <CostChartCard
                       currentAnnualCost={computed!.cmp.currentAnnualCost}
                       heatPumpAnnualCost={computed!.cmp.heatPumpAnnualCost}
                       breakevenCOP={computed!.cmp.breakevenCOP}
                     />
+                    <AssumptionsCard
+                      assumptions={assumptions!}
+                      fuelUnitPrice={inputs!.fuelUnitPrice}
+                      heatingType={inputs!.heatingType}
+                      onChangeCOP={handleCOPChange}
+                      onChangeElectricityPrice={handleElectricityPriceChange}
+                      onChangeFuelPrice={handleFuelPriceChange}
+                      onToggleSeasonalRate={handleSeasonalRateToggle}
+                    />
                   </div>
 
-                  {/* Right column: your numbers + task-4 placeholders. */}
+                  {/* Right column: your numbers + rebates. */}
                   <div className="flex flex-col gap-6 md:col-span-2">
                     <Card className="rounded-2xl p-6 shadow-sm">
                       <YourNumbersCard
@@ -625,16 +722,12 @@ export default function Page() {
                         onHeatingTypeChange={handleHeatingTypeChange}
                       />
                     </Card>
-                    <AssumptionsCard
-                      assumptions={assumptions!}
-                      fuelUnitPrice={inputs!.fuelUnitPrice}
-                      heatingType={inputs!.heatingType}
-                      onChangeCOP={handleCOPChange}
-                      onChangeElectricityPrice={handleElectricityPriceChange}
-                      onChangeFuelPrice={handleFuelPriceChange}
-                      onToggleSeasonalRate={handleSeasonalRateToggle}
+                    <RebatesCard
+                      result={computed!.reb}
+                      inputs={inputs!}
+                      onHouseholdSizeChange={handleHouseholdSizeChange}
+                      onIncomeChange={handleIncomeChange}
                     />
-                    <RebatesCard result={computed!.reb} inputs={inputs!} />
                   </div>
                 </div>
 

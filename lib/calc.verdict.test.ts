@@ -332,24 +332,23 @@ describe("decideVerdict — breakeven boundaries (Req 6.1, 6.3, 6.4)", () => {
 describe("decideVerdict — actBeforeDec31 deadline flag (Req 5.12, 5.13)", () => {
   const inputs = baseGasInputs();
 
-  // A rebate that materially shortens payback: gross install 18000, rebate
-  // 8500 => net 9500. savings = 1200/yr.
-  //   payback_noRebate = 18000 / 1200 = 15 years
-  //   payback_net      =  9500 / 1200 ≈ 7.92 years
-  //   difference ≈ 7.08 years (>= 1) => material.
+  // New rule: actBeforeDec31 is true IFF rebateAmount > 0, paybackYears is
+  // non-null and <= 15, and now <= the 2026 install deadline. A representative
+  // rebate with a short payback: rebate 8500, net 9500, savings 1200/yr =>
+  // payback ≈ 7.92 years (<= 15).
   const savings = 1200;
-  const materialReb = (): RebateResult =>
+  const goodReb = (): RebateResult =>
     makeReb({
       rebateAmount: 8500,
       netInstallCost: 9500,
-      paybackYears: 9500 / savings,
+      paybackYears: 9500 / savings, // ≈ 7.92 years
     });
 
-  it("true when savings > 0, rebate material, and now <= deadline (Req 5.12)", () => {
+  it("true when rebate > 0, payback <= 15, and now <= deadline (Req 5.12)", () => {
     const cmp = makeCmp(savings);
     const now = new Date("2026-06-01T00:00:00"); // before Dec 31, 2026
     expect(now <= REBATE_DEADLINE_2026).toBe(true);
-    const verdict = decideVerdict(cmp, materialReb(), inputs, now);
+    const verdict = decideVerdict(cmp, goodReb(), inputs, now);
     expect(verdict.actBeforeDec31).toBe(true);
   });
 
@@ -357,18 +356,18 @@ describe("decideVerdict — actBeforeDec31 deadline flag (Req 5.12, 5.13)", () =
     const cmp = makeCmp(savings);
     const now = new Date("2027-01-01T00:00:00"); // after Dec 31, 2026
     expect(now > REBATE_DEADLINE_2026).toBe(true);
-    const verdict = decideVerdict(cmp, materialReb(), inputs, now);
+    const verdict = decideVerdict(cmp, goodReb(), inputs, now);
     expect(verdict.actBeforeDec31).toBe(false);
   });
 
   it("true right at the deadline boundary (now === REBATE_DEADLINE_2026)", () => {
     const cmp = makeCmp(savings);
     const now = new Date(REBATE_DEADLINE_2026.getTime());
-    const verdict = decideVerdict(cmp, materialReb(), inputs, now);
+    const verdict = decideVerdict(cmp, goodReb(), inputs, now);
     expect(verdict.actBeforeDec31).toBe(true);
   });
 
-  it("false when there are no savings (payback null), even before the deadline", () => {
+  it("false when paybackYears is null (no savings), even before the deadline", () => {
     const cmp = makeCmp(0); // no savings
     const now = new Date("2026-06-01T00:00:00");
     // Savings <= 0 => payback null; rebate present but nothing to pay back.
@@ -381,30 +380,38 @@ describe("decideVerdict — actBeforeDec31 deadline flag (Req 5.12, 5.13)", () =
     expect(verdict.actBeforeDec31).toBe(false);
   });
 
-  it("false when rebateAmount === 0, even with savings before the deadline", () => {
+  it("false when rebateAmount === 0, even with a short payback before the deadline", () => {
     const cmp = makeCmp(savings);
     const now = new Date("2026-06-01T00:00:00");
-    // No rebate: net === gross, payback unchanged, nothing to incentivize.
+    // No rebate available: the flag never fires regardless of payback.
     const reb = makeReb({
       rebateAmount: 0,
-      netInstallCost: 18000,
-      paybackYears: 18000 / savings,
+      netInstallCost: 9500,
+      paybackYears: 9500 / savings,
     });
     const verdict = decideVerdict(cmp, reb, inputs, now);
     expect(verdict.actBeforeDec31).toBe(false);
   });
 
-  it("false when the rebate does not shorten payback by >= 1 year (Req 5.12)", () => {
+  it("boundary: payback exactly 15 years => true (Req 5.12)", () => {
     const cmp = makeCmp(savings);
     const now = new Date("2026-06-01T00:00:00");
-    // Tiny rebate: gross 18000, rebate 600 => net 17400.
-    //   payback_noRebate = 18000 / 1200 = 15 years
-    //   payback_net      = 17400 / 1200 = 14.5 years
-    //   difference = 0.5 year (< 1) => NOT material.
     const reb = makeReb({
-      rebateAmount: 600,
-      netInstallCost: 17400,
-      paybackYears: 17400 / savings,
+      rebateAmount: 8500,
+      netInstallCost: 15 * savings, // 18000 => payback exactly 15 years
+      paybackYears: 15,
+    });
+    const verdict = decideVerdict(cmp, reb, inputs, now);
+    expect(verdict.actBeforeDec31).toBe(true);
+  });
+
+  it("boundary: payback 15.01 years => false (Req 5.12)", () => {
+    const cmp = makeCmp(savings);
+    const now = new Date("2026-06-01T00:00:00");
+    const reb = makeReb({
+      rebateAmount: 8500,
+      netInstallCost: 15.01 * savings,
+      paybackYears: 15.01, // just over the 15-year threshold
     });
     const verdict = decideVerdict(cmp, reb, inputs, now);
     expect(verdict.actBeforeDec31).toBe(false);

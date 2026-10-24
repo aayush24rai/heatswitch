@@ -351,6 +351,27 @@ describe("computeRebates — equity-zip invariance (Req 5.9)", () => {
     expect(isBostonZip(NON_EQUITY_ZIP)).toBe(true);
   });
 
+  it("isEquityZip returns true for all nine equity zips and false for a non-equity Boston zip", () => {
+    // The authoritative equity-zip list (lib/rebates.ts).
+    const EQUITY_ZIPS = [
+      "02134",
+      "02135",
+      "02121",
+      "02122",
+      "02124",
+      "02125",
+      "02119",
+      "02120",
+      "02128",
+    ];
+    for (const zip of EQUITY_ZIPS) {
+      expect(isEquityZip(zip)).toBe(true);
+    }
+    // 02116 (Back Bay) is a Boston zip but NOT on the equity list.
+    expect(isBostonZip("02116")).toBe(true);
+    expect(isEquityZip("02116")).toBe(false);
+  });
+
   it("rebateAmount is identical whether or not the zip is an equity zip", () => {
     fc.assert(
       fc.property(homeInputsArb, assumptionsArb, (inputs, a) => {

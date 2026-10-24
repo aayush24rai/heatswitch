@@ -1103,3 +1103,66 @@ Commit and push now: feat(my-home): add YourNumbersCard with heating-type chip, 
 - Why it mattered: this is the first point a real uploaded bill produces an
   honest, source-cited answer — the model reads the document and the pure engine
   does every calculation, with a graceful manual fallback when a read is weak.
+
+## Phase A — six UI/logic fixes (my-home results)
+- When: 2026-10-24 18:52 UTC
+- Kiro feature used: Steering (.kiro/steering design/tech/workflow rules) + Playwright MCP
+- What: Six scoped fixes. (1) RebatesCard gained live Household size (1–8) +
+  Annual household income inputs wired through app/page.tsx to inputs.householdSize /
+  inputs.annualIncome (blank income → undefined → Standard tier) so selectRebateTier /
+  computeRebates re-run and the tier Badge updates. (2) lib/rebates.ts EQUITY_ZIPS replaced
+  with the nine authorized zips (02134/02135/02121/02122/02124/02125/02119/02120/02128),
+  isEquityZip kept informational-only; app/page.tsx now propagates intake zip edits to
+  inputs.zip so NextStepRow re-renders live — 02125 now shows the equity notice. Added a unit
+  test asserting all nine return true and 02116 returns false. (3) decideVerdict actBeforeDec31
+  rewritten to the new rule (rebate>0 AND payback≤15 AND now≤deadline); verdict tests rewritten
+  to match; Oil demo still actBeforeDec31===true. (4) CostChartCard heat pump bar is amber when
+  it costs more, emerald otherwise (never red). (5) AssumptionsCard moved into the left column
+  under CostChartCard to balance the grid. (6) YourNumbersCard banner grammar ("1 value needs" /
+  "N values need"); RebatesCard shows a single Mass Save source link at the card bottom instead of
+  under every number.
+- Verification: `npx tsc --noEmit` clean; `npx vitest run` green (9 files, 112 tests). Playwright
+  screenshots of the Gas demo with zip 02125 (equity notice visible, balanced layout, household/income
+  inputs, single source link) at 1280px and 390px → docs/kiro/screens/fixes2-myhome-desktop.png and
+  docs/kiro/screens/fixes2-myhome-mobile.png.
+- Why it mattered: makes the equity notice actually reachable, aligns the rebate tier with live
+  household/income inputs, keeps the deadline flag honest and simple, and balances/ tidies the
+  results layout — all under the shadcn/Tailwind, light-mode, never-red design rules.
+
+## Task 7 — real explanation route + six-language dropdown (Anthropic)
+- When: 2026-10-24 19:00 UTC
+- Kiro feature used: Anthropic SDK (@anthropic-ai/sdk, model claude-sonnet-5-5)
+- What: (7.1) Replaced the stub app/api/explain/route.ts with a real Anthropic call.
+  It accepts POST JSON { verdict, numbers, language } (numbers are the already-computed
+  engine figures; NO raw bill content is sent), reads ANTHROPIC_API_KEY only from
+  process.env (clean 500 when missing), keeps maxDuration=60, and returns { explanation }
+  — prose only, in the requested language. The system prompt pins the output language,
+  forbids introducing any numeric value that wasn't provided (the model may restate given
+  numbers but never invents one), caps length ~500 chars, and sets an honest tone. A
+  model-not-found/invalid-model error is surfaced (model is never swapped).
+  (7.2) Wired the six-language dropdown + explanation rendering in app/page.tsx via a new
+  client helper components/my-home/explain-request.ts (30s AbortController timeout mirroring
+  bill-upload.ts). When results exist the page requests an explanation for the current
+  language; on language change it re-requests while keeping the computed numbers visible,
+  shows a Skeleton in VerdictCard's explanation slot while loading (new explanationLoading
+  prop), guards against stale responses (ignores a response whose language no longer matches),
+  and on timeout/error falls back to VerdictCard's exported DEFAULT_EXPLANATION (<=200 chars).
+  Numbers on screen always come from the engine, never the explanation service.
+- Verification: `npx tsc --noEmit` clean; `npx vitest run` green (9 files, 112 tests). LIVE
+  per-language check against the running dev server (/api/explain, Oil-demo numbers:
+  delta 2630, current 4920, heat-pump 2290, breakeven 1.16, rebate 16000, net 2000, payback 0.76):
+  all six languages returned HTTP 200 with non-empty prose IN the requested language, and every
+  digit-run mapped to a provided engine number or the "December 31" deadline date — no model-
+  introduced numbers:
+    | Language              | Detected language OK? | Stray numbers? |
+    | English               | Yes                   | No             |
+    | Spanish               | Yes                   | No             |
+    | Cape Verdean Creole   | Yes                   | No             |
+    | Chinese               | Yes                   | No (incl. 12月31日 date) |
+    | Haitian Creole        | Yes                   | No             |
+    | Vietnamese            | Yes                   | No (locale . / , formatting) |
+  Playwright screenshots of the verdict card with the Spanish explanation rendered at 1280px and
+  390px → docs/kiro/screens/task-7-desktop.png and docs/kiro/screens/task-7-mobile.png.
+- Why it mattered: delivers HeatSwitch's six-language honest-explanation promise while keeping the
+  hard rule intact — the LLM writes prose from code-computed numbers and never computes (or invents)
+  a number.

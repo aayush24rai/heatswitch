@@ -742,28 +742,21 @@ function quantile(values: number[], q: number): number {
  *   replacing" (Requirement 6.4).
  *
  * ## actBeforeDec31 (Requirements 5.12 / 5.13)
- * True ONLY when every one of these holds:
- * 1. annual savings > 0 (`cmp.annualDeltaDollars > 0`) — otherwise there is no
- *    payback at all and the flag is false;
- * 2. a rebate is actually available (`reb.rebateAmount > 0`);
+ * True IFF every one of these holds:
+ * 1. a rebate is actually available (`reb.rebateAmount > 0`);
+ * 2. the payback WITH the rebate is defined and within 15 years
+ *    (`reb.paybackYears !== null && reb.paybackYears <= 15`). Because
+ *    `reb.paybackYears` is null exactly when annual savings are <= 0, a
+ *    non-null payback already implies positive savings — so there is no need to
+ *    test the delta separately;
  * 3. the current date is on or before the 2026 install deadline
- *    (`now <= REBATE_DEADLINE_2026`) — if `now` is after the deadline the flag is
- *    false (Requirement 5.13);
- * 4. the rebate materially shortens payback: it reduces payback years by at
- *    least 1 year versus the payback computed from the GROSS install cost
- *    (Requirement 5.12).
+ *    (`now <= REBATE_DEADLINE_2026`) — if `now` is after the deadline the flag
+ *    is false (Requirement 5.13).
  *
- * To evaluate materiality (point 4) we reconstruct the gross install cost from
- * the rebate result — `installCostGross = reb.netInstallCost + reb.rebateAmount`
- * (because `netInstallCost === installCostGross - rebateAmount`) — and compute
- * the payback that would result with NO rebate:
- *   `payback_noRebate = annualSavings > 0 ? installCostGross / annualSavings : null`
- * where `annualSavings = cmp.annualDeltaDollars`. The net-of-rebate payback is
- * `reb.paybackYears` (already `netInstallCost / annualSavings`). The rebate is
- * material when both paybacks are finite and
- *   `payback_noRebate - reb.paybackYears >= 1`.
- * When savings are <= 0, `payback_noRebate` is null, `reb.paybackYears` is null,
- * and the flag is false.
+ * This is a simple "a worthwhile rebate is on the table and the clock is still
+ * running" flag: a rebate exists, the heat pump pays back in a reasonable time,
+ * and the deadline has not passed. There is no longer any "materially shortens
+ * payback" comparison against the gross-cost payback.
  *
  * ## isRenter (Requirements 7.2 / 7.3)
  * Derived from `inputs.heatIncludedInRent`: when heat is included in rent the
@@ -804,26 +797,14 @@ export function decideVerdict(
   }
 
   // --- actBeforeDec31 (Requirements 5.12 / 5.13). ---
-  // Reconstruct the gross install cost from the rebate result:
-  //   netInstallCost === installCostGross - rebateAmount
-  //   => installCostGross === netInstallCost + rebateAmount
-  const installCostGross = reb.netInstallCost + reb.rebateAmount;
-
-  // Payback with NO rebate (null when there are no savings to pay it back).
-  const paybackNoRebate = annualSavings > 0 ? installCostGross / annualSavings : null;
-
-  // The rebate materially shortens payback when it cuts payback years by at
-  // least 1 versus the gross-cost payback (Requirement 5.12).
-  const rebateMaterial =
-    paybackNoRebate !== null &&
-    reb.paybackYears !== null &&
-    paybackNoRebate - reb.paybackYears >= 1;
-
+  // True IFF a rebate is available, the payback WITH the rebate is defined and
+  // within 15 years, and the 2026 install deadline has not passed. A non-null
+  // payback already implies positive savings (payback is null when savings <= 0).
   const actBeforeDec31 =
-    annualSavings > 0 && // no savings => no payback => flag false
     reb.rebateAmount > 0 && // a rebate must actually be available
-    now <= REBATE_DEADLINE_2026 && // deadline still ahead (Requirement 5.13)
-    rebateMaterial; // rebate reduces payback by >= 1 year (Requirement 5.12)
+    reb.paybackYears !== null && // defined payback => positive savings
+    reb.paybackYears <= 15 && // pays back within 15 years
+    now <= REBATE_DEADLINE_2026; // deadline still ahead (Requirement 5.13)
 
   // --- isRenter (Requirements 7.2 / 7.3). ---
   // Heat included in rent => the household cannot install themselves; show the

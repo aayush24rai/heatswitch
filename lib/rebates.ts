@@ -218,13 +218,15 @@ const BOSTON_ZIPS: ReadonlySet<string> = new Set([
  * Source: https://www.mass.gov/info-details/environmental-justice-populations-in-massachusetts
  */
 const EQUITY_ZIPS: ReadonlySet<string> = new Set([
-  "02119", // Roxbury
+  "02134", // Allston
+  "02135", // Brighton
   "02121", // Dorchester (Grove Hall)
+  "02122", // Dorchester (Fields Corner)
   "02124", // Dorchester
   "02125", // Dorchester (Uphams Corner)
-  "02126", // Mattapan
+  "02119", // Roxbury
+  "02120", // Mission Hill
   "02128", // East Boston
-  "02136", // Hyde Park
 ]);
 
 const ZIP_PATTERN = /^\d{5}$/;

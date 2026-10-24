@@ -124,8 +124,8 @@ export function YourNumbersCard({
         >
           <AlertTitle className="text-amber-900">
             {`Estimate: ${unconfirmedCount} ${
-              unconfirmedCount === 1 ? "value" : "values"
-            } need a quick check`}
+              unconfirmedCount === 1 ? "value needs" : "values need"
+            } a quick check`}
           </AlertTitle>
         </Alert>
       ) : null}

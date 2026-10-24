@@ -597,6 +597,39 @@
         "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
         "timestamp": 1792867535755
       }
+    ],
+    "7.1 Implement `app/api/explain/route.ts` with a real Anthropic SDK call": [
+      {
+        "executionId": "d2b54533-9e43-496f-a10e-d92b19238504",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792867672276
+      },
+      {
+        "executionId": "d2b54533-9e43-496f-a10e-d92b19238504",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792868522909
+      }
+    ],
+    "7.2 Wire the language dropdown and explanation rendering into `VerdictCard`/`app/page.tsx`": [
+      {
+        "executionId": "d2b54533-9e43-496f-a10e-d92b19238504",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792868525356
+      }
+    ],
+    "7.3 Done (workflow.md)": [
+      {
+        "executionId": "d2b54533-9e43-496f-a10e-d92b19238504",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792868527621
+      }
+    ],
+    "7. Implement real explanation and language support (Anthropic)": [
+      {
+        "executionId": "d2b54533-9e43-496f-a10e-d92b19238504",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792868527693
+      }
     ]
   }
 }

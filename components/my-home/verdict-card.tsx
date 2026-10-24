@@ -3,6 +3,7 @@
 import { cn } from "cn"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -12,8 +13,12 @@ import {
 } from "@/components/ui/select"
 import type { Language, Verdict } from "@/lib/schema"
 
-/** Default explanation shown until the real /api/explain route lands (task 7). */
-const DEFAULT_EXPLANATION =
+/**
+ * Default English explanation (<=200 chars) used as the fallback when the
+ * /api/explain route times out or errors (Requirements 9.7 / 9.8). Exported so
+ * the page can pass it straight back in as the `explanation` on failure.
+ */
+export const DEFAULT_EXPLANATION =
   "Here's the honest math from your numbers. Adjust the assumptions below to see how it changes."
 
 /**
@@ -42,6 +47,8 @@ export interface VerdictCardProps {
   annualDeltaDollars: number
   /** Explanation prose, or null while it is still loading / not yet requested. */
   explanation: string | null
+  /** True while an explanation request is in flight — renders a Skeleton (Req 9.6). */
+  explanationLoading?: boolean
   language: Language
   isEstimate: boolean
   /** True when the loaded inputs came from a demo home (label reads "Demo home"). */
@@ -76,6 +83,7 @@ export function VerdictCard({
   verdict,
   annualDeltaDollars,
   explanation,
+  explanationLoading = false,
   language,
   isEstimate,
   isDemo,
@@ -181,12 +189,22 @@ export function VerdictCard({
           ) : null}
         </div>
 
-        {/* Explanation slot: the real /api/explain route lands in task 7, so
-            until then show the default fallback sentence when none is passed. */}
+        {/* Explanation slot. While a request is in flight show a Skeleton and
+            keep every number above visible (Req 9.6); otherwise render the prose
+            (or the default fallback when none is passed — Req 9.7 / 9.8). The
+            numbers on screen always come from the engine, never the explanation
+            service (Req 9.9). */}
         <div className="flex flex-col gap-2">
-          <p className="text-sm leading-relaxed text-foreground">
-            {explanation ?? DEFAULT_EXPLANATION}
-          </p>
+          {explanationLoading ? (
+            <div className="flex flex-col gap-2" aria-hidden>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+            </div>
+          ) : (
+            <p className="text-sm leading-relaxed text-foreground">
+              {explanation ?? DEFAULT_EXPLANATION}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
