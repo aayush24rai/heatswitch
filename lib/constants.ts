@@ -84,3 +84,5 @@ export const REBATE_DEADLINE_NOTE =
 // Summer (non-heating) months used to estimate baseload in annualHeatingUse: Jun–Sep.
 // 0-based month indexes. Source: https://www.eia.gov/energyexplained/units-and-calculators/
 export const SUMMER_MONTH_INDEXES = [5, 6, 7, 8]; // 0-based Jun,Jul,Aug,Sep
+ 
+

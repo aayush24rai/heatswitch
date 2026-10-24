@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Source check",
+      "trigger": "PostFileSave",
+      "action": {
+        "type": "agent",
+        "prompt": "Check that every exported constant in lib/constants.ts has a comment with a source URL directly above it. List any that are missing. Do not edit the file."
+      },
+      "description": "Checks that every constant in lib/constants.ts cites a source URL.",
+      "matcher": "lib/constants\\.ts$",
+      "enabled": true
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # HeatSwitch
 
-**Heat pump: worth it or not? One bill, real Boston prices, no sales pitch.**
+**Find out if a heat pump actually saves you money in Boston.**
 
 **Live app:** https://heatswitch-five.vercel.app
 **Demo video:** [VIDEO LINK]

@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Repo safety check",
+      "trigger": "SessionStart",
+      "action": {
+        "type": "command",
+        "command": "git ls-files --error-unmatch .env.local >/dev/null 2>&1 && echo \"FAIL: .env.local is tracked\" || echo \"OK: .env.local not tracked\"; grep -qxE '\\.kiro/?' .gitignore && echo \"FAIL: .kiro is ignored\" || echo \"OK: .kiro is committed\"; for s in \"Run it locally\" \"How we used Kiro\" \"Data and sources\" \"The one rule\"; do grep -q \"$s\" README.md && echo \"OK: README has $s\" || echo \"FAIL: README missing $s\"; done; git status -sb | head -1"
+      },
+      "description": "Every new session starts by confirming secrets aren't tracked, .kiro is committed, and the README has its key sections.",
+      "timeout": 30,
+      "enabled": true
+    }
+  ]
+}

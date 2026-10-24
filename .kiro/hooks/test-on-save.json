@@ -1,0 +1,17 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Test on save",
+      "trigger": "PostFileSave",
+      "action": {
+        "type": "command",
+        "command": "npx vitest run --reporter=dot"
+      },
+      "description": "Runs the test suite whenever a calc, rebate or constants file in lib/ is saved, so the math can't silently break.",
+      "matcher": "lib/.*\\.ts$",
+      "timeout": 120,
+      "enabled": true
+    }
+  ]
+}
