@@ -10,6 +10,7 @@ import { BuildingsTable } from "@/components/buildings/buildings-table"
 
 import { FadeIn } from "@/components/shared/fade-in"
 import { AnimatedHeading } from "@/components/shared/animated-heading"
+import { SourceLink } from "@/components/shared/source-link"
 
 import { UploadCard } from "@/components/my-home/upload-card"
 import { VerdictCard } from "@/components/my-home/verdict-card"
@@ -21,6 +22,7 @@ import {
 } from "@/components/my-home/your-numbers-card"
 import { AssumptionsCard } from "@/components/my-home/assumptions-card"
 import { RebatesCard } from "@/components/my-home/rebates-card"
+import { LandlordBox } from "@/components/my-home/landlord-box"
 import { NextStepRow } from "@/components/my-home/next-step-row"
 import { HowWeCalculate } from "@/components/my-home/how-we-calculate"
 import {
@@ -145,6 +147,7 @@ export default function Page() {
   // --- Refs for smooth-scrolling to sections. ---
   const tabsRef = React.useRef<HTMLDivElement>(null)
   const tryItRef = React.useRef<HTMLElement>(null)
+  const howItWorksRef = React.useRef<HTMLElement>(null)
   const resultsRef = React.useRef<HTMLDivElement>(null)
   const howWeCalculateRef = React.useRef<HTMLDivElement>(null)
   const footerRef = React.useRef<HTMLElement>(null)
@@ -189,14 +192,15 @@ export default function Page() {
     setActiveTab("my-home")
     requestAnimationFrame(() => smoothScrollTo(tryItRef.current))
   }
-  // "How it works": My home, scroll to the How-we-calculate section.
+  // "How it works": My home, scroll to the always-visible How-it-works section
+  // (which exists before any demo/bill is loaded — not the results-only
+  // How-we-calculate section).
   function goToHowItWorks() {
     setActiveTab("my-home")
-    requestAnimationFrame(() => smoothScrollTo(howWeCalculateRef.current))
+    requestAnimationFrame(() => smoothScrollTo(howItWorksRef.current))
   }
-  // "Sources": My home, scroll to the footer/sources.
+  // "Sources": scroll to the footer, which always lists the Sources.
   function goToSources() {
-    setActiveTab("my-home")
     requestAnimationFrame(() => smoothScrollTo(footerRef.current))
   }
 
@@ -458,16 +462,33 @@ export default function Page() {
     setExplanationLoading(true)
     setExplanation(null)
 
+    // Format every figure exactly as the UI renders it so the model echoes the
+    // same on-screen text (the LLM still computes nothing). Mirrors
+    // VerdictCard.formatDollars and its payback phrasing.
+    const formatDollars = (value: number) =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      }).format(Math.abs(Math.round(value)))
+    const payback = computed.reb.paybackYears
+    const paybackText =
+      payback === null
+        ? "no payback (costs more to run)"
+        : payback >= 1
+          ? `${payback.toFixed(1)} years`
+          : `${Math.round(payback * 12)} months`
+
     const payload = {
       verdict: computed.verdict,
       numbers: {
-        annualDeltaDollars: computed.cmp.annualDeltaDollars,
-        currentAnnualCost: computed.cmp.currentAnnualCost,
-        heatPumpAnnualCost: computed.cmp.heatPumpAnnualCost,
-        breakevenCOP: computed.cmp.breakevenCOP,
-        rebateAmount: computed.reb.rebateAmount,
-        netInstallCost: computed.reb.netInstallCost,
-        paybackYears: computed.reb.paybackYears,
+        annualDeltaDollars: formatDollars(computed.cmp.annualDeltaDollars),
+        currentAnnualCost: formatDollars(computed.cmp.currentAnnualCost),
+        heatPumpAnnualCost: formatDollars(computed.cmp.heatPumpAnnualCost),
+        breakevenCOP: computed.cmp.breakevenCOP.toFixed(2),
+        rebateAmount: formatDollars(computed.reb.rebateAmount),
+        netInstallCost: formatDollars(computed.reb.netInstallCost),
+        paybackYears: paybackText,
       },
       language,
     }
@@ -580,8 +601,9 @@ export default function Page() {
           </nav>
         </div>
 
-        {/* Bottom-pinned hero content. */}
-        <div className="flex flex-1 flex-col justify-end px-6 pb-12 md:px-12 lg:grid lg:grid-cols-2 lg:items-end lg:px-16 lg:pb-16">
+        {/* Bottom-pinned hero content. relative z-10 keeps it above the bottom
+            legibility gradient so the buttons/subhead/tag are not greyed out. */}
+        <div className="relative z-10 flex flex-1 flex-col justify-end px-6 pb-12 md:px-12 lg:grid lg:grid-cols-2 lg:items-end lg:px-16 lg:pb-16">
           {/* Left column. */}
           <div className="max-w-full">
             <h1
@@ -676,6 +698,50 @@ export default function Page() {
               ) : null}
             </section>
 
+            {/* Always-visible "How it works" — three short steps, present even
+                before any demo/bill is loaded (so the navbar link always has a
+                target). Distinct from the results-only "How we calculate". */}
+            <section
+              ref={howItWorksRef}
+              id="how-it-works"
+              className="scroll-mt-6"
+            >
+              <Card className="rounded-2xl p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-medium">How it works</h2>
+                <ol className="flex flex-col gap-3 text-sm text-foreground">
+                  <li className="flex items-start gap-3">
+                    <span
+                      aria-hidden
+                      className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-emerald-600 text-xs font-medium tabular-nums text-emerald-600"
+                    >
+                      1
+                    </span>
+                    <span>Upload a bill or try a demo home.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span
+                      aria-hidden
+                      className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-emerald-600 text-xs font-medium tabular-nums text-emerald-600"
+                    >
+                      2
+                    </span>
+                    <span>We read it and you confirm the numbers.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span
+                      aria-hidden
+                      className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-emerald-600 text-xs font-medium tabular-nums text-emerald-600"
+                    >
+                      3
+                    </span>
+                    <span>
+                      Get an honest verdict, with the source under every number.
+                    </span>
+                  </li>
+                </ol>
+              </Card>
+            </section>
+
             {hasData ? (
               <div ref={resultsRef} className="flex flex-col gap-6 pb-6">
                 <VerdictCard
@@ -691,47 +757,59 @@ export default function Page() {
                   onLanguageChange={setLanguage}
                 />
 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-                  {/* Left column: cost chart + assumptions (balances the two
-                      columns — Req FIX 5). */}
-                  <div className="flex flex-col gap-6 md:col-span-3">
-                    <CostChartCard
-                      currentAnnualCost={computed!.cmp.currentAnnualCost}
-                      heatPumpAnnualCost={computed!.cmp.heatPumpAnnualCost}
-                      breakevenCOP={computed!.cmp.breakevenCOP}
-                    />
-                    <AssumptionsCard
-                      assumptions={assumptions!}
-                      fuelUnitPrice={inputs!.fuelUnitPrice}
-                      heatingType={inputs!.heatingType}
-                      onChangeCOP={handleCOPChange}
-                      onChangeElectricityPrice={handleElectricityPriceChange}
-                      onChangeFuelPrice={handleFuelPriceChange}
-                      onToggleSeasonalRate={handleSeasonalRateToggle}
-                    />
-                  </div>
+                {/* Renter/landlord path — directly under the verdict, only while
+                    "heat included in rent" is on (Req 7.1 / 7.4 / FIX 5). */}
+                {inputs!.heatIncludedInRent ? (
+                  <LandlordBox
+                    heatingType={inputs!.heatingType}
+                    tier={computed!.reb.tier}
+                    rebateAmount={computed!.reb.rebateAmount}
+                    netInstallCost={computed!.reb.netInstallCost}
+                    paybackYears={computed!.reb.paybackYears}
+                    annualDeltaDollars={computed!.cmp.annualDeltaDollars}
+                  />
+                ) : null}
 
-                  {/* Right column: your numbers + rebates. */}
-                  <div className="flex flex-col gap-6 md:col-span-2">
-                    <Card className="rounded-2xl p-6 shadow-sm">
-                      <YourNumbersCard
-                        fields={editableFields}
-                        heatingType={inputs!.heatingType}
-                        onFieldConfirm={handleFieldConfirm}
-                        onFieldEdit={handleFieldEdit}
-                        onHeatingTypeChange={handleHeatingTypeChange}
-                      />
-                    </Card>
-                    <RebatesCard
-                      result={computed!.reb}
-                      inputs={inputs!}
-                      onHouseholdSizeChange={handleHouseholdSizeChange}
-                      onIncomeChange={handleIncomeChange}
+                {/* Balanced results rows (FIX 6): two equal-width columns per
+                    row so neither column is left with a large empty space. */}
+                {/* Row 1: cost chart | your numbers. */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <CostChartCard
+                    currentAnnualCost={computed!.cmp.currentAnnualCost}
+                    heatPumpAnnualCost={computed!.cmp.heatPumpAnnualCost}
+                    breakevenCOP={computed!.cmp.breakevenCOP}
+                  />
+                  <Card className="rounded-2xl p-6 shadow-sm">
+                    <YourNumbersCard
+                      fields={editableFields}
+                      heatingType={inputs!.heatingType}
+                      onFieldConfirm={handleFieldConfirm}
+                      onFieldEdit={handleFieldEdit}
+                      onHeatingTypeChange={handleHeatingTypeChange}
                     />
-                  </div>
+                  </Card>
                 </div>
 
-                <NextStepRow zip={inputs!.zip} />
+                {/* Row 2: assumptions | rebates. */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <AssumptionsCard
+                    assumptions={assumptions!}
+                    fuelUnitPrice={inputs!.fuelUnitPrice}
+                    heatingType={inputs!.heatingType}
+                    onChangeCOP={handleCOPChange}
+                    onChangeElectricityPrice={handleElectricityPriceChange}
+                    onChangeFuelPrice={handleFuelPriceChange}
+                    onToggleSeasonalRate={handleSeasonalRateToggle}
+                  />
+                  <RebatesCard
+                    result={computed!.reb}
+                    inputs={inputs!}
+                    onHouseholdSizeChange={handleHouseholdSizeChange}
+                    onIncomeChange={handleIncomeChange}
+                  />
+                </div>
+
+                <NextStepRow zip={inputs!.zip} onZipChange={handleZipChange} />
                 <div ref={howWeCalculateRef}>
                   <HowWeCalculate assumptions={assumptions!} />
                 </div>
@@ -761,12 +839,34 @@ export default function Page() {
         </Tabs>
       </div>
 
-      {/* Footer */}
+      {/* Footer — always-visible Sources list + "Your bill is never stored". */}
       <footer
         ref={footerRef}
-        className="mx-auto mt-10 max-w-5xl border-t px-6 pt-6 pb-10 text-sm text-muted-foreground"
+        className="mx-auto mt-10 max-w-5xl scroll-mt-6 border-t px-6 pt-6 pb-10 text-sm text-muted-foreground"
       >
-        Your bill is never stored
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-foreground">Sources</span>
+          <div className="flex flex-col gap-1">
+            <SourceLink
+              label="U.S. EIA"
+              href="https://www.eia.gov/energyexplained/units-and-calculators/"
+            />
+            <SourceLink
+              label="U.S. DOE"
+              href="https://www.energy.gov/energysaver/furnaces-and-boilers"
+            />
+            <SourceLink
+              label="Mass.gov"
+              href="https://www.mass.gov/info-details/residential-electric-seasonal-heat-pump-rates"
+            />
+            <SourceLink label="Mass Save" href="https://www.masssave.com/" />
+            <SourceLink
+              label="Analyze Boston (BERDO 2021)"
+              href="https://data.boston.gov/dataset/building-energy-reporting-and-disclosure-ordinance"
+            />
+          </div>
+        </div>
+        <p className="mt-4">Your bill is never stored</p>
       </footer>
     </div>
   )

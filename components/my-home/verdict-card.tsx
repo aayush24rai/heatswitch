@@ -9,7 +9,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select"
 import type { Language, Verdict } from "@/lib/schema"
 
@@ -60,14 +59,15 @@ export interface VerdictCardProps {
   onLanguageChange: (lang: Language) => void
 }
 
-/** The six supported languages, labeled in English for now (task 7 localizes). */
+/** The six supported languages, labeled with their NATIVE names (shown both in
+ *  the closed trigger and the open list). */
 const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
   { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "cv", label: "Cape Verdean Creole" },
-  { value: "zh", label: "Chinese" },
-  { value: "ht", label: "Haitian Creole" },
-  { value: "vi", label: "Vietnamese" },
+  { value: "es", label: "Español" },
+  { value: "cv", label: "Kabuverdianu" },
+  { value: "zh", label: "中文" },
+  { value: "ht", label: "Kreyòl ayisyen" },
+  { value: "vi", label: "Tiếng Việt" },
 ]
 
 /** Format a whole-dollar amount as "$X,XXX" (no cents; absolute value). */
@@ -134,37 +134,18 @@ export function VerdictCard({
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-muted-foreground">
-                {statusLabel}
-              </span>
-              {verdict.actBeforeDec31 ? (
-                <Badge>Act before Dec 31</Badge>
-              ) : null}
-            </div>
-            <h2 className="text-4xl font-semibold tracking-tight">
-              {verdict.label}
-            </h2>
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {statusLabel}
+            </span>
+            {verdict.actBeforeDec31 ? (
+              <Badge>Act before Dec 31</Badge>
+            ) : null}
           </div>
-
-          {/* Language dropdown (shadcn Select). */}
-          <Select
-            value={language}
-            onValueChange={(value) => onLanguageChange(value as Language)}
-          >
-            <SelectTrigger aria-label="Explanation language" className="font-medium">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LANGUAGE_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <h2 className="text-4xl font-semibold tracking-tight">
+            {verdict.label}
+          </h2>
         </div>
       </CardHeader>
 
@@ -195,6 +176,33 @@ export function VerdictCard({
             numbers on screen always come from the engine, never the explanation
             service (Req 9.9). */}
         <div className="flex flex-col gap-2">
+          {/* Language picker — sits directly above the explanation. Only the
+              explanation text changes language; every number stays as-is. */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Explain in:</span>
+            <Select
+              value={language}
+              onValueChange={(value) => onLanguageChange(value as Language)}
+            >
+              <SelectTrigger
+                aria-label="Explanation language"
+                className="font-medium"
+              >
+                <span data-slot="select-value">
+                  {LANGUAGE_OPTIONS.find((o) => o.value === language)?.label ??
+                    "English"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {explanationLoading ? (
             <div className="flex flex-col gap-2" aria-hidden>
               <Skeleton className="h-4 w-full" />

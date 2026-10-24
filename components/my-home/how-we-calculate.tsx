@@ -112,14 +112,14 @@ export function HowWeCalculate({ assumptions }: HowWeCalculateProps) {
             <SourceRow
               label="Heat pump COP"
               value={assumptions.heatPumpCOP.toFixed(1)}
-              sourceLabel="MA seasonal heat pump rates"
-              href="https://www.mass.gov/info-details/residential-electric-seasonal-heat-pump-rates"
+              sourceLabel="NEEP — cold-climate heat pump list"
+              href="https://ashp.neep.org/"
             />
             <SourceRow
               label="Electricity price"
               value={`$${assumptions.electricityPrice.toFixed(3)}/kWh`}
-              sourceLabel="MA seasonal heat pump rates"
-              href="https://www.mass.gov/info-details/residential-electric-seasonal-heat-pump-rates"
+              sourceLabel="EIA — Massachusetts residential average price"
+              href="https://www.eia.gov/electricity/monthly/epm_table_grapher.php"
             />
             <SourceRow
               label="Seasonal heat pump rate"

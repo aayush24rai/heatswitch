@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { cn } from "cn"
 import {
   Card,
@@ -36,12 +37,22 @@ const MASS_SAVE_ASSESSMENT_URL = "https://www.masssave.com/"
 
 export interface NextStepRowProps {
   zip: string
+  /** Called with the latest zip text as the user types the inline zip input. */
+  onZipChange: (zip: string) => void
 }
 
-export function NextStepRow({ zip }: NextStepRowProps) {
+export function NextStepRow({ zip, onZipChange }: NextStepRowProps) {
+  const zipId = React.useId()
   const validZip = ZIP_PATTERN.test(zip)
   const boston = validZip && isBostonZip(zip)
   const equity = validZip && isEquityZip(zip)
+  const showZipError = zip.length > 0 && !validZip
+
+  // Only digits, max 5 — matches the ^\d{5}$ pattern the page enforces.
+  function handleZipChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const next = e.target.value.replace(/\D/g, "").slice(0, 5)
+    onZipChange(next)
+  }
 
   return (
     <Card className="rounded-2xl p-6 shadow-sm">
@@ -51,10 +62,39 @@ export function NextStepRow({ zip }: NextStepRowProps) {
       <CardContent className="flex flex-col gap-4 p-0 pt-4">
         {!validZip ? (
           // Req 10.5: suppress location steps until there's a valid 5-digit zip.
-          <p className="text-sm text-muted-foreground">
-            Enter a valid 5-digit zip code to see the right next step for your
-            location.
-          </p>
+          // Offer an inline zip input wired to the same zip state so typing
+          // resolves the card live.
+          <div className="flex flex-col gap-2">
+            <label htmlFor={zipId} className="text-sm text-muted-foreground">
+              Enter your 5-digit zip to see the right next step.
+            </label>
+            <input
+              id={zipId}
+              type="text"
+              inputMode="numeric"
+              autoComplete="postal-code"
+              placeholder="02118"
+              value={zip}
+              onChange={handleZipChange}
+              aria-invalid={showZipError || undefined}
+              aria-describedby={showZipError ? `${zipId}-error` : undefined}
+              className={cn(
+                "h-8 w-32 rounded-md border bg-background px-2 text-sm tabular-nums outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50",
+                showZipError
+                  ? "border-destructive focus-visible:ring-destructive/30"
+                  : "border-input focus-visible:border-ring"
+              )}
+            />
+            {showZipError ? (
+              <p
+                id={`${zipId}-error`}
+                role="alert"
+                className="text-xs text-destructive"
+              >
+                Enter a five-digit zip code.
+              </p>
+            ) : null}
+          </div>
         ) : boston ? (
           // Req 10.1: Boston Energy Saver consultation.
           <div className="flex flex-col gap-2">

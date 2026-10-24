@@ -66,17 +66,17 @@ export const DEMO_HOMES: Record<DemoHome, DemoHomeFixture> = {
       heatingType: {
         value: "oil",
         confidence: 0.97,
-        evidence: "Fuel type: #2 heating oil",
+        evidence: "Fuel type #2 heating oil",
       },
       annualFuelUse: {
         value: 800,
         confidence: 0.95,
-        evidence: "Delivered: 800 gal",
+        evidence: "Delivered 800 gal",
       },
       fuelUnitPrice: {
         value: 6.15,
         confidence: 0.93,
-        evidence: "Price/gal: $6.15",
+        evidence: "Price / gal $6.15",
       },
     },
     inputs: {
@@ -100,17 +100,17 @@ export const DEMO_HOMES: Record<DemoHome, DemoHomeFixture> = {
       heatingType: {
         value: "gas",
         confidence: 0.96,
-        evidence: "Service: Residential Gas",
+        evidence: "Service type Residential Gas",
       },
       annualFuelUse: {
         value: 652,
         confidence: 0.72, // BELOW CONFIDENCE_THRESHOLD (0.8) — the single amber field
-        evidence: "Total therms: 652",
+        evidence: "Total therms used (12-month) 652 therms",
       },
       fuelUnitPrice: {
         value: 2.42,
         confidence: 0.91,
-        evidence: "Avg $/therm: 2.42",
+        evidence: "Average price per therm $2.42 / therm",
       },
     },
     inputs: {
@@ -134,17 +134,17 @@ export const DEMO_HOMES: Record<DemoHome, DemoHomeFixture> = {
       heatingType: {
         value: "electric-resistance",
         confidence: 0.9,
-        evidence: "Electric baseboard heat",
+        evidence: "Heating Electric baseboard heat",
       },
       annualFuelUse: {
         value: 7600,
         confidence: 0.88,
-        evidence: "Winter heating kWh: 7,600",
+        evidence: "Winter heating usage (kWh) 7,600 kWh",
       },
       fuelUnitPrice: {
         value: 0.288,
         confidence: 0.9,
-        evidence: "$/kWh: 0.288",
+        evidence: "Price per kWh $0.288 / kWh",
       },
     },
     inputs: {

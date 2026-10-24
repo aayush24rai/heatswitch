@@ -72,6 +72,12 @@ function median(values: number[]): number | null {
 
 const intFmt = new Intl.NumberFormat("en-US")
 
+/** Site EUI, one decimal place, with thousands separators when >= 1,000 (FIX 9). */
+const eui1Fmt = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+})
+
 function formatSqFt(n: number): string {
   return `${intFmt.format(Math.round(n))} sqft`
 }
@@ -93,6 +99,20 @@ function labelBadgeVariant(
   if (label === "High") return "default"
   if (label === "Medium") return "secondary"
   return "outline"
+}
+
+/**
+ * Percentile-bar fill color, keyed off the ranking's opportunity label:
+ *   High   → emerald-600  (strongest opportunity)
+ *   Medium → emerald-300
+ *   Low    → gray-300
+ * A null label (check-data rows) renders no fill (0-width), handled at the call
+ * site. electricResistanceWin rows are forced-High, so they land on emerald-600.
+ */
+function labelBarColor(label: RankedBuilding["label"]): string {
+  if (label === "High") return "bg-emerald-600"
+  if (label === "Medium") return "bg-emerald-300"
+  return "bg-gray-300"
 }
 
 /**
@@ -128,31 +148,12 @@ export function BuildingsTable({
     [buildings]
   )
 
-  // The VALID cohort subset (EUI <= 300): the basis for the summary stats.
-  // Check-data rows are excluded from the strip (they are not ranked).
-  const validCohort = React.useMemo(
-    () => rankedAll.filter((b) => !b.checkData),
-    [rankedAll]
-  )
-
   // Zips present in the ranked COHORT (not all buildings), so picking a zip can
   // never yield an all-non-cohort empty set. Derived from the cohort rows.
   const zips = React.useMemo(
     () => Array.from(new Set(rankedAll.map((b) => b.zip))),
     [rankedAll]
   )
-
-  // Summary strip — computed from the valid cohort at render time, never
-  // hardcoded (total multifamily, all-electric, >=50% gas, median site EUI).
-  const summary = React.useMemo(() => {
-    const total = validCohort.length
-    const allElectric = validCohort.filter((b) => b.electricShare === 1).length
-    const mostlyGas = validCohort.filter(
-      (b) => b.gasShare !== null && b.gasShare >= 0.5
-    ).length
-    const medianEUI = median(validCohort.map((b) => b.siteEUI))
-    return { total, allElectric, mostlyGas, medianEUI }
-  }, [validCohort])
 
   // Rows to display: when a zip is set, re-rank with that zip (all matches, no
   // cap); otherwise the top 25 of the ranked cohort citywide. Either way the
@@ -164,6 +165,29 @@ export function BuildingsTable({
         : rankBuildings(buildings, selectedZip),
     [buildings, rankedAll, selectedZip]
   )
+
+  // The VALID cohort that the summary strip describes: the SELECTED zip's valid
+  // rows when a zip is chosen, else the full citywide cohort. Either way, valid
+  // = cohort rows with checkData === false (check-data rows are excluded).
+  const summaryCohort = React.useMemo(
+    () => ranked.filter((b) => !b.checkData),
+    [ranked]
+  )
+
+  // Summary strip — computed from the summary cohort at render time, never
+  // hardcoded (total multifamily, all-electric, >=50% gas, median site EUI).
+  // Recomputes for the selected zip (FIX 8).
+  const summary = React.useMemo(() => {
+    const total = summaryCohort.length
+    const allElectric = summaryCohort.filter(
+      (b) => b.electricShare === 1
+    ).length
+    const mostlyGas = summaryCohort.filter(
+      (b) => b.gasShare !== null && b.gasShare >= 0.5
+    ).length
+    const medianEUI = median(summaryCohort.map((b) => b.siteEUI))
+    return { total, allElectric, mostlyGas, medianEUI }
+  }, [summaryCohort])
   const rows =
     selectedZip === null ? ranked.slice(0, DEFAULT_CITYWIDE_LIMIT) : ranked
 
@@ -186,15 +210,25 @@ export function BuildingsTable({
         />
       </div>
 
-      {/* Summary strip — computed from the valid cohort, never hardcoded. */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <SummaryCell label="Multifamily buildings" value={intFmt.format(summary.total)} />
-        <SummaryCell label="All-electric" value={intFmt.format(summary.allElectric)} />
-        <SummaryCell label="≥50% gas" value={intFmt.format(summary.mostlyGas)} />
-        <SummaryCell
-          label="Median site EUI"
-          value={summary.medianEUI === null ? "—" : summary.medianEUI.toFixed(1)}
-        />
+      {/* Summary strip — computed from the summary cohort (zip-scoped when a zip
+          is selected, else citywide), never hardcoded. */}
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium tabular-nums">
+          {selectedZip === null ? "Citywide" : `in ${selectedZip}`}
+        </span>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <SummaryCell label="Multifamily buildings" value={intFmt.format(summary.total)} />
+          <SummaryCell label="All-electric" value={intFmt.format(summary.allElectric)} />
+          <SummaryCell label="≥50% gas" value={intFmt.format(summary.mostlyGas)} />
+          <SummaryCell
+            label="Median site EUI"
+            value={
+              summary.medianEUI === null
+                ? "—"
+                : eui1Fmt.format(summary.medianEUI)
+            }
+          />
+        </div>
       </div>
 
       {/* Default-view note: top 25 citywide, pick a zip to filter. */}
@@ -257,7 +291,9 @@ export function BuildingsTable({
                         from the ranking's `checkData` flag — not re-derived. */}
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5 tabular-nums">
-                        <span>{b.siteEUI.toFixed(1)}</span>
+                        <span>
+                          {eui1Fmt.format(b.siteEUI)}
+                        </span>
                         {b.checkData ? (
                           <Badge variant="outline" className="h-5 text-amber-700">
                             check data
@@ -303,7 +339,10 @@ export function BuildingsTable({
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                           <div
-                            className="h-full rounded-full bg-emerald-600"
+                            className={cn(
+                              "h-full rounded-full",
+                              labelBarColor(b.label)
+                            )}
                             style={{
                               width: b.electricResistanceWin
                                 ? "100%"

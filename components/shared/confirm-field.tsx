@@ -36,6 +36,17 @@ export interface ConfirmFieldProps {
   max?: number
 }
 
+/** Group a number with thousands separators for DISPLAY (e.g. 7600 → "7,600").
+ *  Decimals are preserved (up to 3 places) so fuel prices like 2.4 still read
+ *  "2.4". The underlying numeric value is untouched — only the rendered text is
+ *  grouped (FIX 9). */
+function formatGrouped(value: number): string {
+  if (!Number.isFinite(value)) return String(value)
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 3,
+  }).format(value)
+}
+
 function buildRangeMessage(min?: number, max?: number): string {
   if (min !== undefined && max !== undefined) {
     return `Enter a number between ${min} and ${max}.`
@@ -88,7 +99,8 @@ export function ConfirmField({
   }
 
   function commitEditing() {
-    const parsed = Number(draft.trim())
+    // Strip any grouping commas the user may have typed before parsing.
+    const parsed = Number(draft.trim().replace(/,/g, ""))
     const valid =
       draft.trim() !== "" &&
       Number.isFinite(parsed) &&
@@ -171,7 +183,9 @@ export function ConfirmField({
         </div>
       ) : (
         <div className="flex items-baseline gap-1.5">
-          <span className="text-2xl font-semibold tabular-nums">{value}</span>
+          <span className="text-2xl font-semibold tabular-nums">
+            {formatGrouped(value)}
+          </span>
           <span className="text-sm text-muted-foreground">{unit}</span>
         </div>
       )}

@@ -10,9 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
 import { SourceLink } from "@/components/shared/source-link"
 import { REBATE_DEADLINE_NOTE } from "@/lib/constants"
 
@@ -36,9 +34,6 @@ export interface RebatesCardProps {
   onIncomeChange: (income: number | undefined) => void
 }
 
-/** Mass Save multifamily / landlord next-step page (Req 7.1). */
-const MASS_SAVE_MULTIFAMILY_URL =
-  "https://www.masssave.com/saving/residential-rebates/multi-family-retrofit"
 const MASS_SAVE_URL = "https://www.masssave.com/"
 
 /** Human-readable tier label (Req 5.x). */
@@ -96,19 +91,6 @@ export function RebatesCard({
     const digits = e.target.value.replace(/\D/g, "")
     onIncomeChange(digits === "" ? undefined : parseInt(digits, 10))
   }
-
-  // A shareable, plain-text summary the renter can send their landlord (Req 7.1).
-  const landlordSummary = [
-    "Heat pump opportunity for this unit:",
-    `- Mass Save ${TIER_LABEL[result.tier]} rebate: ${formatDollars(
-      result.rebateAmount
-    )}`,
-    `- Net install cost after rebate: ${formatDollars(result.netInstallCost)}`,
-    noPayback
-      ? "- Payback: a heat pump costs more than the current system at these numbers"
-      : `- Simple payback: about ${result.paybackYears!.toFixed(1)} years`,
-    "Next step: a Mass Save assessment for the building.",
-  ].join("\n")
 
   return (
     <Card className="rounded-2xl p-6 shadow-sm">
@@ -222,34 +204,8 @@ export function RebatesCard({
         {/* Exact deadline note (Req 5.11). */}
         <p className="text-xs text-muted-foreground">{REBATE_DEADLINE_NOTE}</p>
 
-        {/* Renter/landlord path — only while "heat included in rent" is on
-            (Req 7.1 / 7.4). */}
-        {inputs.heatIncludedInRent ? (
-          <Alert>
-            <AlertTitle>Renting? Share this with your landlord</AlertTitle>
-            <AlertDescription className="flex flex-col gap-3">
-              <span>
-                You can&apos;t install a heat pump yourself, but your landlord
-                can — and the building may qualify for Mass Save multifamily
-                support. Send them this summary:
-              </span>
-              <pre className="rounded-lg border bg-muted/40 p-3 font-mono text-xs whitespace-pre-wrap text-foreground">
-                {landlordSummary}
-              </pre>
-              <a
-                href={MASS_SAVE_MULTIFAMILY_URL}
-                target="_blank"
-                rel="noreferrer noopener"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" }),
-                  "self-start"
-                )}
-              >
-                Mass Save landlord &amp; multifamily path
-              </a>
-            </AlertDescription>
-          </Alert>
-        ) : null}
+        {/* The renter/landlord path now renders in the page directly under the
+            VerdictCard (see components/my-home/landlord-box.tsx), not here. */}
 
         {/* Single source link for the whole card (Req 11.1 / FIX 6). */}
         <SourceLink label="Mass Save rebates" href={MASS_SAVE_URL} />

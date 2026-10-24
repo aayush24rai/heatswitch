@@ -1,0 +1,124 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e2]:
+    - generic [ref=f3e3]:
+      - navigation [ref=f3e6]:
+        - generic [ref=f3e7]: HeatSwitch
+        - generic [ref=f3e8]:
+          - button "How it works" [ref=f3e9]
+          - button "Buildings" [ref=f3e10]
+          - button "Sources" [ref=f3e11]
+        - button "Try a demo" [ref=f3e12]
+      - generic [ref=f3e13]:
+        - generic [ref=f3e14]:
+          - heading [level=1] [ref=f3e15]:
+            - generic [ref=f3e16]:
+              - generic [ref=f3e17]:
+                - generic [aria-hidden] [ref=f3e18]: S
+                - generic [aria-hidden] [ref=f3e19]: h
+                - generic [aria-hidden] [ref=f3e20]: o
+                - generic [aria-hidden] [ref=f3e21]: u
+                - generic [aria-hidden] [ref=f3e22]: l
+                - generic [aria-hidden] [ref=f3e23]: d
+              - generic [ref=f3e24]:
+                - generic [aria-hidden] [ref=f3e25]: "y"
+                - generic [aria-hidden] [ref=f3e26]: o
+                - generic [aria-hidden] [ref=f3e27]: u
+                - generic [aria-hidden] [ref=f3e28]: r
+              - generic [ref=f3e29]:
+                - generic [aria-hidden] [ref=f3e30]: B
+                - generic [aria-hidden] [ref=f3e31]: o
+                - generic [aria-hidden] [ref=f3e32]: s
+                - generic [aria-hidden] [ref=f3e33]: t
+                - generic [aria-hidden] [ref=f3e34]: o
+                - generic [aria-hidden] [ref=f3e35]: "n"
+              - generic [ref=f3e36]:
+                - generic [aria-hidden] [ref=f3e37]: h
+                - generic [aria-hidden] [ref=f3e38]: o
+                - generic [aria-hidden] [ref=f3e39]: m
+                - generic [aria-hidden] [ref=f3e40]: e
+              - generic [ref=f3e41]:
+                - generic [aria-hidden] [ref=f3e42]: s
+                - generic [aria-hidden] [ref=f3e43]: w
+                - generic [aria-hidden] [ref=f3e44]: i
+                - generic [aria-hidden] [ref=f3e45]: t
+                - generic [aria-hidden] [ref=f3e46]: c
+                - generic [aria-hidden] [ref=f3e47]: h
+              - generic [ref=f3e48]:
+                - generic [aria-hidden] [ref=f3e49]: t
+                - generic [aria-hidden] [ref=f3e50]: o
+              - generic [aria-hidden] [ref=f3e52]: a
+              - generic [ref=f3e53]:
+                - generic [aria-hidden] [ref=f3e54]: h
+                - generic [aria-hidden] [ref=f3e55]: e
+                - generic [aria-hidden] [ref=f3e56]: a
+                - generic [aria-hidden] [ref=f3e57]: t
+              - generic [ref=f3e58]:
+                - generic [aria-hidden] [ref=f3e59]: p
+                - generic [aria-hidden] [ref=f3e60]: u
+                - generic [aria-hidden] [ref=f3e61]: m
+                - generic [aria-hidden] [ref=f3e62]: p
+                - generic [aria-hidden] [ref=f3e63]: "?"
+          - paragraph [ref=f3e65]: Upload a bill. Get an honest answer, with the source under every number.
+          - generic [ref=f3e67]:
+            - button "Upload your bill" [ref=f3e68]
+            - button "Try a demo home" [ref=f3e69]
+        - generic [ref=f3e70]: Renters. Homeowners. Buildings.
+    - generic [ref=f3e74]:
+      - tablist [ref=f3e75]:
+        - tab "My home" [selected] [ref=f3e76]
+        - tab "Buildings (landlords & city)" [ref=f3e77]
+      - tabpanel "My home" [ref=f3e78]:
+        - generic [ref=f3e79]:
+          - heading "Try it" [level=2] [ref=f3e80]
+          - generic [ref=f3e81]:
+            - generic [ref=f3e82]:
+              - generic [ref=f3e83]: Start with your bill
+              - generic [ref=f3e84]: Upload a gas or electric bill, or try a demo home. Your bill is never stored.
+            - generic [ref=f3e85]:
+              - button "Upload a bill photo or PDF" [ref=f3e86] [cursor=pointer]:
+                - generic [ref=f3e87]: Drop your bill here, or click to browse
+                - generic [ref=f3e88]: JPEG, PNG, or PDF
+              - generic [ref=f3e89]:
+                - generic [ref=f3e90]:
+                  - generic [ref=f3e91]: Zip code
+                  - textbox "Zip code" [ref=f3e92]:
+                    - /placeholder: "02118"
+                - generic [ref=f3e93]:
+                  - switch "Heat included in my rent" [ref=f3e94]
+                  - checkbox [aria-hidden] [ref=f3e95]
+                  - generic [ref=f3e96]: Heat included in my rent
+              - generic [ref=f3e97]:
+                - generic [ref=f3e98]: Or try a demo home
+                - generic [ref=f3e99]:
+                  - button "Oil home" [ref=f3e100]
+                  - button "Gas home" [ref=f3e102]
+                  - button "Baseboard apartment" [ref=f3e104]
+        - generic [ref=f3e107]:
+          - heading "How it works" [level=2] [ref=f3e108]
+          - list [ref=f3e109]:
+            - listitem [ref=f3e110]:
+              - generic [aria-hidden] [ref=f3e111]: "1"
+              - generic [ref=f3e112]: Upload a bill or try a demo home.
+            - listitem [ref=f3e113]:
+              - generic [aria-hidden] [ref=f3e114]: "2"
+              - generic [ref=f3e115]: We read it and you confirm the numbers.
+            - listitem [ref=f3e116]:
+              - generic [aria-hidden] [ref=f3e117]: "3"
+              - generic [ref=f3e118]: Get an honest verdict, with the source under every number.
+    - contentinfo [ref=f3e119]:
+      - generic [ref=f3e120]:
+        - generic [ref=f3e121]: Sources
+        - generic [ref=f3e122]:
+          - link "U.S. EIA" [ref=f3e123] [cursor=pointer]:
+            - /url: https://www.eia.gov/energyexplained/units-and-calculators/
+          - link "U.S. DOE" [ref=f3e124] [cursor=pointer]:
+            - /url: https://www.energy.gov/energysaver/furnaces-and-boilers
+          - link "Mass.gov" [ref=f3e125] [cursor=pointer]:
+            - /url: https://www.mass.gov/info-details/residential-electric-seasonal-heat-pump-rates
+          - link "Mass Save" [ref=f3e126] [cursor=pointer]:
+            - /url: https://www.masssave.com/
+          - link "Analyze Boston (BERDO 2021)" [ref=f3e127] [cursor=pointer]:
+            - /url: https://data.boston.gov/dataset/building-energy-reporting-and-disclosure-ordinance
+      - paragraph [ref=f3e128]: Your bill is never stored
+  - button "Open Next.js Dev Tools" [ref=f3e134] [cursor=pointer]
+  - alert [ref=f3e138]

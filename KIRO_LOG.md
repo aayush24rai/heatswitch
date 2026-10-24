@@ -1166,3 +1166,10 @@ Commit and push now: feat(my-home): add YourNumbersCard with heating-type chip, 
 - Why it mattered: delivers HeatSwitch's six-language honest-explanation promise while keeping the
   hard rule intact — the LLM writes prose from code-computed numbers and never computes (or invents)
   a number.
+
+## Kiro CLI audit
+- When: 2026-10-24 15:20 EDT
+- Kiro feature used: Kiro CLI (`kiro-cli chat`) in a separate terminal, read-only
+- What: Asked it to cross-check requirements.md, tasks.md and KIRO_LOG.md against the code in app/, components/ and lib/: untraced requirements, done tasks without log entries, unmet acceptance criteria.
+- Result: Found that oil gallons/price inputs weren't range-validated (Req 1.5/1.6), that Req 1.12 and 11.4 weren't referenced by any task, and that the 12-month history intake (Req 4.2/4.3) has no UI. The first two went into the next fix pass; the history UI is logged as future work.
+- Why it mattered: an independent check of spec vs code from outside the IDE agent's own context. It caught a real validation bug the IDE agent had marked as done.

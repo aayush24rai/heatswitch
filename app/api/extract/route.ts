@@ -63,7 +63,7 @@ Rules:
 - "annualFuelUse" is the annual heating quantity in the fuel's native unit (therms / gallons / kWh). Use it ONLY if an annual (or clearly total) figure is printed. OMIT the whole field otherwise — do not add months yourself.
 - "fuelUnitPrice" is the unit price: $/therm, $/gallon, or $/kWh, exactly as printed. OMIT if no unit price is shown.
 - "confidence" is your 0..1 certainty for that single field.
-- "evidence" MUST be a short exact substring copied verbatim from the document that shows where the value came from. Never invent evidence.
+- "evidence" MUST be the complete line copied verbatim from the document — a verbatim substring of the document — INCLUDING the field's printed label and units, not just the bare number (for example "Total therms used (12-month) 652 therms" or "Delivered 800 gal"). Never invent evidence.
 - Output the JSON object and nothing else.`
 
 const USER_PROMPT =

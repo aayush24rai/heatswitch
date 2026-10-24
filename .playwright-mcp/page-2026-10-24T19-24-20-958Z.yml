@@ -1,0 +1,468 @@
+- generic [ref=f3e1]:
+  - generic [ref=f3e2]:
+    - generic [ref=f3e3]:
+      - navigation [ref=f3e6]:
+        - generic [ref=f3e7]: HeatSwitch
+        - generic [ref=f3e8]:
+          - button "How it works" [ref=f3e9]
+          - button "Buildings" [ref=f3e10]
+          - button "Sources" [ref=f3e11]
+        - button "Try a demo" [ref=f3e12]
+      - generic [ref=f3e13]:
+        - generic [ref=f3e14]:
+          - heading [level=1] [ref=f3e15]:
+            - generic [ref=f3e16]:
+              - generic [ref=f3e17]:
+                - generic [aria-hidden] [ref=f3e18]: S
+                - generic [aria-hidden] [ref=f3e19]: h
+                - generic [aria-hidden] [ref=f3e20]: o
+                - generic [aria-hidden] [ref=f3e21]: u
+                - generic [aria-hidden] [ref=f3e22]: l
+                - generic [aria-hidden] [ref=f3e23]: d
+              - generic [ref=f3e24]:
+                - generic [aria-hidden] [ref=f3e25]: "y"
+                - generic [aria-hidden] [ref=f3e26]: o
+                - generic [aria-hidden] [ref=f3e27]: u
+                - generic [aria-hidden] [ref=f3e28]: r
+              - generic [ref=f3e29]:
+                - generic [aria-hidden] [ref=f3e30]: B
+                - generic [aria-hidden] [ref=f3e31]: o
+                - generic [aria-hidden] [ref=f3e32]: s
+                - generic [aria-hidden] [ref=f3e33]: t
+                - generic [aria-hidden] [ref=f3e34]: o
+                - generic [aria-hidden] [ref=f3e35]: "n"
+              - generic [ref=f3e36]:
+                - generic [aria-hidden] [ref=f3e37]: h
+                - generic [aria-hidden] [ref=f3e38]: o
+                - generic [aria-hidden] [ref=f3e39]: m
+                - generic [aria-hidden] [ref=f3e40]: e
+              - generic [ref=f3e41]:
+                - generic [aria-hidden] [ref=f3e42]: s
+                - generic [aria-hidden] [ref=f3e43]: w
+                - generic [aria-hidden] [ref=f3e44]: i
+                - generic [aria-hidden] [ref=f3e45]: t
+                - generic [aria-hidden] [ref=f3e46]: c
+                - generic [aria-hidden] [ref=f3e47]: h
+              - generic [ref=f3e48]:
+                - generic [aria-hidden] [ref=f3e49]: t
+                - generic [aria-hidden] [ref=f3e50]: o
+              - generic [aria-hidden] [ref=f3e52]: a
+              - generic [ref=f3e53]:
+                - generic [aria-hidden] [ref=f3e54]: h
+                - generic [aria-hidden] [ref=f3e55]: e
+                - generic [aria-hidden] [ref=f3e56]: a
+                - generic [aria-hidden] [ref=f3e57]: t
+              - generic [ref=f3e58]:
+                - generic [aria-hidden] [ref=f3e59]: p
+                - generic [aria-hidden] [ref=f3e60]: u
+                - generic [aria-hidden] [ref=f3e61]: m
+                - generic [aria-hidden] [ref=f3e62]: p
+                - generic [aria-hidden] [ref=f3e63]: "?"
+          - paragraph [ref=f3e65]: Upload a bill. Get an honest answer, with the source under every number.
+          - generic [ref=f3e67]:
+            - button "Upload your bill" [ref=f3e68]
+            - button "Try a demo home" [ref=f3e69]
+        - generic [ref=f3e70]: Renters. Homeowners. Buildings.
+    - generic [ref=f3e74]:
+      - tablist [ref=f3e75]:
+        - tab "My home" [ref=f3e76]
+        - tab "Buildings (landlords & city)" [active] [selected] [ref=f3e77]
+      - tabpanel "Buildings (landlords & city)" [ref=f3e351]:
+        - generic [ref=f3e352]:
+          - generic [ref=f3e353]:
+            - generic [ref=f3e354]:
+              - heading "Boston multifamily buildings" [level=2] [ref=f3e355]
+              - paragraph [ref=f3e356]: Ranked by heat pump opportunity.
+            - generic [ref=f3e357]:
+              - generic [ref=f3e358]: Zip code
+              - combobox "Filter buildings by zip code" [ref=f3e359]:
+                - option "All of Boston" [selected]
+                - option "02108"
+                - option "02109"
+                - option "02110"
+                - option "02111"
+                - option "02113"
+                - option "02114"
+                - option "02115"
+                - option "02116"
+                - option "02118"
+                - option "02119"
+                - option "02120"
+                - option "02121"
+                - option "02122"
+                - option "02124"
+                - option "02125"
+                - option "02126"
+                - option "02127"
+                - option "02128"
+                - option "02129"
+                - option "02130"
+                - option "02131"
+                - option "02132"
+                - option "02134"
+                - option "02135"
+                - option "02136"
+                - option "02199"
+                - option "02210"
+                - option "02215"
+                - option "02216"
+                - option "02446"
+                - option "02467"
+                - option "02481"
+          - generic [ref=f3e360]:
+            - generic [ref=f3e361]: Citywide
+            - generic [ref=f3e362]:
+              - generic [ref=f3e363]:
+                - generic [ref=f3e364]: Multifamily buildings
+                - generic [ref=f3e365]: "431"
+              - generic [ref=f3e366]:
+                - generic [ref=f3e367]: All-electric
+                - generic [ref=f3e368]: "35"
+              - generic [ref=f3e369]:
+                - generic [ref=f3e370]: ≥50% gas
+                - generic [ref=f3e371]: "294"
+              - generic [ref=f3e372]:
+                - generic [ref=f3e373]: Median site EUI
+                - generic [ref=f3e374]: "60.2"
+          - paragraph [ref=f3e375]: Showing top 25 across Boston — pick a zip to filter
+          - table [ref=f3e377]:
+            - rowgroup [ref=f3e378]:
+              - row [ref=f3e379]:
+                - columnheader "Building" [ref=f3e380]
+                - columnheader "Site EUI" [ref=f3e381]
+                - columnheader "GHG (t CO₂e)" [ref=f3e382]
+                - columnheader "Electric" [ref=f3e383]
+                - columnheader "Gas" [ref=f3e384]
+                - columnheader "Opportunity" [ref=f3e385]
+            - rowgroup [ref=f3e386]:
+              - row [ref=f3e387]:
+                - cell "Multifamily Housing · 1989 · 45,188 sqft · 02129 likely electric resistance, biggest heat pump win" [ref=f3e388]:
+                  - generic [ref=f3e389]: Multifamily Housing · 1989 · 45,188 sqft · 02129
+                  - generic [ref=f3e390]: likely electric resistance, biggest heat pump win
+                - cell "84.0" [ref=f3e391]
+                - cell "266" [ref=f3e394]
+                - cell "100%" [ref=f3e395]
+                - cell "unknown" [ref=f3e396]
+                - cell "resistance High" [ref=f3e399]:
+                  - generic [ref=f3e400]:
+                    - generic [ref=f3e403]: resistance
+                    - generic [ref=f3e404]: High
+              - row [ref=f3e405]:
+                - cell "Multifamily Housing · 1920 · 24,700 sqft · 02134 convert at boiler replacement" [ref=f3e406]:
+                  - generic [ref=f3e407]: Multifamily Housing · 1920 · 24,700 sqft · 02134
+                  - generic [ref=f3e408]: convert at boiler replacement
+                - cell "171.5" [ref=f3e409]
+                - cell "233" [ref=f3e412]
+                - cell "14%" [ref=f3e413]
+                - cell "90%" [ref=f3e414]
+                - cell "100 High" [ref=f3e417]:
+                  - generic [ref=f3e418]:
+                    - generic [ref=f3e421]: "100"
+                    - generic [ref=f3e422]: High
+              - row [ref=f3e423]:
+                - cell "Multifamily Housing · 1934 · 35,500 sqft · 02115 convert at boiler replacement" [ref=f3e424]:
+                  - generic [ref=f3e425]: Multifamily Housing · 1934 · 35,500 sqft · 02115
+                  - generic [ref=f3e426]: convert at boiler replacement
+                - cell "165.5" [ref=f3e427]
+                - cell "328" [ref=f3e430]
+                - cell "16%" [ref=f3e431]
+                - cell "84%" [ref=f3e432]
+                - cell "100 High" [ref=f3e435]:
+                  - generic [ref=f3e436]:
+                    - generic [ref=f3e439]: "100"
+                    - generic [ref=f3e440]: High
+              - row [ref=f3e441]:
+                - cell "Multifamily Housing · 1916 · 43,803 sqft · 02134 convert at boiler replacement" [ref=f3e442]:
+                  - generic [ref=f3e443]: Multifamily Housing · 1916 · 43,803 sqft · 02134
+                  - generic [ref=f3e444]: convert at boiler replacement
+                - cell "142.8" [ref=f3e445]
+                - cell "339" [ref=f3e448]
+                - cell "59%" [ref=f3e449]
+                - cell "95% shares don't add up" [ref=f3e450]:
+                  - generic [ref=f3e451]:
+                    - generic [ref=f3e452]: 95%
+                    - generic [ref=f3e453]: shares don't add up
+                - cell "100 High" [ref=f3e454]:
+                  - generic [ref=f3e455]:
+                    - generic [ref=f3e458]: "100"
+                    - generic [ref=f3e459]: High
+              - row [ref=f3e460]:
+                - cell "Multifamily Housing · 1963 · 21,336 sqft · 02126 convert at boiler replacement" [ref=f3e461]:
+                  - generic [ref=f3e462]: Multifamily Housing · 1963 · 21,336 sqft · 02126
+                  - generic [ref=f3e463]: convert at boiler replacement
+                - cell "144.7" [ref=f3e464]
+                - cell "126" [ref=f3e467]
+                - cell "77%" [ref=f3e468]
+                - cell "92% shares don't add up" [ref=f3e469]:
+                  - generic [ref=f3e470]:
+                    - generic [ref=f3e471]: 92%
+                    - generic [ref=f3e472]: shares don't add up
+                - cell "99 High" [ref=f3e473]:
+                  - generic [ref=f3e474]:
+                    - generic [ref=f3e477]: "99"
+                    - generic [ref=f3e478]: High
+              - row [ref=f3e479]:
+                - cell "Multifamily Housing · 1920 · 19,161 sqft · 02215 convert at boiler replacement" [ref=f3e480]:
+                  - generic [ref=f3e481]: Multifamily Housing · 1920 · 19,161 sqft · 02215
+                  - generic [ref=f3e482]: convert at boiler replacement
+                - cell "132.7" [ref=f3e483]
+                - cell "140" [ref=f3e486]
+                - cell "11%" [ref=f3e487]
+                - cell "89%" [ref=f3e488]
+                - cell "99 High" [ref=f3e491]:
+                  - generic [ref=f3e492]:
+                    - generic [ref=f3e495]: "99"
+                    - generic [ref=f3e496]: High
+              - row [ref=f3e497]:
+                - cell "Multifamily Housing · 1920 · 18,000 sqft · 02134" [ref=f3e498]
+                - cell "127.2" [ref=f3e500]
+                - cell "169" [ref=f3e503]
+                - cell "12%" [ref=f3e504]
+                - cell "unknown" [ref=f3e505]
+                - cell "99 High" [ref=f3e508]:
+                  - generic [ref=f3e509]:
+                    - generic [ref=f3e512]: "99"
+                    - generic [ref=f3e513]: High
+              - row [ref=f3e514]:
+                - cell "Multifamily Housing · 1975 · 10,380 sqft · 02128" [ref=f3e515]
+                - cell "140.7" [ref=f3e517]
+                - cell "83" [ref=f3e520]
+                - cell "25%" [ref=f3e521]
+                - cell "80%" [ref=f3e522]
+                - cell "99 High" [ref=f3e525]:
+                  - generic [ref=f3e526]:
+                    - generic [ref=f3e529]: "99"
+                    - generic [ref=f3e530]: High
+              - row [ref=f3e531]:
+                - cell "Multifamily Housing · 1971 · 42,998 sqft · 02116 convert at boiler replacement" [ref=f3e532]:
+                  - generic [ref=f3e533]: Multifamily Housing · 1971 · 42,998 sqft · 02116
+                  - generic [ref=f3e534]: convert at boiler replacement
+                - cell "128.8" [ref=f3e535]
+                - cell "308" [ref=f3e538]
+                - cell "15%" [ref=f3e539]
+                - cell "85%" [ref=f3e540]
+                - cell "98 High" [ref=f3e543]:
+                  - generic [ref=f3e544]:
+                    - generic [ref=f3e547]: "98"
+                    - generic [ref=f3e548]: High
+              - row [ref=f3e549]:
+                - cell "Multifamily Housing · 1845 · 51,431 sqft · 02121 convert at boiler replacement" [ref=f3e550]:
+                  - generic [ref=f3e551]: Multifamily Housing · 1845 · 51,431 sqft · 02121
+                  - generic [ref=f3e552]: convert at boiler replacement
+                - cell "127.1" [ref=f3e553]
+                - cell "318" [ref=f3e556]
+                - cell "14%" [ref=f3e557]
+                - cell "86%" [ref=f3e558]
+                - cell "98 High" [ref=f3e561]:
+                  - generic [ref=f3e562]:
+                    - generic [ref=f3e565]: "98"
+                    - generic [ref=f3e566]: High
+              - row [ref=f3e567]:
+                - cell "Multifamily Housing · 1998 · 113,315 sqft · 02118" [ref=f3e568]
+                - cell "129.4" [ref=f3e570]
+                - cell "826" [ref=f3e573]
+                - cell "19%" [ref=f3e574]
+                - cell "81%" [ref=f3e575]
+                - cell "98 High" [ref=f3e578]:
+                  - generic [ref=f3e579]:
+                    - generic [ref=f3e582]: "98"
+                    - generic [ref=f3e583]: High
+              - row [ref=f3e584]:
+                - cell "Multifamily Housing · 1900 · 93,252 sqft · 02118 convert at boiler replacement" [ref=f3e585]:
+                  - generic [ref=f3e586]: Multifamily Housing · 1900 · 93,252 sqft · 02118
+                  - generic [ref=f3e587]: convert at boiler replacement
+                - cell "127.6" [ref=f3e588]
+                - cell "669" [ref=f3e591]
+                - cell "19%" [ref=f3e592]
+                - cell "82%" [ref=f3e593]
+                - cell "98 High" [ref=f3e596]:
+                  - generic [ref=f3e597]:
+                    - generic [ref=f3e600]: "98"
+                    - generic [ref=f3e601]: High
+              - row [ref=f3e602]:
+                - cell "Multifamily Housing · 1930 · 80,104 sqft · 02135 convert at boiler replacement" [ref=f3e603]:
+                  - generic [ref=f3e604]: Multifamily Housing · 1930 · 80,104 sqft · 02135
+                  - generic [ref=f3e605]: convert at boiler replacement
+                - cell "116.5" [ref=f3e606]
+                - cell "455" [ref=f3e609]
+                - cell "11%" [ref=f3e610]
+                - cell "89%" [ref=f3e611]
+                - cell "97 High" [ref=f3e614]:
+                  - generic [ref=f3e615]:
+                    - generic [ref=f3e618]: "97"
+                    - generic [ref=f3e619]: High
+              - row [ref=f3e620]:
+                - cell "Multifamily Housing · 2001 · 205,800 sqft · 02116" [ref=f3e621]
+                - cell "108.0" [ref=f3e623]
+                - cell "1,282" [ref=f3e626]
+                - cell "44%" [ref=f3e627]
+                - cell "94% shares don't add up" [ref=f3e628]:
+                  - generic [ref=f3e629]:
+                    - generic [ref=f3e630]: 94%
+                    - generic [ref=f3e631]: shares don't add up
+                - cell "97 High" [ref=f3e632]:
+                  - generic [ref=f3e633]:
+                    - generic [ref=f3e636]: "97"
+                    - generic [ref=f3e637]: High
+              - row [ref=f3e638]:
+                - cell "Multifamily Housing · 1900 · 94,785 sqft · 02108" [ref=f3e639]
+                - cell "133.4" [ref=f3e641]
+                - cell "724" [ref=f3e644]
+                - cell "24%" [ref=f3e645]
+                - cell "76%" [ref=f3e646]
+                - cell "97 High" [ref=f3e649]:
+                  - generic [ref=f3e650]:
+                    - generic [ref=f3e653]: "97"
+                    - generic [ref=f3e654]: High
+              - row [ref=f3e655]:
+                - cell "Multifamily Housing · 1920 · 18,000 sqft · 02135 convert at boiler replacement" [ref=f3e656]:
+                  - generic [ref=f3e657]: Multifamily Housing · 1920 · 18,000 sqft · 02135
+                  - generic [ref=f3e658]: convert at boiler replacement
+                - cell "115.5" [ref=f3e659]
+                - cell "115" [ref=f3e662]
+                - cell "15%" [ref=f3e663]
+                - cell "86%" [ref=f3e664]
+                - cell "97 High" [ref=f3e667]:
+                  - generic [ref=f3e668]:
+                    - generic [ref=f3e671]: "97"
+                    - generic [ref=f3e672]: High
+              - row [ref=f3e673]:
+                - cell "Multifamily Housing · 1910 · 150,780 sqft · 02134 convert at boiler replacement" [ref=f3e674]:
+                  - generic [ref=f3e675]: Multifamily Housing · 1910 · 150,780 sqft · 02134
+                  - generic [ref=f3e676]: convert at boiler replacement
+                - cell "110.0" [ref=f3e677]
+                - cell "912" [ref=f3e680]
+                - cell "20%" [ref=f3e681]
+                - cell "89% shares don't add up" [ref=f3e682]:
+                  - generic [ref=f3e683]:
+                    - generic [ref=f3e684]: 89%
+                    - generic [ref=f3e685]: shares don't add up
+                - cell "97 High" [ref=f3e686]:
+                  - generic [ref=f3e687]:
+                    - generic [ref=f3e690]: "97"
+                    - generic [ref=f3e691]: High
+              - row [ref=f3e692]:
+                - cell "Multifamily Housing · 1974 · 112,005 sqft · 02118 convert at boiler replacement" [ref=f3e693]:
+                  - generic [ref=f3e694]: Multifamily Housing · 1974 · 112,005 sqft · 02118
+                  - generic [ref=f3e695]: convert at boiler replacement
+                - cell "117.7" [ref=f3e696]
+                - cell "740" [ref=f3e699]
+                - cell "18%" [ref=f3e700]
+                - cell "82%" [ref=f3e701]
+                - cell "96 High" [ref=f3e704]:
+                  - generic [ref=f3e705]:
+                    - generic [ref=f3e708]: "96"
+                    - generic [ref=f3e709]: High
+              - row [ref=f3e710]:
+                - cell "Multifamily Housing · 1950 · 150,172 sqft · 02130 convert at boiler replacement" [ref=f3e711]:
+                  - generic [ref=f3e712]: Multifamily Housing · 1950 · 150,172 sqft · 02130
+                  - generic [ref=f3e713]: convert at boiler replacement
+                - cell "105.9" [ref=f3e714]
+                - cell "868" [ref=f3e717]
+                - cell "86%" [ref=f3e718]
+                - cell "91% shares don't add up" [ref=f3e719]:
+                  - generic [ref=f3e720]:
+                    - generic [ref=f3e721]: 91%
+                    - generic [ref=f3e722]: shares don't add up
+                - cell "96 High" [ref=f3e723]:
+                  - generic [ref=f3e724]:
+                    - generic [ref=f3e727]: "96"
+                    - generic [ref=f3e728]: High
+              - row [ref=f3e729]:
+                - cell "Multifamily Housing · 1920 · 76,200 sqft · 02113 convert at boiler replacement" [ref=f3e730]:
+                  - generic [ref=f3e731]: Multifamily Housing · 1920 · 76,200 sqft · 02113
+                  - generic [ref=f3e732]: convert at boiler replacement
+                - cell "101.7" [ref=f3e733]
+                - cell "419" [ref=f3e736]
+                - cell "51%" [ref=f3e737]
+                - cell "95% shares don't add up" [ref=f3e738]:
+                  - generic [ref=f3e739]:
+                    - generic [ref=f3e740]: 95%
+                    - generic [ref=f3e741]: shares don't add up
+                - cell "96 High" [ref=f3e742]:
+                  - generic [ref=f3e743]:
+                    - generic [ref=f3e746]: "96"
+                    - generic [ref=f3e747]: High
+              - row [ref=f3e748]:
+                - cell "Multifamily Housing · 1920 · 22,400 sqft · 02135" [ref=f3e749]
+                - cell "111.0" [ref=f3e751]
+                - cell "183" [ref=f3e754]
+                - cell "13%" [ref=f3e755]
+                - cell "unknown" [ref=f3e756]
+                - cell "96 High" [ref=f3e759]:
+                  - generic [ref=f3e760]:
+                    - generic [ref=f3e763]: "96"
+                    - generic [ref=f3e764]: High
+              - row [ref=f3e765]:
+                - cell "Multifamily Housing · 1974 · 61,307 sqft · 02118 convert at boiler replacement" [ref=f3e766]:
+                  - generic [ref=f3e767]: Multifamily Housing · 1974 · 61,307 sqft · 02118
+                  - generic [ref=f3e768]: convert at boiler replacement
+                - cell "114.1" [ref=f3e769]
+                - cell "391" [ref=f3e772]
+                - cell "16%" [ref=f3e773]
+                - cell "84%" [ref=f3e774]
+                - cell "95 High" [ref=f3e777]:
+                  - generic [ref=f3e778]:
+                    - generic [ref=f3e781]: "95"
+                    - generic [ref=f3e782]: High
+              - row [ref=f3e783]:
+                - cell "Multifamily Housing · 1920 · 30,600 sqft · 02135 convert at boiler replacement" [ref=f3e784]:
+                  - generic [ref=f3e785]: Multifamily Housing · 1920 · 30,600 sqft · 02135
+                  - generic [ref=f3e786]: convert at boiler replacement
+                - cell "104.6" [ref=f3e787]
+                - cell "176" [ref=f3e790]
+                - cell "17%" [ref=f3e791]
+                - cell "90% shares don't add up" [ref=f3e792]:
+                  - generic [ref=f3e793]:
+                    - generic [ref=f3e794]: 90%
+                    - generic [ref=f3e795]: shares don't add up
+                - cell "95 High" [ref=f3e796]:
+                  - generic [ref=f3e797]:
+                    - generic [ref=f3e800]: "95"
+                    - generic [ref=f3e801]: High
+              - row [ref=f3e802]:
+                - cell "Multifamily Housing · 1920 · 64,400 sqft · 02215 convert at boiler replacement" [ref=f3e803]:
+                  - generic [ref=f3e804]: Multifamily Housing · 1920 · 64,400 sqft · 02215
+                  - generic [ref=f3e805]: convert at boiler replacement
+                - cell "106.8" [ref=f3e806]
+                - cell "382" [ref=f3e809]
+                - cell "14%" [ref=f3e810]
+                - cell "86%" [ref=f3e811]
+                - cell "95 High" [ref=f3e814]:
+                  - generic [ref=f3e815]:
+                    - generic [ref=f3e818]: "95"
+                    - generic [ref=f3e819]: High
+              - row [ref=f3e820]:
+                - cell "Multifamily Housing · 1900 · 184,496 sqft · 02121 convert at boiler replacement" [ref=f3e821]:
+                  - generic [ref=f3e822]: Multifamily Housing · 1900 · 184,496 sqft · 02121
+                  - generic [ref=f3e823]: convert at boiler replacement
+                - cell "107.6" [ref=f3e824]
+                - cell "1,105" [ref=f3e827]
+                - cell "15%" [ref=f3e828]
+                - cell "85%" [ref=f3e829]
+                - cell "95 High" [ref=f3e832]:
+                  - generic [ref=f3e833]:
+                    - generic [ref=f3e836]: "95"
+                    - generic [ref=f3e837]: High
+          - paragraph [ref=f3e838]:
+            - text: "Data:"
+            - link "City of Boston BERDO 2021" [ref=f3e839] [cursor=pointer]:
+              - /url: https://data.boston.gov/dataset/building-energy-reporting-and-disclosure-ordinance
+    - contentinfo [ref=f3e119]:
+      - generic [ref=f3e120]:
+        - generic [ref=f3e121]: Sources
+        - generic [ref=f3e122]:
+          - link "U.S. EIA" [ref=f3e123] [cursor=pointer]:
+            - /url: https://www.eia.gov/energyexplained/units-and-calculators/
+          - link "U.S. DOE" [ref=f3e124] [cursor=pointer]:
+            - /url: https://www.energy.gov/energysaver/furnaces-and-boilers
+          - link "Mass.gov" [ref=f3e125] [cursor=pointer]:
+            - /url: https://www.mass.gov/info-details/residential-electric-seasonal-heat-pump-rates
+          - link "Mass Save" [ref=f3e126] [cursor=pointer]:
+            - /url: https://www.masssave.com/
+          - link "Analyze Boston (BERDO 2021)" [ref=f3e127] [cursor=pointer]:
+            - /url: https://data.boston.gov/dataset/building-energy-reporting-and-disclosure-ordinance
+      - paragraph [ref=f3e128]: Your bill is never stored
+  - button "Open Next.js Dev Tools" [ref=f3e134] [cursor=pointer]
+  - alert [ref=f3e138]
+  - generic [aria-hidden] [ref=f3e315]: $876

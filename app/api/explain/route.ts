@@ -75,9 +75,9 @@ function buildSystemPrompt(language: Language): string {
 
 Write ENTIRELY in ${name}. Do not include any other language.
 
-You are given a verdict and a set of already-computed numbers. Rules:
-- You MAY restate the numbers you were given (e.g. the annual savings, payback, rebate, net cost).
-- You MUST NOT introduce, compute, invent, round differently, or infer ANY numeric value that is not present in the numbers you were given. If a number is not provided, do not state one.
+You are given a verdict and a set of already-computed numbers. The numbers you are given are ALREADY FORMATTED for display (e.g. "$1,981", "3.14", "9 months"). Rules:
+- When you mention any figure, you MUST reproduce it EXACTLY as the given string, character-for-character (same currency symbol, thousands separators, decimals, and words). Do NOT reformat, round, convert units, recompute, or restyle them.
+- You MUST NOT introduce, compute, invent, or infer ANY numeric value that is not present in the numbers you were given. If a number is not provided, do not state one.
 - Explain WHY the verdict makes sense in everyday terms.
 - Be honest: if the heat pump costs more to run, say so plainly — do not oversell.
 - Keep it to at most about 500 characters. No markdown, no headings, no bullet lists — just one or two short sentences of prose.
@@ -93,11 +93,11 @@ function buildUserPrompt(body: ExplainRequest): string {
     verdict: body.verdict,
     numbers: body.numbers,
   }
-  return `Here is the verdict and the computed numbers (the ONLY numbers you may use):
+  return `Here is the verdict and the pre-formatted display numbers (the ONLY numbers you may use — reproduce each one exactly as written):
 
 ${JSON.stringify(payload, null, 2)}
 
-Write the explanation now, in the required language, using only these numbers.`
+Write the explanation now, in the required language, using only these numbers exactly as given.`
 }
 
 export async function POST(request: Request) {

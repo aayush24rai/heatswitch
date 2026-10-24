@@ -129,8 +129,8 @@ export function AssumptionsCard({
           onChange={onChangeCOP}
           source={
             <SourceLink
-              label="Seasonal COP, MA cold-climate heat pumps"
-              href="https://www.mass.gov/info-details/residential-electric-seasonal-heat-pump-rates"
+              label="NEEP — cold-climate heat pump list"
+              href="https://ashp.neep.org/"
             />
           }
         />
@@ -145,6 +145,12 @@ export function AssumptionsCard({
           step={0.001}
           ariaLabel="Electricity price in dollars per kWh"
           onChange={onChangeElectricityPrice}
+          source={
+            <SourceLink
+              label="EIA — Massachusetts residential average price"
+              href="https://www.eia.gov/electricity/monthly/epm_table_grapher.php"
+            />
+          }
         />
 
         {/* Fuel price in the heating type's native unit. */}

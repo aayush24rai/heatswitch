@@ -14,16 +14,19 @@
 
 import type { Language, Verdict } from "@/lib/schema"
 
-/** The number set sent to the explanation service. All of these come from the
- *  Calculation_Engine (lib/calc.ts / lib/rebates.ts). */
+/** The number set sent to the explanation service. Each value is the EXACT
+ *  on-screen formatted display string (e.g. "$1,981", "3.14", "9 months") the
+ *  UI shows — not a raw number. The values are still computed in code from the
+ *  Calculation_Engine (lib/calc.ts / lib/rebates.ts); only their formatting is
+ *  fixed here so the model reproduces the same text the user sees. */
 export interface ExplainNumbers {
-  annualDeltaDollars: number
-  currentAnnualCost: number
-  heatPumpAnnualCost: number
-  breakevenCOP: number
-  rebateAmount: number
-  netInstallCost: number
-  paybackYears: number | null
+  annualDeltaDollars: string
+  currentAnnualCost: string
+  heatPumpAnnualCost: string
+  breakevenCOP: string
+  rebateAmount: string
+  netInstallCost: string
+  paybackYears: string
 }
 
 export interface ExplainRequestPayload {
