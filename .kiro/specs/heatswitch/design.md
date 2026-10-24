@@ -93,6 +93,51 @@ docs/
 README.md                   # existing (keep)
 ```
 
+## Layout and UI States
+
+The app keeps the two-tab structure — **"My home"** and **"Buildings (landlords & city)"** — as a shadcn `Tabs` in `app/page.tsx`. Styling uses the **default shadcn/ui styling and colors** for now (Card, Button, Slider, Switch, Tabs, Badge, Alert, Tooltip, Skeleton); a dedicated visual pass comes later. The one color rule honored throughout: savings render in emerald, extra cost in amber, neutral at zero — **never red**. Dollar figures use `tabular-nums`.
+
+The **My home** tab renders one of two states depending on whether any data (an uploaded bill or a demo home) has loaded.
+
+### State 1 — Empty state (no bill or demo loaded yet)
+
+Before any data exists, the page shows **only a hero**. None of the result cards (Verdict, Cost chart, Your numbers, Assumptions, Rebates, Next step, How we calculate) render until there is data.
+
+```text
+TAB: My home — EMPTY STATE
+[ Headline:  "Should your Boston home switch to a heat pump?" ]
+[ Subhead:   one-line description ]
+[ UploadCard: drop zone (bill photo/PDF) + zip field + "Heat included in my rent" toggle ]
+[ Three LARGE demo buttons:  [ Oil home ]   [ Gas home ]   [ Baseboard apartment ] ]
+```
+
+- The headline and subhead are the only prose.
+- The UploadCard and the three large demo buttons are the sole interactive elements.
+- No verdict, chart, numbers, assumptions, rebates, next-step row, or "How we calculate" section appears in this state.
+
+### State 2 — Results state (after a bill or demo loads)
+
+Once data exists, the **VerdictCard becomes the hero**: full width at the top of the My home tab. Below it, the remaining cards render in document order.
+
+```text
+TAB: My home — RESULTS STATE
+[ VerdictCard — FULL WIDTH hero ]
+    - verdict label        text-4xl font-semibold
+    - annual dollar figure text-6xl tabular-nums, directly below the label
+        emerald = savings, amber = extra cost, neutral at zero; never red
+    - "Act before Dec 31" badge when the flag is set
+    - language dropdown
+    - AI-explanation slot (Skeleton while loading)
+[ CostChartCard   (current vs heat pump bars + breakeven COP) ]
+[ YourNumbersCard (editable fields; monospace evidence chip under each value; amber = confirm) ]
+[ AssumptionsCard (sliders + seasonal heat pump rate switch) ]
+[ RebatesCard     (amount, net cost, payback, requirements; renter/landlord path when rent toggle on) ]
+[ NextStepRow     (Boston Energy Saver / Mass Save; enhanced-incentive notice for equity zips) ]
+[ How we calculate (collapsible: formulas, assumptions, sources) ]
+```
+
+The **Buildings (landlords & city)** tab is unchanged: a zip picker plus a ranked table of Boston multifamily buildings by heat pump opportunity, sourced from BERDO 2021.
+
 ## Sequence Diagrams
 
 ### Flow 1: Try demo home (fastest path, no AI, but demoes the amber flow)
@@ -166,7 +211,15 @@ sequenceDiagram
 
 ### Component: UploadCard
 
-**Purpose**: Entry point. Drop zone for a bill photo/PDF, a zip code field, a "Heat included in my rent" toggle, and three demo buttons (Oil / Gas / Baseboard home). Each demo button loads a **cached `ExtractionResult`** (value + confidence + evidence per field), not bare inputs, so demos exercise the same Zod + confirmation path as a real upload. The **gas demo** includes exactly one low-confidence field to showcase the amber confirmation flow without any AI call.
+**Purpose**: Entry point. Drop zone for a bill photo/PDF, a zip code field, a "Heat included in my rent" toggle, and three **large** demo buttons labelled **"Oil home"**, **"Gas home"**, and **"Baseboard apartment"**. In the empty state (State 1) the UploadCard and these three large demo buttons, together with the hero headline/subhead, are the only content on the My home tab. Each demo button loads a **cached `ExtractionResult`** (value + confidence + evidence per field), not bare inputs, so demos exercise the same Zod + confirmation path as a real upload.
+
+**Demo presets**: besides the cached `ExtractionResult`-shaped fields, each demo also presets the assumptions/household fields needed to reach its intended verdict:
+
+- **Oil home** → presets household size `3` + annual income `$95,000` (selects the **Enhanced** tier) and turns the **seasonal heat pump rate ON**. Intended verdict: **"Switch now"** with the **"Act before Dec 31"** badge set.
+- **Gas home** → keeps the **Standard** tier (no income preset). Carries **exactly one low-confidence (amber) field** so a single amber confirmation appears with no AI call. Intended verdict: **"Not worth it yet"**.
+- **Baseboard apartment** → keeps the **Standard** tier (no income preset). Intended verdict: **"Switch when your system needs replacing"**.
+
+The three demos are deliberately designed to produce **three different verdicts** (Oil → "Switch now"; Baseboard → "Switch when your system needs replacing"; Gas → "Not worth it yet") so the full range of outcomes is demonstrable in under two minutes.
 
 **Interface**:
 ```typescript
@@ -181,24 +234,29 @@ interface UploadCardProps {
 
 type DemoHome = "oil" | "gas" | "baseboard";
 
-/** Each demo button maps to a cached ExtractionResult (fields + confidence + evidence).
- *  The "gas" demo contains exactly one field with confidence < CONFIDENCE_THRESHOLD. */
+/** Each demo button maps to a cached ExtractionResult (fields + confidence + evidence)
+ *  PLUS preset assumptions/household fields for its intended verdict:
+ *    "oil"      -> householdSize 3 + annualIncome 95_000 (Enhanced tier),
+ *                  seasonalHeatPumpRate ON  => "Switch now" + actBeforeDec31
+ *    "gas"      -> Standard tier (no income); exactly one field with
+ *                  confidence < CONFIDENCE_THRESHOLD  => "Not worth it yet"
+ *    "baseboard"-> Standard tier (no income)  => "Switch when your system needs replacing" */
 ```
 
 **Responsibilities**:
 - Accept a dropped/selected file and hand it up for extraction.
 - Capture zip (drives Boston vs non-Boston next step and equity-zone informational notice).
-- Load the demo's cached `ExtractionResult` on button click (no AI call); feed it through the same Zod parse + amber-confirmation path as a real upload.
+- Load the demo's cached `ExtractionResult` **and preset assumptions/household fields** on button click (no AI call); feed it through the same Zod parse + amber-confirmation path as a real upload, transitioning the My home tab from the empty state (State 1) to the results state (State 2).
 
 ### Component: VerdictCard
 
-**Purpose**: The headline answer. Shows the verdict label, an "Act before Dec 31" badge when relevant, the big annual number, the AI explanation, and a language dropdown.
+**Purpose**: The headline answer and the **hero of the results state (State 2)** — rendered **full width at the top** of the My home tab. Shows the verdict label, the big annual dollar figure directly below it, an "Act before Dec 31" badge when relevant, the AI explanation, and a language dropdown.
 
 **Interface**:
 ```typescript
 interface VerdictCardProps {
   verdict: Verdict;                 // label + actBeforeDec31
-  annualDeltaDollars: number;       // + = savings (emerald), - = extra cost (amber)
+  annualDeltaDollars: number;       // + = savings (emerald), - = extra cost (amber), 0 = neutral
   explanation: string | null;       // from /api/explain; null => Skeleton
   language: Language;
   isEstimate: boolean;              // true while any field is amber
@@ -207,9 +265,12 @@ interface VerdictCardProps {
 ```
 
 **Responsibilities**:
-- Render verdict label text-4xl font-semibold; savings emerald-600, extra cost amber-600, never red.
+- Render the verdict label at `text-4xl font-semibold`.
+- Render the annual dollar figure **directly below the label** at `text-6xl tabular-nums`: emerald for savings, amber for extra cost, neutral at zero — **never red**.
+- Show the "Act before Dec 31" badge when `verdict.actBeforeDec31` is set.
+- Show the language dropdown.
+- Fill the AI-explanation slot from `explanation`; show a **Skeleton** while it is `null` (loading).
 - Show "Estimate" vs "Based on your bill" per `isEstimate`.
-- Show Skeleton while explanation loads.
 
 ### Component: CostChartCard
 
@@ -226,7 +287,7 @@ interface CostChartCardProps {
 
 ### Component: YourNumbersCard
 
-**Purpose**: The editable truth table. Each field shows its value, the bill text it came from beneath it, and an amber outline when unconfirmed. Includes the heating-type chip.
+**Purpose**: The editable truth table. Each field shows its value, the bill evidence it came from rendered **beneath the number as a small monospace "quote chip"** (e.g. `"Total therms: 652"`), and an amber outline when unconfirmed. Includes the heating-type chip.
 
 **Interface**:
 ```typescript
@@ -240,7 +301,7 @@ interface YourNumbersCardProps {
 ```
 
 **Responsibilities**:
-- Render `ConfirmField` for each value: amber outline + evidence text + [Looks right] [Edit].
+- Render `ConfirmField` for each value: the bill evidence appears as a **monospace quote chip under the value**, with an amber outline + [Looks right] [Edit] when unconfirmed.
 - Edit in place (no modal, no new tab); recompute live on change.
 
 ### Component: AssumptionsCard
@@ -313,13 +374,13 @@ interface SourceLinkProps {
 
 ### Shared Component: ConfirmField
 
-**Purpose**: Inline confirmation primitive. Shows best-guess value immediately; amber outline when unconfirmed; evidence text; [Looks right] [Edit] with edit-in-place.
+**Purpose**: Inline confirmation primitive. Shows best-guess value immediately; amber outline when unconfirmed; renders the `evidence` text as a **small monospace "quote chip" beneath the value** (e.g. `"Total therms: 652"`); [Looks right] [Edit] with edit-in-place.
 
 ```typescript
 interface ConfirmFieldProps {
   value: number;
   unit: string;
-  evidence?: string;          // exact bill text this came from
+  evidence?: string;          // exact bill text this came from; shown as a monospace chip under the value
   confirmed: boolean;         // false => amber outline
   onConfirm: () => void;
   onEdit: (value: number) => void;

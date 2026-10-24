@@ -88,23 +88,23 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - No UI change: skip Playwright screenshots
     - Task is not complete until these steps pass
 
-- [ ] 3. Build the demo-driven results UI (no AI)
-  - [ ] 3.1 Build shared `SourceLink` and `ConfirmField` primitives
+- [x] 3. Build the demo-driven results UI (no AI)
+  - [x] 3.1 Build shared `SourceLink` and `ConfirmField` primitives
     - Implement `components/shared/source-link.tsx` (small grey link/tooltip beneath numbers) and `components/shared/confirm-field.tsx` (immediate best-guess value, amber outline when unconfirmed, evidence text, [Looks right] [Edit] edit-in-place, validation on commit)
     - _Requirements: 11.1, 11.2, 3.1, 3.2, 3.3, 3.11_
-  - [ ] 3.2 Build `UploadCard` with the three Try demo buttons and cached ExtractionResults
+  - [x] 3.2 Build `UploadCard` with the three Try demo buttons and cached ExtractionResults
     - Implement `components/my-home/upload-card.tsx` with drop zone, zip field, "Heat included in my rent" toggle, and Oil/Gas/Baseboard demo buttons; add cached `ExtractionResult` fixtures (value + confidence + evidence per field) routed through `ExtractionResultSchema`; the Gas demo carries exactly one field below `CONFIDENCE_THRESHOLD`
     - _Requirements: 1.6, 1.7, 1.8, 1.9, 1.10, 1.11_
-  - [ ] 3.3 Build `VerdictCard` and `CostChartCard`
+  - [x] 3.3 Build `VerdictCard` and `CostChartCard`
     - Implement `components/my-home/verdict-card.tsx` (verdict label `text-4xl font-semibold`, big annual number in emerald for savings / amber for extra cost / neutral at zero, never red; "Act before Dec 31" badge; "Estimate" vs "Based on your bill" label; explanation Skeleton placeholder) and `components/my-home/cost-chart-card.tsx` (Recharts two-bar current-vs-heat-pump + breakeven COP readout)
     - _Requirements: 6.1, 6.5, 6.6, 6.7, 6.8, 12.6_
-  - [ ] 3.4 Build `YourNumbersCard` with heating-type chip and live recompute
+  - [x] 3.4 Build `YourNumbersCard` with heating-type chip and live recompute
     - Implement `components/my-home/your-numbers-card.tsx` rendering a `ConfirmField` per value with evidence beneath, the heating-type chip ("Looks like gas heat." with Yes/Change), and the "Estimate: N values need a quick check" banner that scrolls to the first amber field
     - _Requirements: 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 2.8_
-  - [ ] 3.5 Wire the demo flow into `app/page.tsx`
+  - [x] 3.5 Wire the demo flow into `app/page.tsx`
     - Hold inputs/extraction/confirmation state; map a cached `ExtractionResult` to `HomeInputs`, mark low-confidence fields amber, and call `computeComparison`/`computeRebates`/`decideVerdict`; recompute live on every confirm/edit; flip the verdict label to "Based on your bill" once nothing is amber
     - _Requirements: 3.1, 3.10, 1.11_
-  - [ ] 3.6 Done (workflow.md)
+  - [x] 3.6 Done (workflow.md)
     - Run `npx vitest run` and fix any failures before moving on
     - Append a `KIRO_LOG.md` entry (time, task, Kiro feature used, what it did, why it mattered)
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-3-desktop.png` and `docs/kiro/screens/task-3-mobile.png`, and reference them in the log entry

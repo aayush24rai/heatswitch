@@ -487,3 +487,183 @@
 - Why it mattered: all math now lives in tested, pure functions so the LLM never computes a number,
   and the persona acceptance values confirm the engine matches real-world heat-pump economics within
   ±2% — the honest-verdict core is locked in before any UI wires into it.
+
+## Task 3.1 — Shared SourceLink + ConfirmField primitives
+- When: 2026-10-24 17:02 UTC
+- Task: Task 3.1: build the shared `SourceLink` and `ConfirmField` UI primitives (Requirements 11.1, 11.2, 3.1, 3.2, 3.3, 3.11)
+- Kiro feature used: Spec (design-first workflow) + shadcn/ui
+- What: Added two self-contained client components under `components/shared/`.
+  (1) `source-link.tsx` — `SourceLink({ label, href? })`: a small `text-xs`
+  muted-foreground source reference rendered beneath a number (Req 11.1). With an
+  `href` it renders a focusable anchor that opens the source in a new tab; without
+  one it wraps the label in the shadcn `Tooltip` (trigger defaults to a focusable
+  `<button>`) so the source reveals on hover/focus. (2) `confirm-field.tsx` —
+  `ConfirmField({ value, unit, evidence?, confirmed, onConfirm, onEdit, label?, min?, max? })`:
+  shows the best-guess value immediately (Req 3.1); when `confirmed === false` it
+  draws the one intentional accent the spec allows — an amber outline
+  (`border-amber-500 ring-amber-500/40`) — renders the exact bill `evidence` as a
+  monospace quoted "chip" (`font-mono text-xs` in a rounded `bg-muted` pill, Req 3.2/11.2),
+  and shows shadcn `[Looks right]`/`[Edit]` Buttons. "Looks right" calls `onConfirm`;
+  "Edit" switches to an inline `<input>` in place (no modal/new tab, Req 3.3) that
+  commits on blur or Enter (Escape cancels). Commit validates a finite number within
+  the optional `[min,max]`; invalid input stays in edit mode, restores the prior value,
+  and shows an inline `role="alert"` error with `aria-invalid`/`aria-describedby`
+  (Req 3.11). When confirmed, the amber outline and actions drop away. Everything uses
+  only already-installed shadcn primitives (Button, Tooltip) and Tailwind utilities —
+  no custom CSS, no new color system, default shadcn typography kept for the later
+  visual pass. Verification: `npx tsc --noEmit` clean (exit 0); `npx vitest run` 58/58
+  passing across 6 files (no new tests added this sub-task, per the task note). Did not
+  consume these in any card or wire into `app/page.tsx` (tasks 3.2–3.5). Did not
+  read/print/edit `.env.local`; did not touch `.gitignore`.
+- Screenshots: none — task-3 Playwright screenshots happen at the 3.6 Done step, not this leaf.
+- Why it mattered: these two primitives encode the product's trust rules at the component
+  level — every number can carry its source (11.1) and every extracted value can show the
+  exact bill text it came from with an amber "needs a check" state (3.2/11.2) and friction-free
+  in-place confirmation (3.3/3.11) — so the results cards built next inherit honesty-by-default.
+
+## 2026-10-24 13:05 EDT — Task 3.3 Build VerdictCard and CostChartCard
+
+- **Kiro feature:** Spec task execution + shadcn/ui primitives + Recharts.
+- **What it did:** Added `components/my-home/verdict-card.tsx` (results-state hero: verdict label `text-4xl font-semibold`, big annual figure `text-6xl tabular-nums` colored emerald for savings / amber for extra cost / neutral at zero — never red, "Act before Dec 31" badge, "Estimate" vs "Based on your bill" status line, six-language native `<select>` dropdown, and a Skeleton placeholder while explanation is null) and `components/my-home/cost-chart-card.tsx` (Recharts two-bar current-vs-heat-pump comparison with tabular-nums dollar labels and a breakeven COP readout + SourceLink).
+- **Why it mattered:** Gives the "My home" tab its honest headline answer and the cost comparison visual — the core of a <2-minute demo — using only installed shadcn primitives and the emerald theme, keeping the LLM out of all math.
+- **Verification:** `npx tsc --noEmit` clean; `npx vitest run` green (58 tests). No UI wired into page yet (task 3.5), so no screenshots this sub-task.
+
+## Task 3.4 — Build YourNumbersCard with heating-type chip and live recompute
+- When: 2026-01-01 (implementation; UI-only component, not yet wired into page.tsx)
+- Kiro feature used: Spec (task execution) + shadcn/ui
+- What: Added `components/my-home/your-numbers-card.tsx` (`YourNumbersCard`),
+  exporting `type FieldKey = "annualFuelUse" | "fuelUnitPrice"` and
+  `interface EditableField { key; label; value; unit; evidence?; confirmed }`.
+  It composes one `ConfirmField` (from task 3.1) per editable number — passing
+  value/unit/evidence/confirmed and wiring onConfirm→onFieldConfirm(key),
+  onEdit→onFieldEdit(key,value), min=0 — so the amber outline, monospace
+  evidence chip and inline [Looks right]/[Edit] validation all come from the
+  shared primitive. Added the heating-type chip "Looks like {gas|oil|electric
+  baseboard|propane} heat." with [Yes] (acknowledges) and [Change] (cycles
+  HeatingType in place via onHeatingTypeChange). Added the shadcn Alert banner
+  "Estimate: N values need a quick check" (N = count of unconfirmed fields),
+  rendered only while N>=1, clickable/Enter-Space to scrollIntoView the first
+  amber field via a ref. Verdict label flip stays in VerdictCard; recompute is
+  the page's job via the callbacks. tsc --noEmit clean; vitest 58/58 pass.
+- Why it mattered: gives the My home tab its editable, honest "confirm the
+  numbers" surface — the one place a user corrects low-confidence extracted
+  values — while keeping all math out of the component per the product rule.
+
+Commit and push now: feat(my-home): add YourNumbersCard with heating-type chip, confirm fields, and estimate banner
+
+## Task 3.2 — Build UploadCard + cached demo ExtractionResults (no AI)
+- When: 2026-10-24 17:06 UTC
+- Task: 3.2 Build `UploadCard` with the three Try demo buttons and cached ExtractionResults
+- Kiro feature used: Spec (design-first workflow) + shadcn
+- What: Added two files under `components/my-home/`. (1) `demo-homes.ts` — the cached
+  demo fixtures module. Exports the `DemoHome = "oil" | "gas" | "baseboard"` type, a
+  `DEMO_HOMES: Record<DemoHome, { extraction, inputs, assumptions }>` map, `DEMO_HOME_LABELS`,
+  and two helpers (`getDemoExtraction` which routes a fixture through
+  `ExtractionResultSchema.safeParse` per Req 1.12, and `countLowConfidenceFields`). Each
+  demo's `extraction` is an `ExtractionResult`-shaped object (value + confidence + exact
+  evidence per field) that passes the Zod schema, plus the preset `Partial<HomeInputs>`
+  (zip/utility/householdSize/optional income/rent flag) and `Partial<Assumptions>` overrides
+  the page merges to reach the intended verdict. Used the exact engine-validated values from
+  the task spec unchanged: Oil = 800 gal × $6.15, income 95000 (Enhanced tier), seasonal rate
+  ON → "Switch now" + Act-before-Dec-31; Gas = 652 therms × $2.42, no income (Standard), rate
+  off, with `annualFuelUse` confidence 0.72 as the SINGLE amber field (< CONFIDENCE_THRESHOLD
+  0.8) while heatingType 0.96 and fuelUnitPrice 0.91 stay confirmed (Req 1.11) → "Not worth it
+  yet"; Baseboard = 7,600 kWh × $0.288, no income, rate off → "Switch when your system needs
+  replacing". Shared assumption defaults (COP 2.5, electricity $0.288/kWh, 3 tons, $18,000
+  install, Eversource seasonal discount 0.073 from SEASONAL_HEAT_PUMP_RATE_DISCOUNT,
+  SYSTEM_EFFICIENCY) live in one const reused by all three. (2) `upload-card.tsx` — the
+  `UploadCard` client component using only installed shadcn primitives (Card, Button, Switch):
+  a keyboard-accessible drag/drop + click file picker (JPEG/PNG/PDF) that captures the File and
+  raises it via `onBillSelected` (real extraction is task 6), a 5-digit numeric-only zip input
+  with inline `^\d{5}$` error, the "Heat included in my rent" Switch (`onRentToggle`), and three
+  LARGE `size="lg" h-auto` demo buttons ("Oil home" / "Gas home" / "Baseboard apartment") that
+  call `onTryDemo(demo)`. Props match the design exactly: `{ zip, heatIncludedInRent, onZipChange,
+  onRentToggle, onBillSelected, onTryDemo }`. Did NOT wire into `app/page.tsx` (task 3.5). Also
+  added `components/my-home/demo-homes.test.ts` (6 tests) asserting every fixture parses, the Gas
+  demo has exactly one amber field (specifically annualFuelUse), Oil/Baseboard have zero amber
+  fields, and the Oil Enhanced-tier + seasonal-rate-on / Standard-tier presets hold. Verified:
+  `npx vitest run` → 64 passed (58 prior + 6 new); `npx tsc --noEmit` reports only ONE error, in
+  `components/my-home/cost-chart-card.tsx` (task 3.3, a parallel sub-task — a Recharts
+  `LabelFormatter` type issue) which I did not touch; my two files type-check clean (confirmed via
+  diagnostics). No screenshots this sub-task (task-3 screenshots are at 3.6). Did not read/print/edit
+  `.env.local`.
+- Why it mattered: gives the demo-first flow its data and its intake UI — three cached bills that
+  route through the SAME Zod + confirmation path as a real upload and deterministically produce
+  three different honest verdicts, with the Gas demo exercising the single-amber-field confirmation
+  UX the design relies on, all without any AI call.
+
+## 2026-10-24 13:10 EDT — Task 3.5: Wire the demo flow into app/page.tsx
+
+- **Kiro feature:** Spec (task-driven implementation) + unit test.
+- **What:** Rewrote `app/page.tsx` to hold intake/extraction/confirmation state and
+  switch between an empty hero state (headline + subhead + UploadCard) and a results
+  state (full-width VerdictCard hero, then CostChartCard, YourNumbersCard, and the
+  task-4 placeholder cards). A demo click routes its cached fixture through a shared
+  `buildDemoScenario(demo)` helper (added to `components/my-home/demo-homes.ts`) that
+  maps the Zod-validated extraction + preset inputs → `HomeInputs` and layers the
+  demo's assumption overrides onto the engine defaults → `Assumptions`. Low-confidence
+  fields start amber; confirm/edit/heating-type changes recompute
+  `computeComparison`/`computeRebates`/`decideVerdict` live via a memo, and the verdict
+  label flips "Estimate" → "Based on your bill" once nothing is amber. Added
+  `components/my-home/demo-verdicts.test.ts` asserting the three demos produce three
+  distinct verdicts (Oil → "Switch now" + actBeforeDec31; Baseboard → "Switch when your
+  system needs replacing"; Gas → "Not worth it yet") through the same engine the page
+  uses, with a fixed now before Dec 31 2026.
+- **Why it mattered:** This is the first screen a judge sees. One shared
+  `buildDemoScenario` helper keeps the page and the test on a single source of truth, so
+  the demo-verdict test proves the live UI pipeline produces the full range of honest
+  outcomes — including the case where a heat pump isn't worth it yet.
+- Verification: `npx tsc --noEmit` clean; `npx vitest run` 69/69 (64 existing + 5 new);
+  `npx next build` compiles. Screenshots are captured in task 3.6, not this leaf.
+
+## Task 3 — Demo-driven results UI (no AI): Done (workflow.md closeout)
+- When: 2026-10-24 17:14 UTC
+- Task: Task 3 — demo-driven results UI (closeout of sub-tasks 3.1–3.6)
+- Kiro feature used: Spec (design-first workflow) + shadcn/ui + Playwright MCP (+ the demo-verdict unit test, Vitest)
+- What: Ran the workflow.md Done steps for Task 3. (1) `npx vitest run` passed — 69 tests
+  across 8 files (lib calc/rebates/persona/ranking/verdict + `components/my-home/demo-homes.test.ts`
+  and `components/my-home/demo-verdicts.test.ts`), and `npx tsc --noEmit` was clean (exit 0). No
+  source or test files were modified in this closeout. (2) Task 3 CHANGED the My-home UI (it now has
+  a real empty state and a results state), so with the Next dev server serving http://localhost:3000
+  I used the Playwright MCP to capture responsive full-page screenshots of BOTH states at 1280px
+  (desktop) and 390px (mobile). EMPTY STATE (fresh load): verified the hero headline "Should your
+  Boston home switch to a heat pump?", the subhead, and the UploadCard with the three large demo
+  buttons ("Oil home", "Gas home", "Baseboard apartment"), with NO Verdict/Cost/Your-numbers result
+  cards shown. RESULTS STATE (clicked "Oil home"): verified the VerdictCard renders full-width at the
+  top with the label "Switch now" at large size, the "Based on your bill" + "Act before Dec 31"
+  badges, and the big "$2,630 saved per year" figure below it; beneath it the Cost chart card (current
+  $4,920 vs heat pump $2,290, breakeven COP 1.16) and the Your-numbers card with the monospace evidence
+  chips ("Delivered: 800 gal", "Price/gal: $6.15") and the "Looks like oil heat." chip. Also exercised
+  the amber confirmation flow with the "Gas home" demo: the verdict honestly reads "Not worth it yet"
+  (+$403 more per year) with an "Estimate" label, the "Estimate: 1 value needs a quick check" banner
+  sits above the Your-numbers card, and exactly ONE field (Annual heating use, 652 therms) shows the
+  amber [Looks right] [Edit] confirm controls while the high-confidence fuel price does not. Responsive
+  difference confirmed: at 1280px the results view places the VerdictCard full-width on top and the
+  Cost chart + Your-numbers cards in a two-column grid below; at 390px everything collapses into a
+  single stacked column. Closed the browser and removed the transient `.playwright-mcp/` directory.
+  Left the pre-existing dev server (which was already running before this closeout) untouched.
+  This closeout summarizes Task 3 across 3.1–3.5: 3.1 built the shared `SourceLink` and `ConfirmField`
+  primitives (grey source links/tooltips under numbers; immediate best-guess value with amber outline,
+  evidence text, and edit-in-place); 3.2 built the `UploadCard` with the three Try-demo buttons and the
+  cached `ExtractionResult` fixtures routed through `ExtractionResultSchema` (the Gas demo carries exactly
+  one below-threshold field); 3.3 built the `VerdictCard` (label at `text-4xl`, emerald savings / amber
+  extra-cost big number never red, Act-before-Dec-31 badge, Estimate vs Based-on-your-bill) and the
+  `CostChartCard` (Recharts two-bar current-vs-heat-pump + breakeven COP readout); 3.4 built the
+  `YourNumbersCard` (a ConfirmField per value with evidence beneath, the heating-type chip, and the
+  "Estimate: N values need a quick check" banner that scrolls to the first amber field); 3.5 wired the
+  demo flow into `app/page.tsx` (maps a cached ExtractionResult to HomeInputs, marks low-confidence
+  fields amber, calls computeComparison/computeRebates/decideVerdict, recomputes live on every
+  confirm/edit, and flips the label to "Based on your bill" once nothing is amber) along with the
+  three-distinct-verdicts demo unit test. Kept DEFAULT shadcn styling (no visual redesign). Did not
+  read/print/edit `.env.local`; did not add `.kiro` to `.gitignore`.
+- Screenshots:
+  - docs/kiro/screens/task-3-empty-desktop.png (1280px) — empty state: hero + UploadCard with 3 demo buttons, no result cards
+  - docs/kiro/screens/task-3-empty-mobile.png (390px) — empty state, single stacked column
+  - docs/kiro/screens/task-3-results-desktop.png (1280px) — Oil-home results: full-width Verdict "Switch now" + $2,630/yr, Cost chart + Your numbers in a two-column grid below
+  - docs/kiro/screens/task-3-results-mobile.png (390px) — Oil-home results, single stacked column
+  - docs/kiro/screens/task-3-amber-desktop.png (1280px, optional) — Gas-home amber flow: "Not worth it yet" / "Estimate", the "1 value needs a quick check" banner, one amber confirm field
+  - docs/kiro/screens/task-3-desktop.png (1280px) — alias copy of task-3-results-desktop.png (standard task-3 name)
+  - docs/kiro/screens/task-3-mobile.png (390px) — alias copy of task-3-results-mobile.png (standard task-3 name)
+- Why it mattered: the app is now demo-usable end to end — a visitor can click a demo home and get the
+  honest verdict hero, the current-vs-heat-pump cost picture, and the inline amber confirmation flow —
+  all before any AI is wired in, with every number coming from the pure calculation engine.

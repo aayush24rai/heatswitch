@@ -230,6 +230,85 @@
         "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
         "timestamp": 1792860959182
       }
+    ],
+    "3.1 Build shared `SourceLink` and `ConfirmField` primitives": [
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861154506
+      },
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861416348
+      }
+    ],
+    "3.2 Build `UploadCard` with the three Try demo buttons and cached ExtractionResults": [
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861419716
+      },
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861629350
+      }
+    ],
+    "3.3 Build `VerdictCard` and `CostChartCard`": [
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861421128
+      },
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861628053
+      }
+    ],
+    "3.4 Build `YourNumbersCard` with heating-type chip and live recompute": [
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861421814
+      },
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861630413
+      }
+    ],
+    "3.5 Wire the demo flow into `app/page.tsx`": [
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861634036
+      },
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861835762
+      }
+    ],
+    "3.6 Done (workflow.md)": [
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792861838212
+      },
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792862165156
+      }
+    ],
+    "3. Build the demo-driven results UI (no AI)": [
+      {
+        "executionId": "0b74fe91-af63-445e-bb76-2f019b9232dc",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792862165207
+      }
     ]
   }
 }
