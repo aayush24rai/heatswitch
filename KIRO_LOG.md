@@ -183,3 +183,307 @@
 - Screenshots: docs/kiro/screens/task-1-desktop.png (1280px), docs/kiro/screens/task-1-mobile.png (390px)
 - Why it mattered: verifies the compiling two-tab shell renders correctly and responsively on real
   viewports before any calc/UI/AI work, giving every later task a confirmed, demo-first foundation.
+- 2026-10-24 12:40 EDT — Task 2.1: Implement heating-use and energy-content functions in lib/calc.ts — Kiro feature: spec. Created lib/calc.ts fresh with two pure functions: `annualHeatingUse(history)` (sum − 12·min(summer months), rejecting non-12-length/non-finite/negative histories, clamped to [0, sum]) and `fuelEnergyContentKWh(type, fuelUse, efficiency)` (per-fuel kWh content × efficiency, rejecting unsupported type / fuelUse<0 / efficiency≤0). `npx tsc --noEmit` and `npx vitest run` both pass. Why it mattered: these are the first entries in the Calculation_Engine that keep all math in pure, testable code so the LLM never computes a number (product/tech rules, Requirements 4.2–4.7).
+
+## Task 2.5 — Implement rebate tier + rebate functions in lib/rebates.ts
+- When: 2026-10-24 16:41 UTC
+- Task: 2.5 Implement rebate tier and rebate functions in `lib/rebates.ts`
+- Kiro feature used: Spec (design-first workflow)
+- What: Created `lib/rebates.ts` as a pure module (no I/O, no network) with four exports plus
+  two result types. `selectRebateTier(householdSize, annualIncome?)` returns a small
+  `RebateTierResult { tier, invalidHouseholdSize?, checkIncomeLimits? }`: income absent/undefined
+  => "standard" (Req 5.1); household size absent or not an integer >= 1 => "standard" with
+  `invalidHouseholdSize` flagged (Req 5.3); sizes 6–8 reuse the size-5 `INCOME_LIMITS` row and set
+  `checkIncomeLimits` ("check masssave.com/income"); with valid size + income it uses the CORRECTED
+  Req 5.2 banding where `incomeEligibleMax` is the LOWER bound — income <= incomeEligibleMax =>
+  "income-eligible", else income <= enhancedMax => "enhanced", else "standard" (the earlier
+  design prose/pseudocode had these inverted; the requirement + lib/constants.ts are authoritative).
+  `computeRebates(inputs, a)` picks the tier, computes the uncapped rebate per tier (Standard =
+  min(MASS_SAVE_PER_TON·tons, MASS_SAVE_TOTAL_CAP); Enhanced = min(installCostGross, ENHANCED_CAP=16000);
+  Income Eligible = full installCostGross, Req 5.4/5.5), clamps `rebateAmount` to [0, installCostGross]
+  (Req 5.6), sets `netInstallCost = installCostGross − rebateAmount >= 0` (Req 5.7), and pulls annual
+  savings from `computeComparison` (lib/calc.ts) to set `paybackYears` null when savings <= 0 else
+  netInstallCost/savings >= 0 (Req 5.8). The equity-zip status is never consulted in the rebate math
+  (Req 5.9/10.4). `isBostonZip(zip)` and `isEquityZip(zip)` use documented, source-cited zip sets
+  (USPS/City of Boston; MA environmental-justice list); `isEquityZip` is informational only and is not
+  called by `computeRebates`. Defined/exported `RebateResult` (with optional `invalidHouseholdSize?`/
+  `checkIncomeLimits?`) here since it is a computed-result shape, not a Zod input schema. `npx vitest run`
+  passes (no test files yet — tests land in 2.6/2.11). `npx tsc --noEmit` surfaces exactly one error:
+  `@/lib/calc` has no exported `computeComparison` — an EXPECTED cross-task dependency since task 2.3
+  (which creates `computeComparison` in lib/calc.ts) runs sequentially after this one in wave 3; the
+  import is in place so it resolves once 2.3 lands. No math was reimplemented here. No UI change, so no
+  Playwright screenshots. Did not read/print/edit `.env.local`.
+- Why it mattered: puts all Mass Save rebate/payback math in a pure, source-traceable module with the
+  corrected income banding, so the rebate picture is honest and testable and the equity-zip never alters
+  a dollar amount (LLM-never-computes rule, Requirements 5.1–5.9/10.4).
+
+## Task 2.3 — Implement cost, breakeven, and comparison functions in lib/calc.ts
+- When: 2026-10-24 16:43 UTC
+- Task: 2.3 Implement cost, breakeven, and comparison functions in `lib/calc.ts`
+- Kiro feature used: Spec (design-first workflow)
+- What: Appended four pure functions (plus one private helper) to the existing
+  `lib/calc.ts`, reusing the task-2.1 `fuelEnergyContentKWh` for all delivered-heat
+  conversions (not duplicated). `currentHeatingCost(inputs)` returns
+  `annualFuelUse * fuelUnitPrice`, rejecting non-finite / non-positive factors, so it
+  scales linearly (Req 4.1 / 4.8, Property 7). A private `effectiveElectricityPrice(a)`
+  is the SOLE source of the effective $/kWh price: rate off => `electricityPrice`; rate
+  on => `Math.max(0, electricityPrice - seasonalRateDiscountPerKWh)` — a flat $/kWh
+  discount floored at a minimum of 0 (Req 4.11). `heatPumpCost(inputs, a)` computes
+  `deliveredHeatKWh = fuelEnergyContentKWh(type, annualFuelUse, systemEfficiency[type])`,
+  then `(deliveredHeatKWh / heatPumpCOP) * effectiveElectricityPrice(a)` — strictly
+  decreasing in COP and rate-on <= rate-off (Req 4.12 / 4.13, Properties 3 & 4); asserts
+  `heatPumpCOP >= 1`. `breakevenCOP(inputs, a)` solves the equality to
+  `(deliveredHeatKWh * effectiveElectricityPrice(a)) / currentHeatingCost(inputs)` and
+  clamps to the inclusive range 0.01..10.0 (Req 4.9); it uses the SAME
+  `effectiveElectricityPrice(a)` and the SAME delivered-heat path as `heatPumpCost`, so
+  `heatPumpCOP > breakevenCOP ⟺ annualDeltaDollars > 0` holds exactly (Req 4.10, Property 2).
+  `computeComparison(inputs, a)` returns the `CostComparison` with
+  `annualDeltaDollars = currentAnnualCost - heatPumpAnnualCost` (Req 4.14). Added and
+  exported the `CostComparison` interface in `lib/schema.ts` (computed-result shape) and
+  imported it type-only into calc.ts. No internal rounding (display is a caller concern).
+  `npx tsc --noEmit` now passes with ZERO errors — this resolves the previously-expected
+  task-2.5 cross-task error, since `lib/rebates.ts` imports `computeComparison` from
+  `@/lib/calc` (confirmed at rebates.ts lines 18 and 176). `npx vitest run` passes (no test
+  files yet — tests land in 2.4 / 2.11). No UI change, so no Playwright screenshots. Did not
+  read/print/edit `.env.local`.
+- Why it mattered: completes the honest cost core of the Calculation_Engine — current vs
+  heat-pump cost and the breakeven boundary all in pure, source-traceable code sharing one
+  effective-price path — so the verdict is honest and consistent, and unblocks lib/rebates.ts.
+
+## Task 2.9 — Implement building ranking functions in lib/calc.ts
+- When: 2026-10-24 16:46 UTC
+- Task: 2.9 Implement building ranking functions in `lib/calc.ts`
+- Kiro feature used: Spec (design-first workflow)
+- What: Appended the BERDO building-ranking functions to the existing `lib/calc.ts`,
+  preserving everything from tasks 2.1/2.3. Added the shared data model to `lib/schema.ts`
+  (the data-model home): the `BerdoBuilding` interface per design (id, zip, propertyType,
+  yearBuilt, grossFloorAreaSqFt, siteEUI, ghgEmissions, electricShare, `gasShare: number | null`
+  where null = unknown, NOT zero) and the `OpportunityLabel = "High" | "Medium" | "Low"` type;
+  both are imported type-only into calc.ts. The ranked-row result type `RankedBuilding`
+  (`BerdoBuilding & { score, percentile, label }`) is exported from calc.ts. Implemented three
+  pure functions plus two private helpers: `opportunityScore(b)` is a documented finite linear
+  combination — `siteEUI` (primary) + `0.05·ghgEmissions` + a `+50` electric-resistance bonus when
+  `electricShare === 1` + `40·gasShare` — where `gasShare === null` contributes NO gas term (so an
+  unknown fuel mix is never pushed down the ranking the way substituting 0 would), while a genuine
+  `gasShare === 0` correctly contributes a zero term; result is finite-guarded. `opportunityLabel(percentile)`
+  maps an inclusive 0..100 percentile monotonically to High (>=67) / Medium (>=33) / Low, clamping
+  out-of-range inputs so it is total and monotonic. `rankBuildings(buildings, zip)` computes each
+  row's percentile of `opportunityScore` within the MULTIFAMILY cohort of the FULL list (private
+  `percentileOf` = 100·count(cohort <= score)/cohort.length, monotonic, bounded 0..100, empty cohort => 100;
+  private `isMultifamily` = case-insensitive "multifamily" substring on propertyType), filters to a
+  valid 5-digit zip (null or non-5-digit keeps all rows), annotates `{ score, percentile, label }`, and
+  sorts a COPY by score descending with a deterministic `id`-ascending tie-break — never mutating the
+  input. This guarantees Property 8 / Req 8.7: the result is exactly the zip-matching subset sorted by
+  score descending, no rows added or dropped. Note: percentile uses the inclusive 0..100 range from the
+  authoritative Requirement 8.6 (the design pseudocode's [0,1] was superseded). `npx tsc --noEmit` passes
+  with ZERO errors; `npx vitest run` passes (no test files yet — ranking tests land in task 2.10). No UI
+  change, so no Playwright screenshots. Did not read/print/edit `.env.local`.
+- Why it mattered: completes the Buildings_View ranking logic in pure, source-traceable code — honest,
+  deterministic opportunity scoring and a provable sorted-permutation ranking — so the Buildings tab
+  (task 5) can load BERDO data and rank it without any math leaking out of the Calculation_Engine.
+
+## Task 2.7 — Implement decideVerdict in lib/calc.ts (heatswitch spec)
+- When: 2026-10-24 16:48 UTC (implementation; vitest run — no test files yet; tsc --noEmit clean)
+- Kiro feature used: Spec (design-first workflow, task execution)
+- What: Added the `Verdict` type to lib/schema.ts (alongside CostComparison) and
+  appended the pure `decideVerdict(cmp, reb, inputs, now)` to lib/calc.ts.
+  Label (Req 6.1–6.4): delta <= 0 → "Not worth it yet"; else payback != null &&
+  <= 5 → "Switch now"; else → "Switch when your system needs replacing".
+  actBeforeDec31 (Req 5.12/5.13): true only when savings > 0, rebateAmount > 0,
+  now <= REBATE_DEADLINE_2026, and the rebate shortens payback by >= 1 year vs
+  the gross-cost payback (installCostGross reconstructed as netInstallCost +
+  rebateAmount). isRenter (Req 7.2/7.3) from inputs.heatIncludedInRent.
+- Why it mattered: the headline honest answer — it refuses to say "switch" when a
+  heat pump does not save money, and only flags the deadline when the rebate
+  genuinely moves the payback, keeping the verdict trustworthy.
+
+## Task 2.2 — Property tests for heating-use and energy-content
+- When: 2026-10-24 16:50 UTC
+- Task: 2.2 Write property tests for heating-use and energy-content
+- Kiro feature used: Property-based test (Vitest + fast-check)
+- What: Added `lib/calc.heating-use.test.ts` encoding the two design correctness
+  properties for the task-2.1 functions in `lib/calc.ts`, plus supporting
+  postconditions. Property 10 (Validates: Requirement 4.4): FOR ALL 12-element
+  histories of non-negative finite readings, `0 <= annualHeatingUse(history) <=
+  sum(history)` — arbitrary is `fc.array(fc.double({min:0,max:1e6,noNaN,
+  noDefaultInfinity}), {minLength:12,maxLength:12})`. Property 9 (Validates:
+  Requirement 4.7): FOR ALL supported HeatingType and efficiency > 0,
+  `fuelEnergyContentKWh(type, 0, efficiency) === 0` — arbitraries
+  `fc.constantFrom(...HEATING_TYPES)` and a positive finite efficiency. Also
+  encoded: annualHeatingUse returns a finite number (Req 4.4); it throws for
+  non-12-length histories and for 12-element histories with a negative element
+  (Req 4.3); fuelEnergyContentKWh returns a finite number >= 0 (Req 4.5/4.7) and
+  is monotonic non-decreasing in fuelUse for fixed type+efficiency (Req 4.5).
+  One infra fix was required: vitest did not resolve the tsconfig `@/*` path
+  alias, so I added a `resolve.alias` mapping `@` -> project root in
+  `vitest.config.ts` (mirrors `tsconfig` paths) so tests import `@/lib/calc`
+  the same way the app does. `npx vitest run` => 7 passed (1 file); `npx tsc
+  --noEmit` clean (exit 0). No property was weakened; no implementation changed.
+  No UI change, so no Playwright screenshots. Did not read/print/edit `.env.local`.
+- Why it mattered: locks the two universally-quantified guarantees the honest cost
+  math depends on — heating use can never go negative or exceed the bill total, and
+  zero fuel always means zero delivered heat — so any future regression in the
+  Calculation_Engine fails fast with a minimal shrunk counterexample.
+
+## Task 2.10 — Property and unit tests for building ranking
+- When: 2026-10-24 12:51 EDT
+- Task: 2.10 Write property and unit tests for ranking (calc.ts)
+- Kiro feature used: Property-based test (fast-check + Vitest)
+- What: Added `lib/calc.ranking.test.ts` covering `opportunityScore`,
+  `opportunityLabel`, and `rankBuildings`. Encoded Property 8 (Req 8.7):
+  for all building lists and any zip (null, a zip drawn from the list, or an
+  arbitrary 5-digit zip), `rankBuildings` returns exactly the zip-matching
+  subset as a permutation (multiset of returned ids equals the matching input
+  ids), sorted by score descending, without mutating the input (deep-copy
+  compare) and with every percentile in [0,100]. Added `opportunityLabel`
+  monotonicity (Low<Medium<High for p1<=p2) with the 0/33/67/100 cutoffs, and
+  zip-filtering unit tests (single-zip filter, null returns all, no-match
+  returns []). `npx vitest run` passes (33 tests, 4 files); `npx tsc --noEmit`
+  clean.
+- Why it mattered: The Buildings tab's ranking is the one place rows can be
+  silently dropped, duplicated, or mis-ordered; the permutation + sorted +
+  no-mutation property locks in that the ranking is trustworthy and the
+  label stays monotonic, matching the honesty principle.
+
+## Task 2.6 — Write property tests for rebates
+- When: 2026-10-24 12:51 EDT
+- Kiro feature used: Property-based test (fast-check + Vitest)
+- What: Added `lib/rebates.test.ts` with fast-check property tests for
+  `lib/rebates.ts`. Encoded Property 5 (rebate bounds, Req 5.6:
+  `0 <= rebateAmount <= installCostGross` and `netInstallCost >= 0`) and
+  Property 6 (payback sign, Req 5.8: null when annual savings <= 0, else >= 0),
+  plus supporting properties: corrected tier banding (Req 5.1/5.2/5.3 —
+  income-eligible/enhanced/standard bands, income-absent and invalid-household
+  fallbacks, size 6..8 reuse of size-5 limits with the check flag, and exact
+  boundary incomes at `incomeEligibleMax`/`enhancedMax`), `computeRebates.tier`
+  agreement with `selectRebateTier`, per-tier uncapped amount after the gross cap
+  (Req 5.4/5.5), and equity-zip invariance (Req 5.9 — rebate unchanged between an
+  equity and non-equity zip). Arbitraries: realistic `HomeInputs`
+  (householdSize 1..8, optional income spanning the bands, valid 5-digit zip) and
+  `Assumptions` (installCostGross >= 0, heatPumpTons > 0, plus the COP/price/rate
+  fields `computeComparison` needs). All 11 tests pass; `npx tsc --noEmit` clean.
+- Why it mattered: locks the Mass Save rebate/payback invariants across the whole
+  input space so the honest financial picture (never negative, never over gross,
+  payback only when it actually pays back, and equity status never touching the
+  rebate) cannot silently regress.
+- Note: the full `npx vitest run` shows one unrelated failure in
+  `lib/calc.cost.test.ts` (task 2.4's "Property 2" generator yields
+  `heatPumpCOP: 0.02`, violating the `>= 1` precondition `heatPumpCost` enforces).
+  That file is outside task 2.6's scope and was left untouched.
+
+## Task 2.8 — Property test + boundary unit tests for the verdict
+- When: 2026-10-24 16:51 UTC
+- Task: 2.8 Write property test and boundary unit tests for the verdict
+- Kiro feature used: Property-based test (Vitest + fast-check)
+- What: Added `lib/calc.verdict.test.ts` (uniquely named to avoid colliding with the
+  2.2/2.4/2.6/2.10/2.11 test files) covering `decideVerdict(cmp, reb, inputs, now)` in
+  `lib/calc.ts`. Property 1 — No savings is reported honestly (Validates: Requirement 6.2):
+  FOR ALL realistic HomeInputs + Assumptions, building `cmp`/`reb` via `computeComparison` /
+  `computeRebates` and constraining with `fc.pre(cmp.annualDeltaDollars <= 0)`, the label is
+  ALWAYS "Not worth it yet". The COP arbitrary spans 1..6 so the non-positive-delta region is
+  reached often. Two supporting properties over the full generated space: exactly one of the
+  three labels is always returned (Req 6.1) and `isRenter === inputs.heatIncludedInRent`
+  (Req 7.2/7.3). Boundary unit tests around breakeven (Req 6.1/6.3/6.4): delta === 0 and delta
+  = −0.01 → "Not worth it yet"; delta = +0.01 with payback 5 → "Switch now"; delta = +0.01 with
+  payback 5.01 or payback null → "Switch when your system needs replacing"; comfortable-savings
+  short-payback → "Switch now". Deadline tests (Req 5.12/5.13) using REBATE_DEADLINE_2026: a
+  material rebate (gross 18000, rebate 8500, net 9500, savings 1200/yr; payback 15y→7.92y) gives
+  actBeforeDec31 true at now=2026-06-01 and at exactly the deadline boundary, false at
+  now=2027-01-01; and false when there are no savings (payback null), when rebateAmount===0, or
+  when the rebate shortens payback by < 1 year (600 rebate → 15y→14.5y). isRenter unit cases both
+  ways. `npx vitest run` => 50 passed (5 files; 17 new in this file); `npx tsc --noEmit` clean
+  (exit 0). No property was weakened and no implementation was changed — Property 1 held as written.
+  No UI change, so no Playwright screenshots. Did not read/print/edit `.env.local`.
+- Why it mattered: pins the honesty guarantee at the heart of HeatSwitch — the verdict can never
+  recommend switching when a heat pump does not save money — and nails the exact breakeven and
+  Dec-31-deadline boundaries so any future regression in decideVerdict fails fast with a minimal
+  shrunk counterexample.
+
+## Task 2.4 — Property tests for cost and breakeven
+- When: 2026-10-24 12:51 EDT
+- Task: 2.4 Write property tests for cost and breakeven (lib/calc.ts)
+- Kiro feature used: Property-based test (Vitest + fast-check)
+- What: Added `lib/calc.cost.test.ts` encoding four design correctness properties over
+  realistic `HomeInputs` + `Assumptions` arbitraries (heatingType from the 4 types,
+  annualFuelUse/fuelUnitPrice > 0, valid 02-prefix zip/utility/householdSize; heatPumpCOP >= 1,
+  electricityPrice > 0, seasonalRateDiscountPerKWh >= 0, per-type efficiencies > 0, tons > 0,
+  installCostGross >= 0), 1000 runs each. Property 2 (Validates: Req 4.10) breakeven consistency:
+  `heatPumpCOP > breakevenCOP ⟺ computeComparison(...).annualDeltaDollars > 0`, asserted as a full
+  two-directional iff with no tolerance — gated with `fc.pre` to cases whose RAW (unclamped)
+  breakeven is interior to (0.01, 10.0), since breakevenCOP clamps to that range and the exact iff
+  only holds where the returned value is the true boundary, not a clamp artifact (a domain
+  restriction to where the claim applies, not a weakening; COP still drawn >= 1 per the SUT
+  precondition). Property 3 (Req 4.12) seasonal rate never raises cost:
+  `heatPumpCost({...a, seasonalHeatPumpRate:true}) <= heatPumpCost({...a, seasonalHeatPumpRate:false})`
+  holding all else equal. Property 4 (Req 4.13) COP monotonicity: strict `heatPumpCost(a1) >
+  heatPumpCost(a2)` for copLow < copHigh else equal — gated to effective price > 0 (zero price is the
+  boundary the strict claim excludes) and the two COPs drawn with a multiplicative gap (copHigh =
+  copLow × factor, factor in [1.0001, 6]) so the decrease is observable in IEEE-754 rather than
+  ULP-adjacent pairs that divide to bit-identical doubles. Property 7 (Req 4.8) cost linearity:
+  `currentHeatingCost({...inputs, annualFuelUse: k·u}) ≈ k·currentHeatingCost(...)` with a relative
+  epsilon of 1e-9 (the inherent FP tolerance for a mathematically-exact equality, not a relaxation).
+  No property was weakened and no implementation changed; the two early failures were test-harness
+  issues (an invalid sub-1 COP fed to the SUT, and a strict-vs-ULP float boundary), fixed by
+  constraining the generators. `npx vitest run` => 50 passed (5 files); `npx tsc --noEmit` clean (exit 0).
+  No UI change, so no Playwright screenshots. Did not read/print/edit `.env.local`.
+- Why it mattered: locks the four universally-quantified guarantees the honest cost core depends on —
+  the breakeven boundary is sign-consistent with savings, the seasonal rate can only help, a better COP
+  always costs less, and cost scales linearly with use — so any regression in the Calculation_Engine
+  fails fast with a minimal shrunk counterexample.
+
+## Task 2.11 — Persona acceptance-value tests for calc and rebates
+- When: 2026-10-24 12:54 EDT
+- Task: 2.11 Write persona acceptance-value tests for calc and rebates
+- Kiro feature used: Property-based test harness / persona acceptance tests (Vitest + fast-check toolchain)
+- What: Added `lib/calc.persona.test.ts` (8 tests) asserting the product's concrete
+  acceptance values against the REAL pure functions (`currentHeatingCost`, `heatPumpCost`,
+  `breakevenCOP`, `computeComparison` in lib/calc.ts; `selectRebateTier`, `computeRebates`,
+  `isEquityZip` in lib/rebates.ts), end to end, with the shared assumptions (COP 2.5,
+  electricity $0.288/kWh, 3 tons, $18,000 install, standard tier, seasonal rate OFF unless
+  noted) and the source-cited SYSTEM_EFFICIENCY (gas 0.90, oil 0.82, electric 1.0) + energy
+  content (THERM_KWH 29.3, OIL_GALLON_KWH 40.6, electric 1). Each dollar/COP value is checked
+  with a ±2% RELATIVE tolerance via a helper that also reports the signed margin. Results —
+  every value well inside ±2%: Oil current $4,920 (exact, 0.00%) and heat pump $3,068.19 vs
+  3,068 (+0.01%); Electric current $2,188.80 vs 2,189 (−0.01%) and heat pump $875.52 vs 876
+  (−0.05%); Gas current $1,577.84 vs 1,578 (−0.01%), heat pump $1,980.66 vs 1,981 (−0.02%),
+  breakeven COP 3.138 vs 3.14 (−0.06%); Gas with Eversource seasonal rate ON (effective
+  $0.215/kWh) heat pump $1,478.62 vs 1,481 (−0.16%, and <= the rate-OFF cost). Also asserted
+  tier-selection boundaries for sizes 1–5 (income <= incomeEligibleMax → income-eligible;
+  (incomeEligibleMax, enhancedMax] → enhanced; > enhancedMax → standard) and equity invariance
+  (computeRebates returns the same rebateAmount/tier/netInstallCost for equity zip 02119 vs
+  non-equity 02108, while isEquityZip distinguishes them). Did NOT change any expected value or
+  widen the tolerance — the acceptance numbers already matched the engine. `npx vitest run`
+  passes (58 tests across 6 files, exit 0); the new file passes alone (8/8); `npx tsc --noEmit`
+  clean (exit 0). No UI change, so no Playwright screenshots. Did not read/print/edit `.env.local`.
+- Why it mattered: pins the exact dollar/COP answers the demo personas commit to against the real
+  engine, so any future drift in a constant or formula (THERM_KWH, OIL_GALLON_KWH, SYSTEM_EFFICIENCY,
+  the seasonal discount) fails fast — complementing the universal property tests with concrete,
+  human-checkable acceptance values and confirming equity status never moves a rebate dollar.
+
+## Task 2 — Pure calculation engine + property tests: Done (workflow.md closeout)
+- When: 2026-10-24 16:55 UTC
+- Task: Task 2: pure calculation engine + property tests (closeout of sub-tasks 2.1–2.11)
+- Kiro feature used: Property-based testing (Vitest + fast-check) + Spec (design-first workflow)
+- What: Ran the workflow.md Done steps for Task 2. (1) `npx vitest run` passed (exit 0):
+  6 test files, 58 tests, all passing — `lib/calc.heating-use.test.ts` (7),
+  `lib/calc.cost.test.ts` (4), `lib/calc.verdict.test.ts` (17), `lib/calc.ranking.test.ts` (11),
+  `lib/rebates.test.ts` (11), `lib/calc.persona.test.ts` (8). `npx tsc --noEmit` is clean
+  (exit 0, no diagnostics). No test was weakened and no persona expected value was changed —
+  everything passed as-is, so no lib/*.ts source or test file was touched in this closeout.
+  (2) Task 2 changed NO UI — it is pure `lib/` code (calc.ts, rebates.ts) plus six test files,
+  with no page/component render changes — so per workflow.md step 3 the dev server was NOT started
+  and NO Playwright screenshots were captured. This is the correct skip, not an omission.
+  Summary of what 2.1–2.11 delivered: `lib/calc.ts` — annualHeatingUse, fuelEnergyContentKWh,
+  currentHeatingCost, heatPumpCost (with the shared effective-electricity-price path),
+  breakevenCOP, computeComparison, decideVerdict, and the BERDO ranking trio
+  opportunityScore / opportunityLabel / rankBuildings; `lib/rebates.ts` — selectRebateTier,
+  computeRebates, isBostonZip, isEquityZip. The design's 10 correctness properties are encoded
+  as fast-check tests (heating-use bounds + zero-fuel-zero-heat, breakeven ⟺ delta sign,
+  heat-pump cost monotonic in COP, rate-on ≤ rate-off, rebate bounds, payback sign,
+  ranking permutation + sorted + no-mutation, current-cost linear scaling), alongside the
+  persona acceptance values that pin the engine's real-world outputs. Did not read/print/edit
+  `.env.local`; did not add `.kiro` to `.gitignore`.
+- Screenshots: none — Task 2 changed no UI (correctly skipped per workflow.md step 3).
+- Why it mattered: all math now lives in tested, pure functions so the LLM never computes a number,
+  and the persona acceptance values confirm the engine matches real-world heat-pump economics within
+  ±2% — the honest-verdict core is locked in before any UI wires into it.

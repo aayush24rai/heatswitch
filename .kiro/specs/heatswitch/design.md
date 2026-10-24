@@ -426,15 +426,16 @@ export const MASS_SAVE_TOTAL_CAP = 8500;   // $ cap on the per-ton amount
 // Source: https://www.masssave.com/income
 
 // Mass Save income limits by household size (select the rebate tier).
-// Reading: annualIncome at/below enhancedMax => Enhanced tier; within the
-// (enhancedMax, incomeEligibleMax] band => Income Eligible tier; above => Standard.
+// Reading: annualIncome at/below incomeEligibleMax => Income Eligible tier; within the
+// (incomeEligibleMax, enhancedMax] band => Enhanced tier; above enhancedMax => Standard.
 // Follows masssave.com/income. Source: https://www.masssave.com/income
-export const INCOME_LIMITS: Record<number, { enhancedMax: number; incomeEligibleMax: number }> = {
-  1: { enhancedMax: 51777,  incomeEligibleMax: 69036 },
-  2: { enhancedMax: 67709,  incomeEligibleMax: 90279 },
-  3: { enhancedMax: 83641,  incomeEligibleMax: 111522 },
-  4: { enhancedMax: 99573,  incomeEligibleMax: 132764 },
-  5: { enhancedMax: 115504, incomeEligibleMax: 154006 },
+// Household sizes 6–8 reuse the size-5 limits and set a "check masssave.com/income" flag.
+export const INCOME_LIMITS: Record<number, { incomeEligibleMax: number; enhancedMax: number }> = {
+  1: { incomeEligibleMax: 51777,  enhancedMax: 69036 },
+  2: { incomeEligibleMax: 67709,  enhancedMax: 90279 },
+  3: { incomeEligibleMax: 83641,  enhancedMax: 111522 },
+  4: { incomeEligibleMax: 99573,  enhancedMax: 132764 },
+  5: { incomeEligibleMax: 115504, enhancedMax: 154006 },
 };
 
 // Rebate eligibility checklist. Source: https://www.masssave.com/
@@ -630,7 +631,7 @@ The COP at which `heatPumpCost == currentHeatingCost`.
 Picks the Mass Save whole-home tier from household size and income, following masssave.com/income. When `annualIncome` is absent, defaults to the Standard tier.
 
 **Preconditions**: `householdSize >= 1`; `annualIncome`, when present, `>= 0`.
-**Postconditions**: returns exactly one `RebateTier`. With income present, income at/below the Enhanced threshold for that household size selects `"income-eligible"` only within the Income Eligible band; at/below Enhanced threshold selects `"enhanced"`; above the band selects `"standard"`. (See `INCOME_LIMITS` for the per-household thresholds.)
+**Postconditions**: returns exactly one `RebateTier`. With income present, income at/below the Income Eligible max for that household size selects `"income-eligible"`; within the (Income Eligible max, Enhanced max] band selects `"enhanced"`; above the Enhanced max selects `"standard"`. (See `INCOME_LIMITS` for the per-household thresholds.)
 
 ### `computeRebates(inputs, a)`
 
@@ -740,11 +741,11 @@ BEGIN
     RETURN "standard"                           // no income given => Standard tier
   END IF
 
-  limits ← INCOME_LIMITS[householdSize]         // { enhancedMax, incomeEligibleMax }
-  IF annualIncome <= limits.enhancedMax THEN
-    RETURN "enhanced"
-  ELSE IF annualIncome <= limits.incomeEligibleMax THEN
+  limits ← INCOME_LIMITS[householdSize]         // { incomeEligibleMax, enhancedMax }
+  IF annualIncome <= limits.incomeEligibleMax THEN
     RETURN "income-eligible"
+  ELSE IF annualIncome <= limits.enhancedMax THEN
+    RETURN "enhanced"
   ELSE
     RETURN "standard"
   END IF

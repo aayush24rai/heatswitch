@@ -94,6 +94,80 @@ export interface Assumptions {
 }
 
 // ---------------------------------------------------------------------------
+// Computed results
+// ---------------------------------------------------------------------------
+
+/**
+ * The output of `computeComparison` in lib/calc.ts: current heating cost vs
+ * heat-pump cost, their signed difference, and the breakeven COP.
+ *
+ * - `annualDeltaDollars === currentAnnualCost - heatPumpAnnualCost` (positive = savings).
+ * - `breakevenCOP` is sign-consistent with `annualDeltaDollars`: when the
+ *   assumed COP exceeds it, the heat pump is cheaper (delta > 0), and vice versa.
+ */
+export interface CostComparison {
+  /** $/yr with the current heating system. */
+  currentAnnualCost: number;
+  /** $/yr with a heat pump (rate-aware). */
+  heatPumpAnnualCost: number;
+  /** currentAnnualCost - heatPumpAnnualCost (positive = savings). */
+  annualDeltaDollars: number;
+  /** COP at which heat pump annual cost equals current heating annual cost. */
+  breakevenCOP: number;
+}
+
+/**
+ * The output of `decideVerdict` in lib/calc.ts: the single headline answer.
+ *
+ * - `label` is exactly one `VerdictLabel` (Requirement 6.1).
+ * - `actBeforeDec31` is the Mass Save 2026 rebate-deadline flag — true only when
+ *   a rebate materially shortens payback and the deadline is still ahead
+ *   (Requirements 5.12 / 5.13).
+ * - `isRenter` drives the landlord path (Requirements 7.2 / 7.3), derived from
+ *   `HomeInputs.heatIncludedInRent`.
+ */
+export interface Verdict {
+  label: VerdictLabel;
+  actBeforeDec31: boolean;
+  isRenter: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Buildings (BERDO 2021) data model
+// ---------------------------------------------------------------------------
+
+/**
+ * A cleaned row from the City of Boston BERDO 2021 dataset, used by the
+ * Buildings tab to rank multifamily buildings by heat pump opportunity.
+ *
+ * The cleaning step (Buildings_View, Requirement 8.3–8.5) drops rows missing
+ * Site EUI, keeps only 5-digit "02" zips, and assigns `id` the zero-based
+ * source row index as a string (the dataset has no stable id). `gasShare` is
+ * `null` when the source has no gas fraction for the row — null means
+ * *unknown*, NOT zero (Requirement 8.5).
+ */
+export interface BerdoBuilding {
+  /** Zero-based source row index as a string (the dataset has no stable id). */
+  id: string;
+  zip: string;
+  /** e.g. "Multifamily Housing". */
+  propertyType: string;
+  yearBuilt: number;
+  grossFloorAreaSqFt: number;
+  /** Energy use intensity (kBtu/ft²/year). */
+  siteEUI: number;
+  /** GHG emissions (metric tons CO2e). */
+  ghgEmissions: number;
+  /** 0..1 fraction of energy from electricity. */
+  electricShare: number;
+  /** 0..1 fraction from gas; `null` = unknown (NOT zero). */
+  gasShare: number | null;
+}
+
+/** Plain-English heat pump opportunity label shown with each building. */
+export type OpportunityLabel = "High" | "Medium" | "Low";
+
+// ---------------------------------------------------------------------------
 // Extraction output (Zod)
 // ---------------------------------------------------------------------------
 

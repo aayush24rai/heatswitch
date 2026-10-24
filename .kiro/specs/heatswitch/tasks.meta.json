@@ -79,6 +79,157 @@
         "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
         "timestamp": 1792859748093
       }
+    ],
+    "2.1 Implement heating-use and energy-content functions in `lib/calc.ts`": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859938438
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860109059
+      }
+    ],
+    "2.3 Implement cost, breakeven, and comparison functions in `lib/calc.ts`": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859939458
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860248910
+      }
+    ],
+    "2.5 Implement rebate tier and rebate functions in `lib/rebates.ts`": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859940908
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860109805
+      }
+    ],
+    "2.9 Implement building ranking functions in `lib/calc.ts`": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792859941651
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860405186
+      }
+    ],
+    "2.7 Implement the verdict function in `lib/calc.ts`": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860406107
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860524080
+      }
+    ],
+    "2.2 Write property tests for heating-use and energy-content": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860527705
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860748543
+      }
+    ],
+    "2.4 Write property tests for cost and breakeven": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860528678
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860749876
+      }
+    ],
+    "2.6 Write property tests for rebates": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860530045
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860747555
+      }
+    ],
+    "2.8 Write property test and boundary unit tests for the verdict": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860531049
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860746594
+      }
+    ],
+    "2.10 Write property and unit tests for ranking": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860531869
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860750477
+      }
+    ],
+    "2.11 Write persona acceptance-value tests for calc and rebates": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860754418
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860904256
+      }
+    ],
+    "2.12 Done (workflow.md)": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860907734
+      },
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860959139
+      }
+    ],
+    "2. Implement the pure calculation engine with unit and property tests": [
+      {
+        "executionId": "43e59025-4d9c-4c64-b52b-a64f73452503",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792860959182
+      }
     ]
   }
 }

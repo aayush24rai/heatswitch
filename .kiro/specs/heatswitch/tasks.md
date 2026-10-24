@@ -39,42 +39,42 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-1-desktop.png` and `docs/kiro/screens/task-1-mobile.png`, and reference them in the log entry
     - Task is not complete until these steps pass
 
-- [ ] 2. Implement the pure calculation engine with unit and property tests
-  - [ ] 2.1 Implement heating-use and energy-content functions in `lib/calc.ts`
+- [x] 2. Implement the pure calculation engine with unit and property tests
+  - [x] 2.1 Implement heating-use and energy-content functions in `lib/calc.ts`
     - Implement `annualHeatingUse(history)` (`sum - 12 * min(Jun..Sep)`, rejecting non-12-length or negative histories) and `fuelEnergyContentKWh(type, fuelUse, efficiency)` applying `SYSTEM_EFFICIENCY`
     - _Requirements: 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
-  - [ ] 2.2 Write property tests for heating-use and energy-content
+  - [x] 2.2 Write property tests for heating-use and energy-content
     - **Property 9: Zero fuel, zero cost** — **Validates: Requirement 4.7**
     - **Property 10: Annual heating use is bounded** — **Validates: Requirement 4.4**
-  - [ ] 2.3 Implement cost, breakeven, and comparison functions in `lib/calc.ts`
+  - [x] 2.3 Implement cost, breakeven, and comparison functions in `lib/calc.ts`
     - Implement `currentHeatingCost`, `heatPumpCost` (flat $/kWh seasonal discount floored above 0, rate-aware), `breakevenCOP`, and `computeComparison` (`annualDeltaDollars = current - heatPump`)
     - _Requirements: 4.1, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 4.14_
-  - [ ] 2.4 Write property tests for cost and breakeven
+  - [x] 2.4 Write property tests for cost and breakeven
     - **Property 2: Breakeven consistency** — **Validates: Requirement 4.10**
     - **Property 3: Seasonal rate never raises heat pump cost** — **Validates: Requirement 4.12**
     - **Property 4: COP monotonicity** — **Validates: Requirement 4.13**
     - **Property 7: Cost linearity** — **Validates: Requirement 4.8**
-  - [ ] 2.5 Implement rebate tier and rebate functions in `lib/rebates.ts`
+  - [x] 2.5 Implement rebate tier and rebate functions in `lib/rebates.ts`
     - Implement `selectRebateTier(householdSize, annualIncome?)` (Standard when income absent or household size invalid; Enhanced/Income Eligible bands from `INCOME_LIMITS`), `computeRebates` (tiered cap, Income Eligible up to full install cost, `netInstallCost >= 0`, payback null when savings <= 0), `isBostonZip`, and `isEquityZip` (informational only; never changes rebate)
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 10.4_
-  - [ ] 2.6 Write property tests for rebates
+  - [x] 2.6 Write property tests for rebates
     - **Property 5: Rebate bounds** — **Validates: Requirement 5.6**
     - **Property 6: Payback sign** — **Validates: Requirement 5.8**
-  - [ ] 2.7 Implement the verdict function in `lib/calc.ts`
+  - [x] 2.7 Implement the verdict function in `lib/calc.ts`
     - Implement `decideVerdict(cmp, reb, inputs, now)` selecting exactly one label ("Not worth it yet" when delta <= 0; "Switch now" when delta > 0 and payback <= 5; else "Switch when your system needs replacing"); set `actBeforeDec31` only when a rebate materially shortens payback and `now <= REBATE_DEADLINE_2026`; derive `isRenter`
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 5.12, 5.13, 7.2, 7.3_
-  - [ ] 2.8 Write property test and boundary unit tests for the verdict
+  - [x] 2.8 Write property test and boundary unit tests for the verdict
     - **Property 1: No savings is reported honestly** — **Validates: Requirement 6.2**
     - Add boundary unit tests at/just-above/just-below breakeven and the deadline on/off around Dec 31, 2026
     - _Requirements: 6.1, 6.3, 6.4, 5.12, 5.13_
-  - [ ] 2.9 Implement building ranking functions in `lib/calc.ts`
+  - [x] 2.9 Implement building ranking functions in `lib/calc.ts`
     - Implement `opportunityScore(b)`, `opportunityLabel(percentile)` (High/Medium/Low, monotonic), and `rankBuildings(buildings, zip)` (filter by zip, annotate percentile within the multifamily cohort, sort by score descending, permutation of the matching subset)
     - _Requirements: 8.6, 8.7_
-  - [ ] 2.10 Write property and unit tests for ranking
+  - [x] 2.10 Write property and unit tests for ranking
     - **Property 8: Ranking is a sorted permutation** — **Validates: Requirement 8.7**
     - Add unit tests for `opportunityLabel` monotonicity and zip filtering
     - _Requirements: 8.6, 8.7_
-  - [ ] 2.11 Write persona acceptance-value tests for calc and rebates
+  - [x] 2.11 Write persona acceptance-value tests for calc and rebates
     - Assert, with ±2% tolerance and the shared assumptions (COP 2.5, electricity $0.288/kWh, 3 tons, $18,000 install, standard tier, seasonal rate off unless noted):
       - Oil persona: 800 gal × $6.15 → current heating cost $4,920; heat pump cost ≈ $3,068
       - Electric-resistance persona: annual heating 7,600 kWh → current cost ≈ $2,189; heat pump cost ≈ $876
@@ -82,7 +82,7 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
       - Gas persona with Eversource seasonal rate ON (effective ≈ $0.215/kWh): heat pump cost ≈ $1,481
     - Also assert tier-selection boundaries and that `isEquityZip` never changes the rebate amount
     - _Requirements: 4.1, 4.9, 5.2, 5.9, 10.4_
-  - [ ] 2.12 Done (workflow.md)
+  - [x] 2.12 Done (workflow.md)
     - Run `npx vitest run` and fix any failures before moving on
     - Append a `KIRO_LOG.md` entry (time, task, Kiro feature used — property-based tests, what it did, why it mattered)
     - No UI change: skip Playwright screenshots
