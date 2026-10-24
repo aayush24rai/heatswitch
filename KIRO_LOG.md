@@ -667,3 +667,129 @@ Commit and push now: feat(my-home): add YourNumbersCard with heating-type chip, 
 - Why it mattered: the app is now demo-usable end to end — a visitor can click a demo home and get the
   honest verdict hero, the current-vs-heat-pump cost picture, and the inline amber confirmation flow —
   all before any AI is wired in, with every number coming from the pure calculation engine.
+
+## 2026-10-24 13:29 — Task 8.1: Sanctioned `.liquid-glass` CSS + hero Ken Burns keyframes
+
+**Kiro feature used:** Spec task execution + sanctioned custom CSS (the single hand-authored CSS exception permitted by requirement 12.1).
+
+**What it did:** Appended the sanctioned `.liquid-glass` utility and its `::before` border-gradient pseudo-element to the end of `app/globals.css`, plus a `.hero-kenburns` utility with a 20s ease-out `scale(1)→scale(1.06)` keyframes animation and a `prefers-reduced-motion: reduce` block that disables the scale. Existing Tailwind `@import`/`@theme`/`:root`/`@layer base` content was left untouched.
+
+**Why it mattered:** Establishes the only hand-authored CSS the project allows, giving the My-home empty-state photo hero (tasks 8.3/8.4) its glass panels and slow background zoom while keeping the rest of the app on Tailwind utilities and respecting reduced-motion preferences. Verified with `npx tsc --noEmit` (clean) and `npx vitest run` (69/69 green).
+- 2026-10-24 13:30 EDT — Task 8.2 Build the shared animation components (Kiro feature: spec). Created `components/shared/fade-in.tsx` (`FadeIn`: opacity 0→1 via Tailwind `transition-opacity` + inline `transitionDelay`/`transitionDuration`, mount-flag progressive enhancement) and `components/shared/animated-heading.tsx` (`AnimatedHeading`: per-character entrance, 500ms each, 30ms stagger, 200ms initial delay, spaces as \u00A0, "\n" → `<br/>`). Both are SSR-safe (server/first-client render match, flip to visible on mount) and honor `prefers-reduced-motion` by showing everything immediately. `npx tsc --noEmit` clean; `npx vitest run` green (69 tests). Why it mattered: gives task 8.3's hero its reusable, accessible entrance animations without any custom CSS or runtime deps.
+
+## Tasks 8.3 + 8.4 — Full-screen photo hero for the My home empty state
+- When: 2026-10-24 (UTC)
+- Kiro feature used: Spec (task-driven execution) + shadcn/ui (Switch) + the sanctioned `.liquid-glass`/`.hero-kenburns` custom CSS (app/globals.css) + next/image
+- What: Rewrote `app/page.tsx` to choose between two render modes. When the My
+  home tab is active and no demo/bill is loaded it early-returns a full-bleed
+  hero — `next/image` (fill, priority, sizes="100vw", object-cover object-bottom)
+  wrapped in a `.hero-kenburns` scale layer, a bottom-only legibility gradient,
+  a `.liquid-glass` navbar (HeatSwitch / How it works / Buildings / Sources /
+  "Try a demo"), an `<h1>` wrapping the existing `AnimatedHeading`, FadeIn-staged
+  subhead/buttons/right tag, the three demo pills (reuse `handleTryDemo` +
+  `DEMO_HOME_LABELS`), and a glass zip/rent panel. Every other mode (results on
+  My home, or the Buildings tab) renders the unchanged light layout with the
+  Tabs now controlled by a lifted `activeTab` state. Wired behavior: `showDemos`
+  reveal toggle, a hidden file input calling the existing `handleBillSelected`,
+  the "Buildings" nav switching tabs, "How it works"/"Sources" guarded
+  smooth-scrolls, and a `hasData` effect that smooth-scrolls to the results
+  container (instant under `prefers-reduced-motion`). Footer now reads
+  "Your bill is never stored · Photo: [credit]". Only new state added:
+  `activeTab`, `showDemos`, a hero file-input ref, and results/how/footer refs —
+  no change to the calculation logic, demo fixtures, or any test.
+- Why it mattered: Gives the empty state a distinctive, honest first impression
+  without touching the verified calc engine or the results UI, and keeps the
+  69-test suite, `tsc --noEmit`, and `next build` all green.
+## Task 8 — Full-screen photo hero (My home empty state): Done (workflow.md closeout)
+- When: 2026-10-24 13:39 EDT
+- Task: Task 8: full-screen photo hero (My home empty state)
+- Kiro feature used: Spec (task-driven execution) + shadcn/ui + the sanctioned
+  `.liquid-glass` custom CSS exception + next/image + Playwright MCP
+- What: Closed out Task 8, whose sub-tasks 8.1–8.4 built the hero: 8.1 appended
+  the single hand-authored CSS the project allows (`.liquid-glass` + its
+  `::before`, plus the 20s `.hero-kenburns` scale keyframes, reduced-motion
+  disabled); 8.2 added the SSR-safe `FadeIn` and `AnimatedHeading` (per-character
+  entrance, reduced-motion aware); 8.3/8.4 rewrote `app/page.tsx` to early-return
+  a full-bleed hero (next/image Ken Burns background + bottom gradient, the glass
+  navbar HeatSwitch / How it works / Buildings / Sources / "Try a demo", the
+  animated heading "Should your Boston home switch to a heat pump?", the three
+  demo pills, a glass zip/rent panel, and the right-column glass tag "Renters.
+  Homeowners. Buildings."), with the demo/bill flow smooth-scrolling into the
+  unchanged light results layout and a "Photo: [credit]" placeholder added beside
+  "Your bill is never stored" in the footer.
+  Closeout verification: `npx vitest run` 69/69 green (unchanged — the hero added
+  no tests and changed no logic), `npx tsc --noEmit` clean, and `npx next build`
+  compiled. Captured responsive Playwright screenshots of the empty-state hero
+  (waited ~3s for the per-character heading animation + FadeIn delays to settle):
+  `docs/kiro/screens/hero-desktop.png` (1280px — photo + bottom gradient, glass
+  navbar, fully-rendered animated heading, subhead, "Upload your bill" + "Try a
+  demo home" buttons, glass zip/rent panel, right tag; the three demo pills
+  Oil home / Gas home / Baseboard apartment confirmed revealed in the
+  accessibility snapshot) and `docs/kiro/screens/hero-mobile.png` (390px). At
+  390px the document scrollWidth equals the 390px viewport (no horizontal
+  overflow), the heading wraps within the viewport (right edge 366 ≤ 390, no
+  word split across lines), and both hero buttons stay tappable (48px tall,
+  fully on-screen) with a usable glass zip/rent panel. The demo-pill click was
+  confirmed to switch from the hero to the light results layout (smooth-scroll
+  behavior).
+  Bug found + fixed: at both widths the heading originally broke words
+  mid-word ("Bost/on", "Boston h/ome", "heat p/ump?") because `AnimatedHeading`
+  rendered every character — including the inter-word space as a non-breaking
+  `\u00A0` — as an `inline-block` atom, leaving the browser no word-boundary
+  break opportunity. Fixed the minimal cause in
+  `components/shared/animated-heading.tsx`: each word's characters are now grouped
+  in a `whitespace-nowrap` span (a word never breaks internally) and the
+  inter-word space is a real breakable " " in the normal flow (it still consumes
+  a stagger slot so the per-character timing stays continuous). The per-character
+  animation, SSR-safety, and reduced-motion behavior are unchanged; no test or
+  calculation logic changed. Re-verified after the fix: vitest 69/69, tsc clean,
+  next build compiles, and in-browser `anyWordSplit:false` with no horizontal
+  overflow at both 1280px and 390px; both screenshots re-captured.
+  Note: the footer still carries the "Photo: [credit]" placeholder — the real
+  hero photo credit still needs to be filled in.
+- Why it mattered: Task 8 gives the empty state a striking, honest entry point
+  that routes straight into the unchanged, verified light results layout — and
+  the closeout caught a real heading-wrapping defect so the hero headline now
+  wraps cleanly at word boundaries on both desktop and mobile.
+
+## Task 8: video hero + Try it section (My home)
+- When: 2026-10-24 17:45 UTC
+- Kiro feature used: Spec (design-first workflow) + shadcn/ui + the single sanctioned
+  `.liquid-glass` custom CSS + Playwright MCP (headless screenshots).
+- What: Reworked the Task 8 hero from a Ken Burns image into a presentation-only VIDEO
+  hero and moved ALL intake into a new `#try-it` section below it. The hero now holds only
+  the glass navbar, animated heading, FadeIn subhead/buttons, and the right-side glass tag;
+  its two buttons and the navbar "Try a demo" link only smooth-scroll to `#try-it`. The
+  background is a plain `<video>` (autoplay/loop/muted/playsInline, `poster="/hero.jpg"`)
+  sourced from the external CloudFront URL; under `prefers-reduced-motion` (and on the SSR
+  first render) it falls back to the static poster `<img>` and enhances to autoplay on mount
+  only when motion is allowed. My home is now one scrollable page: hero → `#try-it`
+  (the existing `UploadCard` = drop zone + zip + rent toggle + the three demo buttons) →
+  results (rendered below `#try-it` once a demo/bill loads, with a smooth-scroll to it).
+  The hero's glass navbar is the header for My home (no duplicate light header); the Tabs
+  control sits below the hero and routes through the navbar "Buildings" link. The Buildings
+  tab keeps the existing light header + tabs layout, unchanged. Removed the dead
+  `.hero-kenburns` rule + keyframes + its reduced-motion block from `app/globals.css` and
+  trimmed the "Ken Burns" phrase from the `.liquid-glass` comment; `.liquid-glass` remains
+  the only hand-authored CSS. Fade timings unchanged (heading 200ms initial / 500ms per char
+  / 30ms stagger; subhead 800ms+1000ms; buttons 1200ms; tag 1400ms). No change to any
+  calculation logic, demo fixtures (DEMO_HOMES/buildDemoScenario/handleTryDemo), live
+  recompute, the isEstimate flip, or any test.
+- Verification: `npx tsc --noEmit` clean; `npx vitest run` green (69 tests, unchanged);
+  `npx next build` compiled. Playwright (1280px + 390px, 3000ms settle): hero shows the glass
+  navbar + faded-in heading/subhead/buttons/right tag with NO intake controls; `#try-it`
+  shows the upload drop zone, zip field, rent toggle, and three demo buttons on the light
+  background; clicking the Gas demo loaded results and smooth-scrolled to them. At 390px the
+  heading wraps within the viewport (scrollWidth === clientWidth, no horizontal overflow) and
+  never breaks mid-word; buttons stay tappable.
+- Why it mattered: splits presentation (the motion hero) from interaction (the `#try-it`
+  intake), so the 2-minute demo opens on a striking video first impression while all the
+  real controls live in one honest, light intake section below — without touching the
+  verified math or fixtures.
+- Screenshots: docs/kiro/screens/hero-desktop.png, docs/kiro/screens/hero-mobile.png,
+  docs/kiro/screens/tryit-desktop.png.
+- Notes: the external CloudFront video URL
+  (https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4)
+  is intentionally wired as given (not self-hosted) and does not load in headless, so the
+  poster frame shows in the screenshots. The footer "Photo: [credit]" placeholder still needs
+  the real photo credit filled in.

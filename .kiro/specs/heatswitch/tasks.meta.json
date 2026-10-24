@@ -309,6 +309,78 @@
         "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
         "timestamp": 1792862165207
       }
+    ],
+    "8.1 Add the .liquid-glass CSS and the slow background-scale keyframes to app/globals.css": [
+      {
+        "executionId": "fa9335b9-f264-47c0-b874-8e4528e3fde3",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792862911299
+      },
+      {
+        "executionId": "fa9335b9-f264-47c0-b874-8e4528e3fde3",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863030818
+      }
+    ],
+    "8.2 Build the shared animation components": [
+      {
+        "executionId": "fa9335b9-f264-47c0-b874-8e4528e3fde3",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792862912133
+      },
+      {
+        "executionId": "fa9335b9-f264-47c0-b874-8e4528e3fde3",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863031698
+      }
+    ],
+    "8.3 Replace the My-home empty state with the full-screen photo hero": [
+      {
+        "executionId": "fa9335b9-f264-47c0-b874-8e4528e3fde3",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863036603
+      },
+      {
+        "executionId": "fa9335b9-f264-47c0-b874-8e4528e3fde3",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863267238
+      }
+    ],
+    "8.4 Wire hero behavior: reveal demos, smooth-scroll to results, footer photo credit": [
+      {
+        "executionId": "fa9335b9-f264-47c0-b874-8e4528e3fde3",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863037586
+      },
+      {
+        "executionId": "fa9335b9-f264-47c0-b874-8e4528e3fde3",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863268265
+      }
+    ],
+    "8.5 Done (workflow.md)": [
+      {
+        "executionId": "fa9335b9-f264-47c0-b874-8e4528e3fde3",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863270885
+      },
+      {
+        "executionId": "b79eccad-760e-4ab8-abe5-04993063b3cb",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863703246
+      },
+      {
+        "executionId": "b79eccad-760e-4ab8-abe5-04993063b3cb",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863982734
+      }
+    ],
+    "8. Full-screen photo hero for the My home empty state": [
+      {
+        "executionId": "b79eccad-760e-4ab8-abe5-04993063b3cb",
+        "chatSessionId": "sess_54efb648-e23d-4094-8a67-1426017e629c",
+        "timestamp": 1792863982796
+      }
     ]
   }
 }

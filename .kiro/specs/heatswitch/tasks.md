@@ -186,6 +186,25 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/task-7-desktop.png` and `docs/kiro/screens/task-7-mobile.png`, and reference them in the log entry
     - Task is not complete until these steps pass
 
+- [x] 8. Full-screen photo hero for the My home empty state
+  - [x] 8.1 Add the .liquid-glass CSS and the slow background-scale keyframes to app/globals.css
+    - Append the single sanctioned `.liquid-glass` utility + its `::before` pseudo-element (the only hand-authored CSS), plus a 20s ease-out scale 1→1.06 keyframes; disable the scale under `prefers-reduced-motion`.
+    - _Requirements: 12.1_
+  - [x] 8.2 Build the shared animation components
+    - `components/shared/fade-in.tsx` (`FadeIn`: opacity 0→1 after configurable delay/duration) and `components/shared/animated-heading.tsx` (`AnimatedHeading`: per-character entrance, 500ms each, 30ms stagger, 200ms initial delay, spaces as \u00A0, "\n" as <br/>). Both SSR-safe; `prefers-reduced-motion` shows everything immediately.
+    - _Requirements: 12.3, 12.9_
+  - [x] 8.3 Replace the My-home empty state with the full-screen photo hero
+    - Full-viewport `public/hero.jpg` via next/image (fill, priority, sizes="100vw", object-cover object-bottom, min-h-svh) with the slow scale; a bottom-only legibility gradient; the glass navbar (HeatSwitch / How it works / Buildings / Sources / "Try a demo"); bottom-pinned hero content (animated heading "Should your Boston home switch to a heat pump?", subhead, "Upload your bill" + "Try a demo home" buttons revealing the three demo pills, a glass panel with the zip field + "Heat included in my rent" toggle, and a right-column glass tag "Renters. Homeowners. Buildings."). Results state and Buildings tab keep the existing light layout unchanged.
+    - _Requirements: 1.1, 1.6, 1.9, 12.1, 12.3_
+  - [x] 8.4 Wire hero behavior: reveal demos, smooth-scroll to results, footer photo credit
+    - The demo pills call the existing handleTryDemo; loading a demo/bill switches to the light results layout and smooth-scrolls to it (instant under reduced-motion); "Buildings" nav switches tabs; add a "Photo: [credit]" placeholder beside "Your bill is never stored" in the footer. No change to calculation logic, demo fixtures, or tests.
+    - _Requirements: 3.10, 8.1, 11.5_
+  - [x] 8.5 Done (workflow.md)
+    - Run `npx vitest run` (must stay green, 69 tests) and fix failures; `npx tsc --noEmit` clean; `npx next build` compiles.
+    - UI changed: with the dev server running, use the Playwright MCP to open http://localhost:3000 at 1280px and 390px, save screenshots to `docs/kiro/screens/hero-desktop.png` and `docs/kiro/screens/hero-mobile.png` (verify the heading does not overflow at 390px and the buttons stay tappable), and reference them in the log entry.
+    - Append a KIRO_LOG.md entry (time, task, Kiro feature used, what it did, why it mattered).
+    - Task is not complete until these steps pass.
+
 ## Notes
 
 - All property-based test sub-tasks are required; only 5.4 (dataset cleaning unit tests) is marked optional with `*` and can be skipped for a faster MVP. Optional sub-tasks are still scheduled in the dependency graph.
@@ -211,7 +230,11 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
     { "id": 9, "tasks": ["4.5", "5.3"] },
     { "id": 10, "tasks": ["6.1"] },
     { "id": 11, "tasks": ["6.2", "6.3", "7.1"] },
-    { "id": 12, "tasks": ["6.4", "7.2"] }
+    { "id": 12, "tasks": ["6.4", "7.2"] },
+    { "id": 13, "tasks": ["8.1", "8.2"] },
+    { "id": 14, "tasks": ["8.3"] },
+    { "id": 15, "tasks": ["8.4"] },
+    { "id": 16, "tasks": ["8.5"] }
   ]
 }
 ```

@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import { FadeIn } from "@/components/shared/fade-in"
+import { AnimatedHeading } from "@/components/shared/animated-heading"
+
 import { UploadCard } from "@/components/my-home/upload-card"
 import { VerdictCard } from "@/components/my-home/verdict-card"
 import { CostChartCard } from "@/components/my-home/cost-chart-card"
@@ -32,22 +35,41 @@ import {
 } from "@/lib/schema"
 
 /**
- * HeatSwitch single page (task 3.5 — demo flow wired in).
+ * HeatSwitch single page (tasks 3.5 + 8 video-hero rework).
  *
- * Two tabs — "My home" (default) and "Buildings (landlords & city)". The My
- * home tab has two states:
+ * Two tabs — "My home" (default) and "Buildings (landlords & city)".
  *
- *  - EMPTY (no demo/bill loaded): a hero headline + subhead + the UploadCard.
- *    None of the result cards render.
- *  - RESULTS (a demo clicked / a bill loaded): the VerdictCard is the full-width
- *    hero at the top, then CostChartCard, YourNumbersCard, and the still-
- *    placeholder cards (Assumptions/Rebates/NextStep/HowWeCalculate — task 4).
+ * MY HOME is ONE scrollable page, top to bottom:
+ *
+ *   1. VIDEO HERO (presentation only) — a full-bleed background <video> (with a
+ *      poster="/hero.jpg" fallback), a bottom legibility gradient, a glass
+ *      navbar, an animated heading, FadeIn-staged subhead/buttons, and a
+ *      right-column glass tag. The hero contains NO intake controls: the two
+ *      hero buttons and the navbar "Try a demo" only smooth-scroll to #try-it.
+ *      Under prefers-reduced-motion the video does not autoplay — the static
+ *      poster is shown instead (SSR-safe: static on first render, enhanced to
+ *      autoplay on mount when motion is allowed).
+ *   2. #try-it — the light Mist section holding the real <UploadCard/> (drop
+ *      zone + zip + rent toggle + the three demo buttons). ALL intake lives
+ *      here, out of the hero.
+ *   3. RESULTS — rendered below #try-it once a demo/bill is loaded (hasData);
+ *      loading one smooth-scrolls here (instant under reduced motion).
+ *
+ * Because the hero's glass navbar is the header for My home, the plain light
+ * header is NOT rendered on My home (avoids two headers). The Tabs control is
+ * rendered below the hero; tab switching also routes through the hero navbar's
+ * "Buildings" link. The BUILDINGS tab keeps the existing light layout with the
+ * normal light header + tabs and no hero.
  *
  * All computed numbers come from the pure engine (lib/calc.ts, lib/rebates.ts);
  * the page only holds state and recomputes live on every confirm/edit/heating-
  * type/assumption change (Req 3.10). The verdict label flips from "Estimate" to
  * "Based on your bill" once nothing is amber (Req 3.8 / 3.9).
  */
+
+/** The background video for the hero (external, intentionally not self-hosted). */
+const HERO_VIDEO_SRC =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4"
 
 /** The two editable extracted numbers tracked for confirmation. */
 const EDITABLE_FIELD_KEYS: FieldKey[] = ["annualFuelUse", "fuelUnitPrice"]
@@ -61,13 +83,7 @@ const FIELD_UNITS: Record<HeatingType, { fuelUse: string; price: string }> = {
 }
 
 /** Placeholder card for the task-4 cards that still render in the results layout. */
-function PlaceholderCard({
-  title,
-  note,
-}: {
-  title: string
-  note: string
-}) {
+function PlaceholderCard({ title, note }: { title: string; note: string }) {
   return (
     <Card className="rounded-2xl p-6 shadow-sm">
       <CardHeader className="p-0">
@@ -81,7 +97,10 @@ function PlaceholderCard({
 }
 
 export default function Page() {
-  // --- Intake state shared with the UploadCard (empty state). ---
+  // --- Which tab is active (lifted from Tabs so the hero navbar can switch). ---
+  const [activeTab, setActiveTab] = React.useState("my-home")
+
+  // --- Intake state shared with the #try-it UploadCard. ---
   const [zip, setZip] = React.useState("")
   const [heatIncludedInRent, setHeatIncludedInRent] = React.useState(false)
 
@@ -101,7 +120,54 @@ export default function Page() {
   // --- Explanation language (explanation text itself arrives in task 7). ---
   const [language, setLanguage] = React.useState<Language>("en")
 
+  // --- Refs for smooth-scrolling to sections. ---
+  const tryItRef = React.useRef<HTMLElement>(null)
+  const resultsRef = React.useRef<HTMLDivElement>(null)
+  const howWeCalculateRef = React.useRef<HTMLDivElement>(null)
+  const footerRef = React.useRef<HTMLElement>(null)
+
   const hasData = extraction !== null && inputs !== null && assumptions !== null
+
+  // --- Reduced-motion-aware video autoplay (SSR-safe: static on first render,
+  //     enhance to autoplay on mount only when motion is allowed). Mirrors the
+  //     matchMedia pattern used by fade-in.tsx. ---
+  const [heroAutoplay, setHeroAutoplay] = React.useState(false)
+
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
+    setHeroAutoplay(!mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setHeroAutoplay(!e.matches)
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
+  // Small reduced-motion check reused by the smooth-scroll + nav handlers.
+  function prefersReducedMotion(): boolean {
+    if (typeof window === "undefined" || !window.matchMedia) return false
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  }
+
+  function smoothScrollTo(el: HTMLElement | null) {
+    if (!el) return
+    el.scrollIntoView({
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+      block: "start",
+    })
+  }
+
+  // When a demo/bill loads (hasData flips true), the results section mounts
+  // below #try-it; smooth-scroll to it (instant under reduced motion). Keyed on
+  // hasData so it fires on the flip.
+  React.useEffect(() => {
+    if (hasData) {
+      const id = window.requestAnimationFrame(() =>
+        smoothScrollTo(resultsRef.current)
+      )
+      return () => window.cancelAnimationFrame(id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasData])
 
   /**
    * Load a demo home: route its cached fixture through the shared
@@ -196,6 +262,240 @@ export default function Page() {
     ]
   }, [extraction, inputs, confirmed])
 
+  // The shared #try-it intake section (same UploadCard on both tabs' flows).
+  const tryItSection = (
+    <section ref={tryItRef} id="try-it" className="mx-auto max-w-5xl px-6 py-16">
+      <h2 className="mb-6 text-lg font-medium">Try it</h2>
+      <UploadCard
+        zip={zip}
+        heatIncludedInRent={heatIncludedInRent}
+        onZipChange={setZip}
+        onRentToggle={setHeatIncludedInRent}
+        onBillSelected={handleBillSelected}
+        onTryDemo={handleTryDemo}
+      />
+    </section>
+  )
+
+  // The results section (rendered below #try-it once a demo/bill is loaded).
+  const resultsSection = hasData ? (
+    <section className="mx-auto max-w-5xl px-6 pb-16">
+      <div ref={resultsRef} className="flex flex-col gap-6">
+        <VerdictCard
+          verdict={computed!.verdict}
+          annualDeltaDollars={computed!.cmp.annualDeltaDollars}
+          explanation={null}
+          language={language}
+          isEstimate={isEstimate}
+          onLanguageChange={setLanguage}
+        />
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+          {/* Left column: cost chart. */}
+          <div className="flex flex-col gap-6 md:col-span-3">
+            <CostChartCard
+              currentAnnualCost={computed!.cmp.currentAnnualCost}
+              heatPumpAnnualCost={computed!.cmp.heatPumpAnnualCost}
+              breakevenCOP={computed!.cmp.breakevenCOP}
+            />
+          </div>
+
+          {/* Right column: your numbers + task-4 placeholders. */}
+          <div className="flex flex-col gap-6 md:col-span-2">
+            <Card className="rounded-2xl p-6 shadow-sm">
+              <YourNumbersCard
+                fields={editableFields}
+                heatingType={inputs!.heatingType}
+                onFieldConfirm={handleFieldConfirm}
+                onFieldEdit={handleFieldEdit}
+                onHeatingTypeChange={handleHeatingTypeChange}
+              />
+            </Card>
+            <PlaceholderCard
+              title="Assumptions"
+              note="Sliders for COP, electricity price, fuel price, and the seasonal heat pump rate switch. (Task 4.1)"
+            />
+            <PlaceholderCard
+              title="Rebates"
+              note="Mass Save rebate, net install cost, payback, requirements, and the renter/landlord path. (Task 4.2)"
+            />
+          </div>
+        </div>
+
+        <PlaceholderCard
+          title="Next step"
+          note="Free Boston Energy Saver consultation (Boston zips) or Mass Save Home Energy Assessment elsewhere. (Task 4.3)"
+        />
+        <div ref={howWeCalculateRef}>
+          <PlaceholderCard
+            title="How we calculate"
+            note="Formulas, assumptions, and sources — collapsed by default. (Task 4.4)"
+          />
+        </div>
+      </div>
+    </section>
+  ) : null
+
+  const footer = (
+    <footer
+      ref={footerRef}
+      className="mx-auto mt-10 max-w-5xl border-t px-6 pt-6 pb-10 text-sm text-muted-foreground"
+    >
+      Your bill is never stored · Photo: [credit]
+    </footer>
+  )
+
+  // =========================================================================
+  // MY HOME — video hero (top) → #try-it → results. The hero's glass navbar is
+  // the header; the Tabs control sits below the hero. No plain light header.
+  // =========================================================================
+  if (activeTab === "my-home") {
+    return (
+      <div>
+        {/* VIDEO HERO (presentation only — no intake controls). */}
+        <section className="relative flex min-h-svh w-full flex-col overflow-hidden text-white">
+          {/* Background: autoplay video when motion is allowed, else static poster. */}
+          {heroAutoplay ? (
+            <video
+              key="hero-video"
+              autoPlay
+              loop
+              muted
+              playsInline
+              poster="/hero.jpg"
+              className="absolute inset-0 -z-10 h-full w-full object-cover"
+            >
+              <source src={HERO_VIDEO_SRC} type="video/mp4" />
+            </video>
+          ) : (
+            // Reduced motion (or pre-mount SSR default): static poster image.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/hero.jpg"
+              alt=""
+              className="absolute inset-0 -z-10 h-full w-full object-cover"
+            />
+          )}
+
+          {/* Bottom-only legibility gradient. */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/50 to-transparent" />
+
+          {/* Glass navbar. */}
+          <div className="absolute inset-x-0 top-0 z-20 px-6 pt-6 md:px-12 lg:px-16">
+            <nav className="liquid-glass flex items-center justify-between rounded-xl px-4 py-2 text-white">
+              <span className="text-2xl font-semibold tracking-tight">
+                HeatSwitch
+              </span>
+              <div className="hidden gap-8 text-sm md:flex">
+                <button
+                  type="button"
+                  className="transition-colors hover:text-gray-300"
+                  onClick={() => smoothScrollTo(howWeCalculateRef.current)}
+                >
+                  How it works
+                </button>
+                <button
+                  type="button"
+                  className="transition-colors hover:text-gray-300"
+                  onClick={() => setActiveTab("buildings")}
+                >
+                  Buildings
+                </button>
+                <button
+                  type="button"
+                  className="transition-colors hover:text-gray-300"
+                  onClick={() => smoothScrollTo(footerRef.current)}
+                >
+                  Sources
+                </button>
+              </div>
+              <button
+                type="button"
+                className="rounded-lg bg-white px-6 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-100"
+                onClick={() => smoothScrollTo(tryItRef.current)}
+              >
+                Try a demo
+              </button>
+            </nav>
+          </div>
+
+          {/* Bottom-pinned hero content. */}
+          <div className="flex flex-1 flex-col justify-end px-6 pb-12 md:px-12 lg:grid lg:grid-cols-2 lg:items-end lg:px-16 lg:pb-16">
+            {/* Left column. */}
+            <div className="max-w-full">
+              <h1
+                className="mb-4 text-4xl font-normal leading-[1.05] md:text-5xl lg:text-6xl xl:text-7xl"
+                style={{ letterSpacing: "-0.04em" }}
+              >
+                <AnimatedHeading
+                  text={"Should your Boston home\nswitch to a heat pump?"}
+                  className="text-white"
+                />
+              </h1>
+
+              <FadeIn delay={800} duration={1000}>
+                <p className="mb-5 text-base text-gray-300 md:text-lg">
+                  Upload a bill. Get an honest answer, with the source under
+                  every number.
+                </p>
+              </FadeIn>
+
+              <FadeIn delay={1200}>
+                <div className="flex flex-wrap gap-4">
+                  <button
+                    type="button"
+                    className="rounded-lg bg-white px-8 py-3 font-medium text-black transition-colors hover:bg-gray-100"
+                    onClick={() => smoothScrollTo(tryItRef.current)}
+                  >
+                    Upload your bill
+                  </button>
+                  <button
+                    type="button"
+                    className="liquid-glass rounded-lg border border-white/20 px-8 py-3 font-medium text-white transition-colors hover:bg-white hover:text-black"
+                    onClick={() => smoothScrollTo(tryItRef.current)}
+                  >
+                    Try a demo home
+                  </button>
+                </div>
+              </FadeIn>
+            </div>
+
+            {/* Right column tag. */}
+            <div className="mt-8 flex items-end lg:mt-0 lg:justify-end">
+              <FadeIn delay={1400}>
+                <div className="liquid-glass rounded-xl border border-white/20 px-6 py-3 text-lg font-light text-white md:text-xl lg:text-2xl">
+                  Renters. Homeowners. Buildings.
+                </div>
+              </FadeIn>
+            </div>
+          </div>
+        </section>
+
+        {/* Tabs control below the hero (navigation lives in the glass navbar
+            too; this keeps the Tabs controlled + lets users switch here). */}
+        <div className="mx-auto max-w-5xl px-6 pt-10">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="my-home">My home</TabsTrigger>
+              <TabsTrigger value="buildings">
+                Buildings (landlords &amp; city)
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        {/* #try-it intake, then results below it. */}
+        {tryItSection}
+        {resultsSection}
+        {footer}
+      </div>
+    )
+  }
+
+  // =========================================================================
+  // BUILDINGS — existing light layout, with the normal light header + tabs and
+  // no hero. Unchanged.
+  // =========================================================================
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       {/* Header */}
@@ -209,92 +509,13 @@ export default function Page() {
         </Badge>
       </header>
 
-      <Tabs defaultValue="my-home">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="my-home">My home</TabsTrigger>
           <TabsTrigger value="buildings">
             Buildings (landlords &amp; city)
           </TabsTrigger>
         </TabsList>
-
-        {/* TAB 1 — My home */}
-        <TabsContent value="my-home" className="flex flex-col gap-6">
-          {!hasData ? (
-            // ---- EMPTY STATE: hero only. ----
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                  Should your Boston home switch to a heat pump?
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Upload a bill or try a demo — we&apos;ll show the real numbers,
-                  even when a heat pump isn&apos;t worth it yet.
-                </p>
-              </div>
-              <UploadCard
-                zip={zip}
-                heatIncludedInRent={heatIncludedInRent}
-                onZipChange={setZip}
-                onRentToggle={setHeatIncludedInRent}
-                onBillSelected={handleBillSelected}
-                onTryDemo={handleTryDemo}
-              />
-            </div>
-          ) : (
-            // ---- RESULTS STATE: VerdictCard hero, then the rest. ----
-            <>
-              <VerdictCard
-                verdict={computed!.verdict}
-                annualDeltaDollars={computed!.cmp.annualDeltaDollars}
-                explanation={null}
-                language={language}
-                isEstimate={isEstimate}
-                onLanguageChange={setLanguage}
-              />
-
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-                {/* Left column: cost chart. */}
-                <div className="flex flex-col gap-6 md:col-span-3">
-                  <CostChartCard
-                    currentAnnualCost={computed!.cmp.currentAnnualCost}
-                    heatPumpAnnualCost={computed!.cmp.heatPumpAnnualCost}
-                    breakevenCOP={computed!.cmp.breakevenCOP}
-                  />
-                </div>
-
-                {/* Right column: your numbers + task-4 placeholders. */}
-                <div className="flex flex-col gap-6 md:col-span-2">
-                  <Card className="rounded-2xl p-6 shadow-sm">
-                    <YourNumbersCard
-                      fields={editableFields}
-                      heatingType={inputs!.heatingType}
-                      onFieldConfirm={handleFieldConfirm}
-                      onFieldEdit={handleFieldEdit}
-                      onHeatingTypeChange={handleHeatingTypeChange}
-                    />
-                  </Card>
-                  <PlaceholderCard
-                    title="Assumptions"
-                    note="Sliders for COP, electricity price, fuel price, and the seasonal heat pump rate switch. (Task 4.1)"
-                  />
-                  <PlaceholderCard
-                    title="Rebates"
-                    note="Mass Save rebate, net install cost, payback, requirements, and the renter/landlord path. (Task 4.2)"
-                  />
-                </div>
-              </div>
-
-              <PlaceholderCard
-                title="Next step"
-                note="Free Boston Energy Saver consultation (Boston zips) or Mass Save Home Energy Assessment elsewhere. (Task 4.3)"
-              />
-              <PlaceholderCard
-                title="How we calculate"
-                note="Formulas, assumptions, and sources — collapsed by default. (Task 4.4)"
-              />
-            </>
-          )}
-        </TabsContent>
 
         {/* TAB 2 — Buildings (landlords & city) */}
         <TabsContent value="buildings" className="flex flex-col gap-6">
@@ -306,8 +527,11 @@ export default function Page() {
       </Tabs>
 
       {/* Footer */}
-      <footer className="mt-10 border-t pt-6 text-sm text-muted-foreground">
-        Your bill is never stored.
+      <footer
+        ref={footerRef}
+        className="mt-10 border-t pt-6 text-sm text-muted-foreground"
+      >
+        Your bill is never stored · Photo: [credit]
       </footer>
     </div>
   )

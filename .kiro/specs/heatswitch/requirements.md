@@ -218,7 +218,7 @@ These requirements are derived from the finalized design document (`design.md`) 
 
 #### Acceptance Criteria
 
-1. THE HeatSwitch SHALL build its interface using only shadcn/ui components and Tailwind utility classes, with zero custom CSS files other than the single Tailwind entry stylesheet and the scaffolded theme preset.
+1. THE HeatSwitch SHALL build its interface using only shadcn/ui components and Tailwind utility classes, with no custom CSS files other than the single Tailwind entry stylesheet (`app/globals.css`) and the scaffolded theme preset. WHERE the My home empty-state photo hero requires it, THE HeatSwitch MAY define a single `.liquid-glass` utility class (and its `::before` pseudo-element) in `app/globals.css`; this is the only hand-authored CSS permitted, and no additional custom CSS files or classes SHALL be introduced.
 2. WHERE a component is required by the interface, THE HeatSwitch SHALL source it exclusively from the shadcn/ui component set (Card, Button, Slider, Switch, Tabs, Badge, Alert, Tooltip, Skeleton) and SHALL NOT introduce components from other UI libraries.
 3. THE HeatSwitch SHALL use the Mist base color and Emerald theme with Emerald chart color, and SHALL render in light mode only such that no dark-mode class or theme toggle is present in the interface.
 4. THE HeatSwitch SHALL render all text using the Inter font, with the verdict at `text-4xl font-semibold`, section titles at `text-lg font-medium`, and body text at `text-sm`.

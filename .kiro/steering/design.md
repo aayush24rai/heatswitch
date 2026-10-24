@@ -3,7 +3,7 @@ inclusion: always
 ---
 # Design (follow exactly; do not invent new styles)
 - Use ONLY shadcn/ui components (Card, Button, Slider, Switch, Tabs, Badge, Alert, Tooltip, Skeleton).
-  Install them via the shadcn MCP. No custom CSS files; Tailwind utilities only.
+  Install them via the shadcn MCP. No custom CSS files; Tailwind utilities only — with ONE sanctioned exception: a single `.liquid-glass` utility (and its `::before`) in `app/globals.css`, used only by the My home empty-state photo hero.
 - Theme: shadcn/create preset with base color Mist, theme Emerald, chart color Emerald (scaffolded from the preset; do not hand-edit colors). Light mode only.
 - Font: Inter via next/font. Sizes: verdict text-4xl font-semibold; section titles text-lg font-medium; body text-sm.
 - Layout: max-w-5xl mx-auto px-6 py-10; cards rounded-2xl border shadow-sm p-6; gap-6 between cards.
@@ -16,6 +16,23 @@ inclusion: always
 [Tabs: "My home" | "Buildings (landlords & city)"]
 
 TAB 1 — My home
+
+EMPTY STATE (before any demo/bill is loaded): full-screen photo hero.
+- Full-viewport `public/hero.jpg` background via next/image fill, object-cover, with a
+  slow 20s scale 1→1.06 animation.
+- A bottom-only legibility gradient over the photo.
+- An absolutely-positioned glass navbar: HeatSwitch / How it works / Buildings / Sources /
+  "Try a demo".
+- Bottom-pinned hero content: animated heading "Should your Boston home switch to a heat
+  pump?", a subhead, "Upload your bill" + "Try a demo home" buttons (the latter reveals the
+  three demo pills), a small glass panel with the zip field + "Heat included in my rent"
+  toggle, and a right-column glass tag "Renters. Homeowners. Buildings."
+- Loading a demo or a bill smooth-scrolls down to the existing light Mist/Emerald RESULTS
+  layout below the hero.
+- The RESULTS state and the Buildings tab keep the existing light layout unchanged.
+- `prefers-reduced-motion` disables all hero animations (everything is shown immediately).
+
+RESULTS STATE (after a demo/bill is loaded; existing light layout, unchanged):
 [Upload card: drop zone (bill photo/PDF) + zip code field + toggle "Heat included in my rent"
               + 3 buttons "Try: Oil home / Gas home / Baseboard home"]
 [Left col 60%: Verdict card (verdict label: Switch now / Switch when your system needs
