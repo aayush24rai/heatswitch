@@ -11,7 +11,7 @@ Per `.kiro/steering/workflow.md`, every top-level task ends with an explicit **D
 ## Tasks
 
 - [ ] 1. Scaffold the app, constants, schema, and stub routes
-  - [ ] 1.1 Scaffold the Next.js App Router + TypeScript + Tailwind + shadcn/ui project
+  - [x] 1.1 Scaffold the Next.js App Router + TypeScript + Tailwind + shadcn/ui project
     - Run `npx shadcn@latest init --preset b2BWx6KYq --template next` (base Mist, theme Emerald, chart Emerald) into the current folder using npm (never pnpm); keep existing `README.md`, `.git`, `.kiro`, and `docs`
     - If the CLI requires an empty folder or prompts for a project name, scaffold into a temp folder and move the generated files into the workspace root, preserving the kept files
     - Enable TypeScript strict mode; configure Inter via `next/font`; enforce light mode only (no dark-mode class or theme toggle)

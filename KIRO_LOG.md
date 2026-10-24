@@ -38,3 +38,22 @@
   (no issues).
 - Why it mattered: gives every design decision a traceable, testable requirement so the
   correctness properties map cleanly to acceptance criteria before tasks are generated.
+
+## Task 1.1 — Scaffold Next.js App Router + TypeScript + Tailwind + shadcn/ui
+- When: 2026-10-24 16:23 UTC
+- Task: 1.1 Scaffold the Next.js App Router + TypeScript + Tailwind + shadcn/ui project
+- Kiro feature used: Spec (design-first workflow) + CLI scaffold + shadcn
+- What: Ran `npx shadcn@latest init --preset b2BWx6KYq --template next --name heatswitch --yes`
+  in a temp folder (workspace was non-empty) with npm, then rsync'd the generated files into the
+  workspace root while excluding `.git`, `.gitignore`, and `README.md` so existing files were
+  preserved (`data/`, `docs/`, `.kiro/`, `KIRO_LOG.md`, `.env.example`, `.env.local`, `.gitignore`).
+  Confirmed TypeScript strict mode (`strict: true`) and Inter via `next/font`. Enforced light mode
+  only: removed the next-themes `ThemeProvider` + dark-mode hotkey, deleted `components/theme-provider.tsx`,
+  uninstalled `next-themes`, and stripped the `.dark` block and `@custom-variant dark` from
+  `app/globals.css`. Merged `.gitignore` (union of scaffold + existing) keeping `.env*.local` so
+  `.env.local` stays ignored while `.env.example` stays tracked, and kept `.kiro` out of `.gitignore`.
+  Created the directory structure: `lib/`, `app/api/extract/`, `app/api/explain/`,
+  `components/my-home/`, `components/buildings/`, `components/shared/`, `data/berdo-2021/`.
+  `npx tsc --noEmit` passes. `npx vitest run` not run yet — the test toolchain is set up in task 1.2.
+- Why it mattered: establishes the Mist+Emerald, light-only, strict-TypeScript foundation every later
+  task builds on, without clobbering the spec, data, or secrets already in the repo.
