@@ -58,3 +58,29 @@ describe("heatingFuelLabel", () => {
     expect(heatingFuelLabel({ electricShare: 0.5, gasShare: 0.5 })).toBe("Mixed");
   });
 });
+
+import { adviceChip } from "@/lib/calc";
+
+describe("adviceChip", () => {
+  it("all-electric override → 'Biggest win' (high)", () => {
+    const c = adviceChip(row({ electricResistanceWin: true }));
+    expect(c.label).toBe("Biggest win");
+    expect(c.high).toBe(true);
+    expect(c.sentence).toBe("Biggest win: likely electric heat");
+  });
+  it("mostly gas → 'At boiler replacement' (high)", () => {
+    const c = adviceChip(row({ gasShare: 0.9 }));
+    expect(c.label).toBe("At boiler replacement");
+    expect(c.high).toBe(true);
+  });
+  it("High/Medium not mostly gas → 'Good candidate' (not high)", () => {
+    const c = adviceChip(row({ label: "High", gasShare: 0.4 }));
+    expect(c.label).toBe("Good candidate");
+    expect(c.high).toBe(false);
+  });
+  it("Low → 'Lower priority' (not high)", () => {
+    const c = adviceChip(row({ label: "Low", gasShare: 0.4 }));
+    expect(c.label).toBe("Lower priority");
+    expect(c.high).toBe(false);
+  });
+});

@@ -6,8 +6,8 @@ import type { BerdoBuilding } from "@/lib/schema"
 import {
   rankBuildings,
   sharesInconsistent,
-  buildingAdvice,
   heatingFuelLabel,
+  adviceChip,
   type RankedBuilding,
 } from "@/lib/calc"
 import { Badge } from "@/components/ui/badge"
@@ -20,14 +20,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { GLOSSARY, type GlossaryKey } from "@/lib/glossary"
 import { ZipPicker } from "@/components/buildings/zip-picker"
 import { neighborhoodFor, zipLabel } from "@/lib/neighborhoods"
 
 /**
- * BuildingsTable — the Buildings tab, redesigned for non-experts (presentation
- * only; the cohort filter / dedupe / fossil-intensity score / percentiles /
- * labels / check-data split ALL still live in `rankBuildings`). The table reads
- * the per-row flags off each `RankedBuilding` and never re-derives the ranking.
+ * BuildingsTable — the Buildings tab, tightened for scannability (presentation
+ * only; the ranking still lives entirely in `rankBuildings`). Max 5 columns:
+ * Building · Energy use (bar + "N× typical") · Heating fuel · What to do (chip)
+ * · Priority (badge, right-aligned). Rows don't wrap on desktop; the whole row
+ * is clickable to expand Details. Mobile (<md) renders stacked cards.
  */
 
 export interface BuildingsTableProps {
@@ -37,7 +39,6 @@ export interface BuildingsTableProps {
   className?: string
 }
 
-/** Citywide default shows the top 10 with a "Show more" button. */
 const DEFAULT_CITYWIDE_LIMIT = 10
 
 const BERDO_SOURCE_URL =
@@ -63,13 +64,14 @@ function formatShare(share: number | null): string {
   return `${Math.round(share * 100)}%`
 }
 
-/** "Built 1920 · 24,700 sq ft · Allston (02134)" — no "Multifamily Housing". */
-function buildingTitle(b: BerdoBuilding): string {
+/** Building cell line 1: "Allston · built 1916" (neighborhood when known). */
+function buildingLine1(b: BerdoBuilding): string {
   const nb = neighborhoodFor(b.zip)
-  const where = nb ? `${nb} (${b.zip})` : b.zip
-  return `Built ${b.yearBuilt} · ${intFmt.format(
-    Math.round(b.grossFloorAreaSqFt)
-  )} sq ft · ${where}`
+  return nb ? `${nb} · built ${b.yearBuilt}` : `Built ${b.yearBuilt}`
+}
+/** Building cell line 2: "43,803 sq ft · 02134". */
+function buildingLine2(b: BerdoBuilding): string {
+  return `${intFmt.format(Math.round(b.grossFloorAreaSqFt))} sq ft · ${b.zip}`
 }
 
 function labelBadgeVariant(
@@ -80,14 +82,37 @@ function labelBadgeVariant(
   return "outline"
 }
 
-/** Bar fill color by priority label (tier colors, as before). */
 function labelBarColor(label: RankedBuilding["label"]): string {
   if (label === "High") return "bg-emerald-600"
   if (label === "Medium") return "bg-emerald-300"
   return "bg-gray-300"
 }
 
-/** A small amber ⚠ with a tooltip, used for check-data / shares-don't-add-up. */
+/** Column header text that is itself a tooltip trigger — no visible "?" icon.
+ *  Keyboard-focusable; shows the glossary definition on hover/focus. */
+function HeaderTip({
+  term,
+  children,
+}: {
+  term: GlossaryKey
+  children: React.ReactNode
+}) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger
+          type="button"
+          className="cursor-help text-xs font-medium text-muted-foreground underline decoration-dotted decoration-muted-foreground/40 underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
+          {children}
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">{GLOSSARY[term]}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
+/** A small amber ⚠ with a tooltip (check-data / shares-don't-add-up). */
 function WarnIcon({ text }: { text: string }) {
   return (
     <TooltipProvider>
@@ -95,11 +120,40 @@ function WarnIcon({ text }: { text: string }) {
         <TooltipTrigger
           type="button"
           aria-label={text}
-          className="inline-flex size-4 cursor-help items-center justify-center rounded-full text-amber-600 outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="inline-flex size-4 shrink-0 cursor-help items-center justify-center rounded-full text-amber-600 outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           ⚠
         </TooltipTrigger>
         <TooltipContent className="max-w-xs">{text}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
+const CHECK_DATA_WARN =
+  "This building's reported energy use looks unusually high — double-check it."
+const SHARES_WARN =
+  "The electric and gas shares reported add up to more than 100%, so the fuel mix may be off."
+
+/** The "what to do" chip: emerald tint for High actions, neutral otherwise; the
+ *  full sentence lives in the tooltip. */
+function AdviceChipView({ b }: { b: RankedBuilding }) {
+  const chip = adviceChip(b)
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger
+          type="button"
+          className={cn(
+            "inline-flex cursor-help items-center rounded-full px-2.5 py-0.5 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+            chip.high
+              ? "bg-emerald-100 text-emerald-800"
+              : "bg-muted text-muted-foreground"
+          )}
+        >
+          {chip.label}
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">{chip.sentence}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )
@@ -114,7 +168,6 @@ export function BuildingsTable({
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({})
   const [showAll, setShowAll] = React.useState(false)
 
-  // Reset the "show more" expansion whenever the zip changes.
   React.useEffect(() => {
     setShowAll(false)
   }, [selectedZip])
@@ -132,9 +185,6 @@ export function BuildingsTable({
       selectedZip === null ? rankedAll : rankBuildings(buildings, selectedZip),
     [buildings, rankedAll, selectedZip]
   )
-
-  // Valid cohort of the CURRENT view (zip-scoped or citywide) for the summary +
-  // the "typical" (median) energy-use reference used by the "N× typical" column.
   const summaryCohort = React.useMemo(
     () => ranked.filter((b) => !b.checkData),
     [ranked]
@@ -153,29 +203,23 @@ export function BuildingsTable({
   const scopeLabel =
     selectedZip === null ? "Citywide" : `in ${zipLabel(selectedZip)}`
 
-  // Display rows: citywide shows the top 10 unless "Show more" is on; a zip
-  // shows all its matches. Order comes straight from rankBuildings.
   const rows =
     selectedZip === null && !showAll
       ? ranked.slice(0, DEFAULT_CITYWIDE_LIMIT)
       : ranked
   const hiddenCount =
     selectedZip === null ? Math.max(0, ranked.length - rows.length) : 0
-
   const noMatch = selectedZip !== null && ranked.length === 0
 
   function toggle(id: string) {
     setExpanded((m) => ({ ...m, [id]: !m[id] }))
   }
-
-  /** "N× typical" for a row given the cohort median. */
-  function euiMultipleText(siteEUI: number): string {
+  function euiMultiple(siteEUI: number): string {
     if (!typicalEUI || typicalEUI <= 0) return "—"
-    return `${(siteEUI / typicalEUI).toFixed(1)}× typical`
+    return `${(siteEUI / typicalEUI).toFixed(1)}×`
   }
   function euiBarWidth(siteEUI: number): string {
     if (!typicalEUI || typicalEUI <= 0) return "0%"
-    // Scale so "2× typical" roughly fills the bar; clamp 0–100%.
     const pct = Math.min(100, Math.max(0, (siteEUI / typicalEUI / 2) * 100))
     return `${Math.round(pct)}%`
   }
@@ -199,7 +243,7 @@ export function BuildingsTable({
         />
       </div>
 
-      {/* Summary cards in plain words (zip-scoped or citywide). */}
+      {/* Summary cards in plain words. */}
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium">{scopeLabel}</span>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -242,25 +286,36 @@ export function BuildingsTable({
       ) : (
         <>
           {/* ===== Desktop table (md+). ===== */}
-          <div className="hidden overflow-x-auto rounded-2xl border shadow-sm md:block">
-            <table className="w-full border-collapse text-sm">
+          <div className="hidden overflow-hidden rounded-2xl border shadow-sm md:block">
+            <table className="w-full table-fixed border-collapse text-sm">
+              <colgroup>
+                <col className="w-[32%]" />
+                <col className="w-[18%]" />
+                <col className="w-[18%]" />
+                <col className="w-[20%]" />
+                <col className="w-[12%]" />
+              </colgroup>
               <thead>
-                <tr className="border-b bg-muted/40 text-left text-xs font-medium text-muted-foreground">
-                  <th className="px-4 py-3">Building</th>
-                  <th className="px-4 py-3">
-                    Energy use
-                    <InfoTip term="energyUse" label="Energy use" className="ml-1" />
+                <tr className="border-b bg-muted/40 text-left">
+                  <th className="px-4 py-3 font-medium">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Building
+                    </span>
+                  </th>
+                  <th className="px-4 py-3 text-right">
+                    <HeaderTip term="energyUse">Energy use</HeaderTip>
                   </th>
                   <th className="px-4 py-3">
-                    Heating fuel
-                    <InfoTip term="heatingFuel" label="Heating fuel" className="ml-1" />
+                    <HeaderTip term="heatingFuel">Heating fuel</HeaderTip>
                   </th>
-                  <th className="px-4 py-3">What to do</th>
                   <th className="px-4 py-3">
-                    Priority
-                    <InfoTip term="priority" label="Priority" className="ml-1" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      What to do
+                    </span>
                   </th>
-                  <th className="px-4 py-3" />
+                  <th className="px-4 py-3 text-right">
+                    <HeaderTip term="priority">Priority</HeaderTip>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -268,15 +323,34 @@ export function BuildingsTable({
                   const isOpen = !!expanded[b.id]
                   return (
                     <React.Fragment key={b.id}>
-                      <tr className="border-b last:border-b-0 align-top">
-                        <td className="px-4 py-3">
-                          <div className="font-medium tabular-nums">
-                            {buildingTitle(b)}
+                      <tr
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={isOpen}
+                        onClick={() => toggle(b.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            toggle(b.id)
+                          }
+                        }}
+                        className="cursor-pointer border-b transition-colors last:border-b-0 hover:bg-muted/50"
+                      >
+                        {/* Building: two lines, no wrap. */}
+                        <td className="px-4 py-3 align-middle">
+                          <div className="truncate text-sm font-medium">
+                            {buildingLine1(b)}
+                          </div>
+                          <div className="truncate text-xs text-muted-foreground tabular-nums">
+                            {buildingLine2(b)}
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+
+                        {/* Energy use: bar + single right-aligned multiple. */}
+                        <td className="px-4 py-3 text-right align-middle">
+                          <div className="flex items-center justify-end gap-2">
+                            {b.checkData ? <WarnIcon text={CHECK_DATA_WARN} /> : null}
+                            <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
                               <div
                                 className={cn(
                                   "h-full rounded-full",
@@ -285,43 +359,37 @@ export function BuildingsTable({
                                 style={{ width: euiBarWidth(b.siteEUI) }}
                               />
                             </div>
-                            <span className="tabular-nums">
-                              {euiMultipleText(b.siteEUI)}
+                            <span className="w-10 text-right tabular-nums">
+                              {euiMultiple(b.siteEUI)}
                             </span>
-                            {b.checkData ? (
-                              <WarnIcon text="This building's reported energy use looks unusually high — double-check it." />
-                            ) : null}
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center gap-1">
+
+                        {/* Heating fuel. */}
+                        <td className="px-4 py-3 align-middle">
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap">
                             {heatingFuelLabel(b)}
                             {sharesInconsistent(b) ? (
-                              <WarnIcon text="The electric and gas shares reported add up to more than 100%, so the fuel mix may be off." />
+                              <WarnIcon text={SHARES_WARN} />
                             ) : null}
                           </span>
                         </td>
-                        <td className="px-4 py-3">{buildingAdvice(b)}</td>
-                        <td className="px-4 py-3">
+
+                        {/* What to do: single chip. */}
+                        <td className="px-4 py-3 align-middle">
+                          <AdviceChipView b={b} />
+                        </td>
+
+                        {/* Priority badge, right-aligned (last column). */}
+                        <td className="px-4 py-3 text-right align-middle">
                           <Badge variant={labelBadgeVariant(b.label)}>
                             {b.label ?? "—"}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <Button
-                            type="button"
-                            size="xs"
-                            variant="ghost"
-                            aria-expanded={isOpen}
-                            onClick={() => toggle(b.id)}
-                          >
-                            Details {isOpen ? "▴" : "▾"}
-                          </Button>
-                        </td>
                       </tr>
                       {isOpen ? (
                         <tr className="border-b bg-muted/20">
-                          <td colSpan={6} className="px-4 py-3">
+                          <td colSpan={5} className="px-4 py-3">
                             <DetailGrid b={b} />
                           </td>
                         </tr>
@@ -343,50 +411,46 @@ export function BuildingsTable({
                   className="flex flex-col gap-2 rounded-2xl border p-4 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-medium tabular-nums">
-                      {buildingTitle(b)}
-                    </span>
+                    <div>
+                      <div className="text-sm font-medium">{buildingLine1(b)}</div>
+                      <div className="text-xs text-muted-foreground tabular-nums">
+                        {buildingLine2(b)}
+                      </div>
+                    </div>
                     <Badge variant={labelBadgeVariant(b.label)}>
                       {b.label ?? "—"}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Energy use:</span>
-                    <span className="tabular-nums">{euiMultipleText(b.siteEUI)}</span>
-                    {b.checkData ? (
-                      <WarnIcon text="This building's reported energy use looks unusually high — double-check it." />
-                    ) : null}
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Heating fuel: </span>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                     <span className="inline-flex items-center gap-1">
+                      <span className="text-muted-foreground">Energy use:</span>
+                      <span className="tabular-nums">{euiMultiple(b.siteEUI)} typical</span>
+                      {b.checkData ? <WarnIcon text={CHECK_DATA_WARN} /> : null}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="text-muted-foreground">Fuel:</span>
                       {heatingFuelLabel(b)}
-                      {sharesInconsistent(b) ? (
-                        <WarnIcon text="The electric and gas shares reported add up to more than 100%, so the fuel mix may be off." />
-                      ) : null}
+                      {sharesInconsistent(b) ? <WarnIcon text={SHARES_WARN} /> : null}
                     </span>
                   </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">What to do: </span>
-                    {buildingAdvice(b)}
+                  <div className="flex items-center justify-between gap-2">
+                    <AdviceChipView b={b} />
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="ghost"
+                      aria-expanded={isOpen}
+                      onClick={() => toggle(b.id)}
+                    >
+                      Details {isOpen ? "▴" : "▾"}
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="ghost"
-                    className="self-start"
-                    aria-expanded={isOpen}
-                    onClick={() => toggle(b.id)}
-                  >
-                    Details {isOpen ? "▴" : "▾"}
-                  </Button>
                   {isOpen ? <DetailGrid b={b} /> : null}
                 </div>
               )
             })}
           </div>
 
-          {/* Citywide "Show more". */}
           {hiddenCount > 0 ? (
             <Button
               type="button"
@@ -411,22 +475,36 @@ export function BuildingsTable({
   )
 }
 
-/** The expandable per-building details: raw site EUI, emissions, shares, score. */
+/** Expandable per-building details: raw site EUI, emissions, shares, score, and
+ *  the full "what to do" sentence. */
 function DetailGrid({ b }: { b: RankedBuilding }) {
+  const chip = adviceChip(b)
   return (
-    <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-      <Detail label="Site EUI" value={`${eui1Fmt.format(b.siteEUI)} kBtu/ft²`} />
-      <Detail
-        label="Yearly emissions"
-        value={`${intFmt.format(Math.round(b.ghgEmissions))} t CO₂`}
-      />
-      <Detail label="Electric share" value={formatShare(b.electricShare)} />
-      <Detail label="Gas share" value={formatShare(b.gasShare)} />
-      <Detail
-        label="Opportunity score"
-        value={b.score.toFixed(1)}
-      />
-    </dl>
+    <div className="flex flex-col gap-3">
+      <p className="text-sm">{chip.sentence}</p>
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+        <Detail label="Site EUI" value={`${eui1Fmt.format(b.siteEUI)} kBtu/ft²`} />
+        <Detail
+          label="Yearly emissions"
+          value={`${intFmt.format(Math.round(b.ghgEmissions))} t CO₂`}
+        />
+        <Detail label="Electric share" value={formatShare(b.electricShare)} />
+        <Detail label="Gas share" value={formatShare(b.gasShare)} />
+        {b.electricResistanceWin ? (
+          // The fossil-intensity score is 0 for an all-electric building, so
+          // showing "0.0" misreads as "no opportunity". Explain the override.
+          <div className="col-span-2 flex flex-col sm:col-span-4">
+            <dt className="text-xs text-muted-foreground">Why High</dt>
+            <dd>
+              Ranked high: all-electric with high energy use, likely electric
+              resistance heat
+            </dd>
+          </div>
+        ) : (
+          <Detail label="Opportunity score" value={b.score.toFixed(1)} />
+        )}
+      </dl>
+    </div>
   )
 }
 

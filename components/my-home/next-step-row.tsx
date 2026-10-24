@@ -32,9 +32,9 @@ import { isBostonZip, isEquityZip } from "@/lib/rebates"
 
 const ZIP_PATTERN = /^\d{5}$/
 
-const BOSTON_ENERGY_SAVER_URL =
-  "https://www.boston.gov/departments/environment"
-const MASS_SAVE_ASSESSMENT_URL = "https://www.masssave.com/"
+const BOSTON_ENERGY_SAVER_URL = "https://www.boston.gov/save"
+const MASS_SAVE_ASSESSMENT_URL =
+  "https://www.masssave.com/residential/programs-and-services/home-energy-assessments"
 
 export interface NextStepRowProps {
   zip: string
@@ -115,6 +115,15 @@ export function NextStepRow({ zip, onZipChange }: NextStepRowProps) {
             >
               Free Boston Energy Saver consultation
             </a>
+            <span className="text-xs text-muted-foreground">
+              Free 1-on-1 help:{" "}
+              <a
+                href="tel:+16176357283"
+                className="underline-offset-4 hover:text-foreground hover:underline"
+              >
+                617-635-SAVE (7283)
+              </a>
+            </span>
           </div>
         ) : (
           // Req 10.2 / 10.6: Mass Save assessment (default, incl. unknown zips).

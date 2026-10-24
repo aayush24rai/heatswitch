@@ -125,6 +125,13 @@ export default function Page() {
   const [extractionNotice, setExtractionNotice] = React.useState<string | null>(
     null
   )
+  // A monotonically increasing signal the page bumps to ask UploadCard to open
+  // the manual form (e.g. after a Step-2 "Change" clears the units). The paired
+  // seed type preselects the manual heating type. Never seeds zero inputs.
+  const [openManualSignal, setOpenManualSignal] = React.useState(0)
+  const [manualSeedType, setManualSeedType] = React.useState<HeatingType | null>(
+    null
+  )
 
   // --- Explanation language + the fetched prose / loading flag (task 7.2). ---
   const [language, setLanguage] = React.useState<Language>("en")
@@ -378,37 +385,19 @@ export default function Page() {
   }
 
   /**
-   * Guesser result (item 4): the three-question helper resolved a heating type
-   * (null when a mini-split is likely). Set the type (clearing usage/price so
-   * old numbers are never reinterpreted), and turn on the rent toggle when the
-   * user said heat is included. When null (mini-split) we leave the type alone
-   * and just honor the rent answer — the helper's message already explains it.
+   * Guesser result (item 1): the three-question helper resolved a heating type
+   * (null = mini-split). We do NOT seed any inputs here — seeding 0/0 would make
+   * the zero-value results/Step 2 flash (which we forbid). Instead the manual
+   * form (in UploadCard) opens with the guessed type preselected and the
+   * yearly-use field focused, so results only appear once the user enters a
+   * positive use + price. Here we only honor the rent answer.
    */
   function handleGuessResolved(
-    heatingType: HeatingType | null,
+    _heatingType: HeatingType | null,
     rentIncluded: boolean
   ) {
+    void _heatingType
     if (rentIncluded) handleRentToggle(true)
-    if (heatingType === null) return
-    setIsDemo(false)
-    setExtractionNotice(null)
-    const utility = "eversource" as const
-    setExtraction({
-      heatingType: { value: heatingType, confidence: 1, evidence: "From your answers" },
-      annualFuelUse: { value: 0, confidence: 0, evidence: "Enter your yearly use" },
-      fuelUnitPrice: { value: 0, confidence: 0, evidence: "Enter your price" },
-    })
-    setInputs({
-      heatingType,
-      annualFuelUse: 0,
-      fuelUnitPrice: 0,
-      zip,
-      utility,
-      heatIncludedInRent: rentIncluded || heatIncludedInRent,
-      householdSize: 1,
-    })
-    setAssumptions(defaultAssumptions(utility))
-    setConfirmed({ annualFuelUse: false, fuelUnitPrice: false })
   }
 
   // --- Confirmation handlers (recompute happens via derived memo below). ---
@@ -429,8 +418,16 @@ export default function Page() {
   // recompute while either is <= 0, and both fields are marked unconfirmed so
   // the empty inputs show for re-entry in the new fuel's units.
   function handleHeatingTypeChange(type: HeatingType) {
-    setInputs((prev) => (prev ? resetInputsForHeatingType(prev, type) : prev))
+    // Clear the loaded scenario entirely — old usage/price were in the old
+    // fuel's units, so we never reinterpret them, and we never show a zero
+    // Step 2. Reopen the manual form preselected to the new type so the user
+    // re-enters use + price; results reappear only once both are > 0.
+    setExtraction(null)
+    setInputs(null)
+    setAssumptions(null)
     setConfirmed({ annualFuelUse: false, fuelUnitPrice: false })
+    setManualSeedType(type)
+    setOpenManualSignal((n) => n + 1)
   }
 
   // --- Rent toggle: keep the intake state AND loaded inputs in sync so the
@@ -686,10 +683,12 @@ export default function Page() {
         </div>
 
         {/* Bottom-pinned hero content. relative z-10 keeps it above the bottom
-            legibility gradient so the buttons/subhead/tag are not greyed out. */}
-        <div className="relative z-10 flex flex-1 flex-col justify-end px-6 pb-12 md:px-12 lg:grid lg:grid-cols-2 lg:items-end lg:px-16 lg:pb-16">
-          {/* Left column. */}
-          <div className="max-w-full">
+            legibility gradient so the buttons/subhead/tag are not greyed out.
+            The headline spans up to max-w-4xl (not a 2-column grid) so it breaks
+            onto exactly two lines at 1280px; the glass tag sits bottom-right on
+            the same row as the buttons. */}
+        <div className="relative z-10 flex flex-1 flex-col justify-end gap-6 px-6 pb-12 md:px-12 lg:px-16 lg:pb-16">
+          <div className="max-w-4xl">
             <h1
               className="mb-4 text-4xl font-normal leading-[1.05] md:text-5xl lg:text-6xl xl:text-7xl"
               style={{ letterSpacing: "-0.04em" }}
@@ -701,12 +700,15 @@ export default function Page() {
             </h1>
 
             <FadeIn delay={800} duration={1000}>
-              <p className="mb-5 text-base text-white/85 md:text-lg">
+              <p className="text-base text-white/85 md:text-lg">
                 Upload a bill. Get an honest answer, with the source under
                 every number.
               </p>
             </FadeIn>
+          </div>
 
+          {/* Bottom row: buttons (left) + glass tag (right). */}
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <FadeIn delay={1200}>
               <div className="flex flex-wrap gap-4">
                 <button
@@ -725,10 +727,7 @@ export default function Page() {
                 </button>
               </div>
             </FadeIn>
-          </div>
 
-          {/* Right column tag. */}
-          <div className="mt-8 flex items-end lg:mt-0 lg:justify-end">
             <FadeIn delay={1400}>
               <div className="liquid-glass rounded-xl border border-white/20 px-6 py-3 text-lg font-light text-white md:text-xl lg:text-2xl">
                 Renters. Homeowners. Buildings.
@@ -763,6 +762,8 @@ export default function Page() {
                 onTryDemo={handleTryDemo}
                 onManualSubmit={handleManualSubmit}
                 onGuessResolved={handleGuessResolved}
+                openManualSignal={openManualSignal}
+                manualSeedType={manualSeedType}
               />
 
               {/* Extraction status: a brief loading note, then (on a soft/hard
@@ -826,26 +827,6 @@ export default function Page() {
                 </ol>
               </Card>
             </section>
-            ) : null}
-
-            {hasData && !computed ? (
-              /* Mid re-entry (e.g. a heating-type change cleared usage/price):
-                 show ONLY Step 2 so the user re-enters the new numbers. No
-                 verdict/chart until both are entered (item 6). */
-              <div ref={resultsRef} className="flex flex-col gap-6 pb-6">
-                <Card className="rounded-2xl p-6 shadow-sm">
-                  <YourNumbersCard
-                    fields={editableFields}
-                    heatingType={inputs!.heatingType}
-                    onFieldConfirm={handleFieldConfirm}
-                    onFieldEdit={handleFieldEdit}
-                    onHeatingTypeChange={handleHeatingTypeChange}
-                  />
-                </Card>
-                <p className="text-sm text-muted-foreground">
-                  Enter your yearly use and price above to see your answer.
-                </p>
-              </div>
             ) : null}
 
             {hasData && computed ? (

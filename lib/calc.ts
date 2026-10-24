@@ -854,3 +854,30 @@ export function heatingFuelLabel(b: {
   if (b.gasShare === null) return "Unknown";
   return "Mixed";
 }
+
+
+/**
+ * Short "what to do" CHIP for a ranked building: a terse label, the full
+ * sentence (for the tooltip / Details), and whether it is a High-priority
+ * action (used to tint the chip emerald). Derived from the same flags as
+ * `buildingAdvice`; presentation only.
+ */
+export interface AdviceChip {
+  label: string;
+  sentence: string;
+  high: boolean;
+}
+
+export function adviceChip(b: RankedBuilding): AdviceChip {
+  const sentence = buildingAdvice(b);
+  if (b.electricResistanceWin) {
+    return { label: "Biggest win", sentence, high: true };
+  }
+  if (b.gasShare !== null && b.gasShare >= 0.8) {
+    return { label: "At boiler replacement", sentence, high: true };
+  }
+  if (b.label === "High" || b.label === "Medium") {
+    return { label: "Good candidate", sentence, high: false };
+  }
+  return { label: "Lower priority", sentence, high: false };
+}

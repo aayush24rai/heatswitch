@@ -27,9 +27,10 @@ export interface LandlordBoxProps {
   annualDeltaDollars: number
 }
 
-/** Mass Save multifamily / landlord next-step page (Req 7.1). */
-const MASS_SAVE_MULTIFAMILY_URL =
-  "https://www.masssave.com/saving/residential-rebates/multi-family-retrofit"
+/** Mass Save home energy assessment — the building's next step (Req 7.1).
+ *  (The old multifamily-retrofit page 404s, so we point to the assessment.) */
+const MASS_SAVE_ASSESSMENT_URL =
+  "https://www.masssave.com/residential/programs-and-services/home-energy-assessments"
 
 /** Human-readable tier label. */
 const TIER_LABEL: Record<RebateTier, string> = {
@@ -126,12 +127,12 @@ export function LandlordBox({
             {copied ? "Copied" : "Copy summary"}
           </Button>
           <a
-            href={MASS_SAVE_MULTIFAMILY_URL}
+            href={MASS_SAVE_ASSESSMENT_URL}
             target="_blank"
             rel="noreferrer noopener"
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
-            Mass Save landlord &amp; multifamily path
+            Book a Mass Save assessment for the building
           </a>
         </div>
       </AlertDescription>

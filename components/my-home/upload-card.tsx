@@ -39,12 +39,17 @@ export interface UploadCardProps {
     annualFuelUse: number,
     fuelUnitPrice: number
   ) => void
-  /** Guesser (item 4): a resolved heating type (null = mini-split) + rent flag.
-   *  The page sets the type, opens the manual form, and toggles rent. */
+  /** Guesser: a resolved heating type (null = mini-split) + rent flag. The page
+   *  only honors the rent flag; the manual form opens here with the type. */
   onGuessResolved: (
     heatingType: HeatingType | null,
     rentIncluded: boolean
   ) => void
+  /** Bumped by the page to (re)open the manual form — e.g. after a Step-2
+   *  "Change" cleared the units. Each new value triggers an open. */
+  openManualSignal?: number
+  /** When the manual form (re)opens via the signal, preselect this type. */
+  manualSeedType?: HeatingType | null
 }
 
 const DEMO_ORDER: DemoHome[] = ["oil", "gas", "baseboard"]
@@ -109,6 +114,8 @@ export function UploadCard({
   onTryDemo,
   onManualSubmit,
   onGuessResolved,
+  openManualSignal,
+  manualSeedType,
 }: UploadCardProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const [dragActive, setDragActive] = React.useState(false)
@@ -120,6 +127,24 @@ export function UploadCard({
   const [manualUse, setManualUse] = React.useState("")
   const [manualPrice, setManualPrice] = React.useState("")
   const [manualError, setManualError] = React.useState<string | null>(null)
+  // Ref to the yearly-use input so the guesser / Change flow can focus it.
+  const useInputRef = React.useRef<HTMLInputElement>(null)
+  function focusUseField() {
+    requestAnimationFrame(() => useInputRef.current?.focus())
+  }
+
+  // Reopen the manual form on the page's signal (e.g. after a Step-2 "Change").
+  React.useEffect(() => {
+    if (!openManualSignal) return
+    if (manualSeedType) setManualType(manualSeedType)
+    setManualUse("")
+    setManualPrice("")
+    setManualError(null)
+    setManualOpen(true)
+    setGuideOpen(false)
+    focusUseField()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openManualSignal])
 
   // Guesser state (item 4).
   const [guideOpen, setGuideOpen] = React.useState(false)
@@ -136,16 +161,26 @@ export function UploadCard({
   function openFilePicker() {
     fileInputRef.current?.click()
   }
+  function closeInputs() {
+    setManualOpen(false)
+    setGuideOpen(false)
+  }
   function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (file) onBillSelected(file)
+    if (file) {
+      closeInputs()
+      onBillSelected(file)
+    }
     e.target.value = ""
   }
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault()
     setDragActive(false)
     const file = e.dataTransfer.files?.[0]
-    if (file) onBillSelected(file)
+    if (file) {
+      closeInputs()
+      onBillSelected(file)
+    }
   }
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault()
@@ -187,7 +222,9 @@ export function UploadCard({
       setManualType(g.heatingType)
       setManualUse("")
       setManualPrice("")
+      setManualError(null)
       setManualOpen(true)
+      focusUseField()
     }
     setGuideOpen(false)
   }
@@ -290,6 +327,7 @@ export function UploadCard({
                   Yearly use ({manualTypeMeta.unit})
                 </label>
                 <input
+                  ref={useInputRef}
                   id="manual-use"
                   type="text"
                   inputMode="decimal"
@@ -453,7 +491,10 @@ export function UploadCard({
                 variant="outline"
                 size="lg"
                 className="h-auto flex-col items-start gap-0.5 py-3 text-left whitespace-normal"
-                onClick={() => onTryDemo(demo)}
+                onClick={() => {
+                  closeInputs()
+                  onTryDemo(demo)
+                }}
               >
                 <span className="text-sm font-medium">
                   {DEMO_HOME_LABELS[demo]}

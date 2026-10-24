@@ -79,6 +79,7 @@ You are given a verdict and a set of already-computed numbers. The numbers you a
 - When you mention any figure, you MUST reproduce it EXACTLY as the given string, character-for-character (same currency symbol, thousands separators, decimals, and words). Do NOT reformat, round, convert units, recompute, or restyle them.
 - You MUST NOT introduce, compute, invent, or infer ANY numeric value that is not present in the numbers you were given. If a number is not provided, do not state one.
 - Explain WHY the verdict makes sense in everyday terms.
+- Use plain words. When referring to a heat pump's performance, call it its "efficiency" — NEVER write "COP" or any abbreviation. Use correct grammar: write "an efficiency" (not "a efficiency"), e.g. "it would need an efficiency of at least 3.14".
 - Be honest: if the heat pump costs more to run, say so plainly — do not oversell.
 - Keep it to at most about 500 characters. No markdown, no headings, no bullet lists — just one or two short sentences of prose.
 - Output only the explanation text, nothing else.`
